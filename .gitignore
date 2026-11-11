@@ -147,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Laboratorio: capturas de la prueba de humo (se regeneran con npm test)
+capturas/
+__pycache__/
+.venv/

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laboratorio de física</title>
+  <meta name="description" content="Simulaciones interactivas de cuántica, interacción luz-materia, plasmónica y cristalografía.">
+  <!-- IMPORTANTE: todas las rutas son relativas (sin "/" inicial). La web se sirve desde
+       la subruta /laboratorio/ de GitHub Pages y una ruta absoluta daría 404. -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="src/ui/styles.css">
+  <script>
+    // Aplica el tema guardado antes del primer pintado, para que no parpadee.
+    // La lógica completa de temas está en src/core/theme.js.
+    try {
+      var t = localStorage.getItem('laboratorio:tema');
+      if (t !== 'light' && t !== 'dark') {
+        t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = t;
+    } catch (e) { /* sin almacenamiento local: se queda el tema claro */ }
+  </script>
+  <!-- Mapa de importación: nombres cortos -> archivos de vendor/ (sin CDN, sin compilar). -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/",
+      "katex": "./vendor/katex/katex.mjs"
+    }
+  }
+  </script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/">Laboratorio de física</a>
+    <span class="topbar-title" id="topbar-title"></span>
+    <nav class="topbar-actions" id="topbar-actions" aria-label="Acciones"></nav>
+  </header>
+  <main id="app">
+    <noscript>
+      <p class="notice">Este laboratorio necesita JavaScript para funcionar.</p>
+    </noscript>
+  </main>
+</body>
+</html>
