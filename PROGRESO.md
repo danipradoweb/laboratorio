@@ -7,15 +7,34 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | Encargo | Estado |
 |---|---|
 | 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
-| 01 Plasmón, Mie y color | pendiente |
+| 01 Plasmón, Mie y color | **en curso** (rama `claude/bold-goldberg-s51hqd`) |
 | 02 Luz y materia | pendiente |
 | 03 Ondas clásicas y función de onda | pendiente |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 00 Base y servicios comunes (terminado). El siguiente es `docs/encargos/01-plasmon-mie.md`.
-- Último paso terminado: 14 (revisión independiente, correcciones y cierre). Encargo 00 terminado
-- Siguiente paso: encargo 01 (`docs/encargos/01-plasmon-mie.md`), en una sesión nueva
+- Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
+- Último paso terminado: 2 (motor de color)
+- Siguiente paso: 3 (biblioteca de materiales)
+
+### Plan del encargo 01 (pasos y estado)
+
+| # | Paso | Estado |
+|---|---|---|
+| 1 | Datos CIE: `tools/cie.py` → `data/cie/` | hecho |
+| 2 | Motor de color: `src/color/cie.js`, `src/color/spectrum.js`, `tests/color.test.js` | hecho |
+| 3 | Biblioteca de materiales: importador YAML, `data/materials/`, `src/materials/` y tests | pendiente |
+| 4a | Mie (BHMIE) en `src/modules/plasmon/physics.js` + comparación con `miepython` | pendiente |
+| 4b | Cuasiestática, Gans, campo cercano y tests con datos reales | pendiente |
+| 5 | Color del coloide (transmitido y dispersado) | pendiente |
+| 6 | Vistas enlazadas (a)–(e) y controles | pendiente |
+| 7–8 | Presets y recorridos | pendiente |
+| 9 | Ficha, miniatura, prueba de humo del módulo | pendiente |
+| 10 | Revisión con subagente, documentación de servicios, cierre | pendiente |
+
+### Evidencia por paso (encargo 01)
+
+- Pasos 1–2: `tests/color.test.js`, 33 tests en verde. D65 en (0,3127; 0,3290), A en (0,4476; 0,4074), E en (1/3; 1/3), 700 nm en (0,7347; 0,2653), reflector perfecto bajo D65 → sRGB (1, 1, 1) con 10⁻³; 14 casos de `colour-science` (parches reales de ColorChecker bajo D65, A y E, y dos espectros sintéticos) coinciden a 10⁻⁹ en XYZ y sRGB lineal y a 10⁻⁷ en CIELAB.
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -50,7 +69,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 - Para un módulo nuevo: `src/modules/_plantilla/LEEME.md`.
 - Comandos además de los de `CLAUDE.md`: `npm run serve` (web en `http://127.0.0.1:8080/laboratorio/`), `npm run test:unit` (sin navegador), `npm run miniaturas [id]`, `npm run vendor`.
 - Para regenerar datos y referencias: `python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt`, y después los scripts de `tools/`.
-- La rama de trabajo es `claude/nifty-pascal-etf0j1`. **No está fusionada en `main`**: GitHub Pages no mostrará nada hasta que se fusione (ver "Necesito de Daniel").
+- La rama `claude/nifty-pascal-etf0j1` del encargo 00 ya está fusionada en `main` (pull request #1).
 
 ### Revisión independiente (paso 14)
 
@@ -81,6 +100,9 @@ Un subagente con contexto limpio revisó solo la física y el cumplimiento del e
 | @types/three | 0.187.0 | solo tipos |
 | @types/node | 22.20.5 | solo tipos |
 | culori | 4.0.2 | solo `tools/oklab-fixture.mjs` (referencia de OKLab para tests) |
+| colour-science (pip) | 0.4.7 | solo `tools/cie.py` (datos CIE y referencia del motor de color) |
+| miepython (pip) | 3.3.1 | solo `tools/` (referencia de Mie) |
+| PyYAML (pip) | 6.0.3 | solo `tools/` (referencia del importador de materiales) |
 
 Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponibles.
 
@@ -132,6 +154,15 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Prueba de humo completa** (`tests/smoke.test.js`, dentro de `npm test`; se omite sola si no hay Playwright o con `SKIP_SMOKE=1`): portada y tarjetas; cada módulo en los dos temas, en pantalla estrecha y con su ficha; URL ↔ controles; clic en gráficas; PNG; presets con transición y cancelación; recorridos; reloj; modo presentación a 1920 × 1080 y en 4:3; navegación entre páginas. Cualquier error de consola, excepción o petición fallida hace fallar el test. Capturas en `capturas/` (no versionadas).
 - 2026-11-11. **La prueba de pantalla estrecha encontró un fallo real**: la barra superior no cabía en 390 px y desbordaba la página; ahora salta de línea y omite el título del módulo.
 
+### Decisiones del encargo 01
+
+- 2026-11-11. **Datos CIE sin transformar**: `data/cie/` guarda las tablas tal como las distribuye `colour-science` (funciones de igualación cada 1 nm de 360 a 830 nm; D65 y A cada 5 nm de 300 a 780 nm; E constante). `src/color/cie.js` pasa los iluminantes a 1 nm por interpolación lineal y **no extrapola**: D65 y A acaban en 780 nm y el motor integra solo donde hay datos (lo que queda fuera aporta menos de 10⁻⁵).
+- 2026-11-11. **`src/core/load-json.js`**: carga de archivos de `data/` que funciona igual en el navegador (`fetch`) y en Node (`fs`), siempre con rutas relativas al archivo que las pide (`new URL(ruta, import.meta.url)`). Una sola descarga por archivo.
+- 2026-11-11. **Matriz de sRGB deducida de los primarios y del blanco** (definición de IEC 61966-2-1), no la matriz redondeada a 4 decimales. La referencia de `colour-science` se genera con la misma convención (`use_derived_transformation_matrices`), y así la comparación llega a 10⁻⁹.
+- 2026-11-11. **Sin adaptación cromática**: el color se muestra como lo vería un ojo adaptado a D65 (el blanco de la pantalla). Un blanco bajo el iluminante A sale anaranjado. Está dicho en la cabecera de `spectrum.js`.
+- 2026-11-11. **Fuera de gama**: recorte canal a canal y `inGamut = false`, con un margen de 10⁻³ (el D65 integrado difiere 2·10⁻⁴ del blanco nominal de sRGB; sin margen, el propio blanco saldría «fuera de gama»).
+- 2026-11-11. **Dos tests de color fallaron al escribirlos, por el test y no por el código**: (1) pedía 10⁻¹² al sRGB del blanco, cuando el encargo dice «≈ (1, 1, 1)» y la diferencia real es 2·10⁻⁴ por el redondeo del blanco nominal; (2) pedía continuidad a 10⁻⁹ en el empalme de la curva gamma, pero las constantes redondeadas de la norma dejan un salto de 3·10⁻⁸. Un tercero destapó un fallo real: `resampleSpectrum` aceptaba longitudes de onda repetidas; ahora las rechaza.
+
 ## Problemas abiertos
 
 - (resuelto 2026-11-11) El push a GitHub dio 403 al cerrar el paso 1 por falta de permiso de escritura; desde el paso 2a funciona.
@@ -139,6 +170,5 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
 
-- **Fusionar la rama `claude/nifty-pascal-etf0j1` en `main`** (con un pull request o directamente) para que GitHub Pages publique el laboratorio, y comprobar en Ajustes → Pages que se sirve desde `main`, carpeta raíz.
 - **Cotejar las referencias bibliográficas** de `src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md` con los libros (capítulos y secciones citados de memoria).
 - Opcional: probar el modo presentación en el equipo de grabación (tecla P, después F para pantalla completa) y decir si el tamaño de letra a 1080p es el que quieres.
