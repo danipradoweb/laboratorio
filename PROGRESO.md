@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 12b (oscilador: vistas enlazadas)
-- Siguiente paso: 12c (oscilador: recorrido «Qué significa resonancia», miniatura, repaso de la ficha)
+- Último paso terminado: 12c (oscilador completo: recorrido, ficha y miniatura)
+- Siguiente paso: 13 (repaso final de la prueba de humo)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -39,7 +39,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 11 | Plantilla `_plantilla/` | hecho |
 | 12a | Oscilador: física y tests | hecho |
 | 12b | Oscilador: vistas | hecho |
-| 12c | Oscilador: presets, recorrido, ficha | pendiente |
+| 12c | Oscilador: presets, recorrido, ficha | hecho |
 | 13 | Prueba de humo completa | pendiente |
 | 14 | Revisión con subagente, árbol de `ARQUITECTURA.md` al día, cierre | pendiente |
 
@@ -99,6 +99,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **En la evolución temporal, fuerza y posición van normalizadas** (F/F₀ y x/A, con A la amplitud estacionaria) para comparar fases; el tamaño real de la respuesta está en la gráfica de amplitud. La ficha lo dice. El eje de tiempo va en periodos de la fuerza (8 periodos) y el desfase se marca en el periodo 6 con una banda.
 - 2026-11-11. **Paso de integración de la vista**: 60 pasos de RK4 por cada periodo (el más corto entre el de la fuerza y el propio), suficiente para que el error sea muy inferior al grosor de la línea incluso con ω = 0,05 ω₀.
 - 2026-11-11. **Añadidos al trazador**: marcas fijas (`xTicks`, `yTicks`), apilado de etiquetas de marcadores verticales que se pisarían y `src/ui/format.js` (`formatEs`, números con coma decimal).
+- 2026-11-11. **Recorrido «Qué significa resonancia»** (5 pasos, uno por preset): manda el muelle / 90° y máxima potencia / manda la inercia / poco rozamiento (Q, anchura γ) / mucho rozamiento (sin máximo de amplitud si γ ≥ √2·ω₀).
 
 ## Problemas abiertos
 

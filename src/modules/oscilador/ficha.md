@@ -4,12 +4,12 @@
 
 Una masa sujeta a un muelle, con rozamiento, a la que una fuerza externa empuja de forma periódica. Hay cuatro vistas enlazadas: al cambiar la frecuencia de la fuerza o el amortiguamiento, cambian todas a la vez.
 
-- **Evolución temporal.** La fuerza $F(t)$ y la posición $x(t)$, cada una dividida por su amplitud para poder comparar sus fases. El tiempo va en periodos de la fuerza. La banda sombreada mide el **desfase** $\delta$: lo que tarda la masa en llegar a su máximo después de que lo haga la fuerza. Con "Arrancar desde el reposo" se ve además el *transitorio*, calculado paso a paso, hasta que se confunde con el régimen estacionario (línea de trazos).
+- **Evolución temporal.** La fuerza $F(t)$ y la posición $x(t)$, cada una dividida por su amplitud para poder comparar sus fases. El tiempo va en periodos de la fuerza (se muestran ocho). La banda sombreada mide el **desfase** $\delta$: lo que tarda la masa en llegar a su máximo después de que lo haga la fuerza. Con "Arrancar desde el reposo" se ve además el *transitorio*, calculado paso a paso, hasta que se confunde con el régimen estacionario (línea de trazos).
 - **Amplitud** del régimen estacionario frente a la frecuencia de la fuerza.
 - **Desfase** frente a la frecuencia.
-- **Potencia media** que la fuerza entrega a la masa, que es la que disipa el rozamiento.
+- **Potencia media** que la fuerza entrega a la masa, que es la que disipa el rozamiento. La banda sombreada es su anchura a media altura y la curva de trazos, la aproximación lorentziana.
 
-La línea vertical marca en las tres curvas la frecuencia actual. Un clic sobre cualquiera de ellas la cambia.
+En las tres curvas, la línea vertical continua marca la frecuencia actual y la de puntos, la frecuencia propia $\omega_0$. Un clic sobre cualquiera de ellas cambia la frecuencia. El punto que recorre la evolución temporal es un cursor de tiempo: se detiene con la pausa.
 
 ## Qué es físico y qué es representación
 

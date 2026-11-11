@@ -44,6 +44,8 @@ try {
     await page.waitForSelector('html[data-ready="true"]');
     await page.keyboard.press('p');
     await page.waitForSelector('html[data-presentation="true"]');
+    // La barra flotante del modo presentación (tema, salir) no debe salir en la miniatura.
+    await page.addStyleTag({ content: '.presentation-toolbar { display: none !important; }' });
     await page.waitForTimeout(1200);
     const file = join(root, 'src/modules', m.id, String(m.thumbnail));
     await page.locator('.stage-frame').screenshot({ path: file });

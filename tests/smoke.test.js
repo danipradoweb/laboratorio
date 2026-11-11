@@ -379,3 +379,25 @@ test('oscilador: URL, vistas enlazadas, presets y presentación', { skip }, asyn
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Recorrido del oscilador: cinco pasos, cada uno lleva a su preset y pinta su texto con
+// fórmulas. Se recorre en modo presentación con las flechas y se guarda cada paso.
+test('oscilador: recorrido «Qué significa resonancia» en modo presentación', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/oscilador', { width: 1920, height: 1080 });
+  await page.locator('.tour-start[data-tour="resonancia"]').click();
+  await page.keyboard.press('p');
+  const expected = ['omega=0.2&gamma=0.2', 'omega=1&gamma=0.2', 'omega=3&gamma=0.2', 'omega=1&gamma=0.05', 'omega=1&gamma=1.5'];
+  for (let step = 0; step < expected.length; step++) {
+    assert.match(await page.locator('.tour-counter').textContent(), new RegExp(`Paso ${step + 1} de 5`));
+    await page.waitForFunction((/** @type {string} */ e) => location.hash.includes(e), expected[step]);
+    await page.waitForSelector('.tour-text .katex');
+    assert.equal(await page.locator('.tour-text .katex-error').count(), 0);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: join(shots, `oscilador-recorrido-${step + 1}.png`) });
+    await page.keyboard.press('ArrowRight');
+  }
+  // En el último paso la flecha derecha no hace nada.
+  assert.match(await page.locator('.tour-counter').textContent(), /Paso 5 de 5/);
+  await close();
+  assert.deepEqual(errors, []);
+});
