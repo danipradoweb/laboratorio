@@ -70,6 +70,12 @@ Entrada al laboratorio por objetos cotidianos en lugar de por fenómenos. Cada o
 - Visualizador de grupos espaciales.
 
 ## Infraestructura
+- Miniaturas de la portada en los dos temas (ahora solo se genera la del tema claro).
+- Escala logarítmica en los ejes del trazador 2D y en los deslizadores (útil para espectros y para parámetros que abarcan varios órdenes de magnitud).
+- Página de créditos (`docs/ARQUITECTURA.md` la menciona): fuentes de los datos de materiales y licencias de `vendor/` y de los mapas de color.
+- Funcionamiento sin conexión real con un service worker (ahora funciona sin red solo lo que ya se ha cargado).
+- Guardar en la URL el recorrido y el paso en curso, para enlazar a un paso concreto.
+- Variante compleja del algoritmo de Thomas en `linalg.js` (la pedirá Crank-Nicolson en el encargo 03).
 - Integración con la web personal (sección Laboratorio) cuando haya módulos terminados.
 - Dominio propio: GitHub Pages lo admite sin mover nada.
 - Ensayo interactivo "Determinismo sin predicción": autómata celular (regla 30), sistema caótico con trayectorias que divergen, "demonio" que pierde precisión. Usa el sistema de recorridos.

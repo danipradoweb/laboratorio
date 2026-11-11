@@ -9,7 +9,8 @@
     "test:unit": "SKIP_SMOKE=1 node --test \"tests/*.test.js\"",
     "check": "tsc --noEmit -p tsconfig.json",
     "vendor": "node tools/vendor.mjs",
-    "serve": "node tools/serve.mjs --base /laboratorio/"
+    "serve": "node tools/serve.mjs --base /laboratorio/",
+    "miniaturas": "node tools/miniaturas.mjs"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

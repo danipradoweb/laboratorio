@@ -78,6 +78,20 @@ test('la portada carga desde la subruta /laboratorio/ sin errores', { skip }, as
   const { page, errors, close } = await openPage('');
   assert.equal(await page.title(), 'Laboratorio de física');
   assert.equal(await page.locator('.cover h1').textContent(), 'Laboratorio de física');
+  // Enlace de vuelta a la web personal.
+  assert.equal(await page.locator('.cover-back').getAttribute('href'), 'https://danipradoweb.github.io/');
+  // Una tarjeta por módulo visible, con título y resumen; los ocultos no salen.
+  const visible = modules.filter((m) => !m.hidden);
+  assert.equal(await page.locator('.card').count(), visible.length);
+  for (const m of visible) {
+    const card = page.locator(`.card[data-module="${m.id}"]`);
+    assert.equal(await card.getAttribute('href'), `#/${m.id}`);
+    assert.equal(await card.locator('h2').textContent(), m.title);
+    assert.equal(await card.locator('p').textContent(), m.summary);
+  }
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+  await page.screenshot({ path: join(shots, 'portada-dark.png') });
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'light'));
   await page.screenshot({ path: join(shots, 'portada.png') });
   await close();
   assert.deepEqual(errors, []);

@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 9 (fichas con Markdown y KaTeX)
-- Siguiente paso: 10 (portada: tarjetas con miniatura y enlace a la web personal)
+- Último paso terminado: 10 (portada)
+- Siguiente paso: 11 (plantilla de módulo `src/modules/_plantilla/` con LEEME.md)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -35,7 +35,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 7 | `presets.js`, `tours.js`, `clock.js` | hecho |
 | 8 | `presentation.js` | hecho |
 | 9 | `markdown.js`, `ficha.js` | hecho |
-| 10 | Portada | pendiente |
+| 10 | Portada | hecho |
 | 11 | Plantilla `_plantilla/` | pendiente |
 | 12a | Oscilador: física y tests | pendiente |
 | 12b | Oscilador: vistas | pendiente |
@@ -87,6 +87,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Markdown mínimo propio** (`src/core/markdown.js`, puro y con tests): títulos, párrafos, listas, negrita, cursiva (solo con asteriscos, para no chocar con los guiones bajos de TeX), código, enlaces y fórmulas `$…$` / `$$…$$`. Sin tablas, imágenes ni listas anidadas. Las fórmulas se apartan antes de interpretar nada, así que el TeX llega intacto a KaTeX.
 - 2026-11-11. **La ficha se busca por convenio** en `src/modules/<id>/ficha.md` (no hace falta declararla en el descriptor) y se descarga al abrir el panel. KaTeX y su hoja de estilos se cargan en diferido la primera vez que hay una fórmula; si fallara, las fórmulas quedan como texto TeX.
 - 2026-11-11. **Abrir la ficha pliega el panel de controles** en ventanas de menos de 1500 px (no caben controles, vistas y ficha a la vez) y lo restaura al cerrarla.
+- 2026-11-11. **Miniaturas**: el descriptor declara `thumbnail: 'miniatura.png'` y `npm run miniaturas` (`tools/miniaturas.mjs`, Playwright) genera una captura de 640 × 360 del módulo en modo presentación y tema claro. Un módulo sin miniatura muestra un recuadro con su inicial. `tests/modulos.test.js` comprueba que el archivo declarado existe.
 
 ## Problemas abiertos
 
