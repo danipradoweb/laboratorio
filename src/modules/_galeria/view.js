@@ -4,6 +4,7 @@
 import { el } from '../../ui/dom.js';
 import { addPanel, createPanelGrid } from '../../ui/panels.js';
 import { createPlot } from '../../ui/plot2d.js';
+import { createView3D } from '../../ui/view3d.js';
 import { gaussianPacket, sampleGrid } from './physics.js';
 
 /** Semianchura de la región dibujada y resolución de las mallas. */
@@ -24,9 +25,9 @@ function gray(t) {
 /**
  * @param {HTMLElement} container
  * @param {import('../types.js').ModuleContext} ctx
- * @returns {import('../types.js').ModuleInstance}
+ * @returns {Promise<import('../types.js').ModuleInstance>}
  */
-export function mount(container, ctx) {
+export async function mount(container, ctx) {
   const grid = createPanelGrid(container, 'galeria-grid');
 
   // 1) Series, áreas, bandas y marcadores. Un clic fija σ = |x| (vistas enlazadas).
@@ -48,7 +49,14 @@ export function mount(container, ctx) {
     exportName: 'galeria-mapa',
   });
 
-  // 3) Estado actual, como texto.
+  // 3) Visor 3D: la altura es |ψ|. createView3D es asíncrona (carga three.js).
+  const view3dPanel = addPanel(grid, 'Visor 3D: superficie |ψ(x, y)| (arrastra para girar)');
+  const view3d = await createView3D(view3dPanel.body, { axisLabels: { z: '|ψ|' }, axisLength: 1.2 });
+  const surface = view3d?.addSurface({ nx: GRID, ny: GRID, xRange: [-1, 1], yRange: [-1, 1] });
+  const heights = new Float32Array(GRID * GRID);
+  const surfaceColors = new Uint8ClampedArray(GRID * GRID * 3);
+
+  // 4) Estado actual, como texto.
   const statePanel = addPanel(grid, 'Estado');
   const readout = el('pre', { class: 'galeria-readout' });
   statePanel.body.append(readout);
@@ -88,11 +96,21 @@ export function mount(container, ctx) {
         },
       });
 
+      for (let i = 0; i < GRID * GRID; i++) {
+        heights[i] = Math.hypot(field.re[i], field.im[i]);
+        const [r, g, b] = gray(0.25 + 0.75 * heights[i]);
+        surfaceColors[3 * i] = r;
+        surfaceColors[3 * i + 1] = g;
+        surfaceColors[3 * i + 2] = b;
+      }
+      surface?.update(heights, surfaceColors);
+
       readout.textContent = JSON.stringify(state, null, 2);
     },
     destroy() {
       linePlot.destroy();
       mapPlot.destroy();
+      view3d?.destroy();
       grid.remove();
     },
   };

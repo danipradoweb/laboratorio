@@ -506,6 +506,20 @@ h3 {
   opacity: 1;
 }
 
+/* Visor 3D (src/ui/view3d.js). */
+.view3d {
+  position: absolute;
+  inset: 0;
+}
+
+.view3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  cursor: grab;
+}
+
 /* Pantallas estrechas: el panel lateral pasa arriba y los paneles se apilan. */
 @media (max-width: 760px) {
   html,

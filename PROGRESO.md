@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 5a (plot2d.js: trazador Canvas 2D)
-- Siguiente paso: 5b (`src/ui/view3d.js`: envoltorio de three.js)
+- Último paso terminado: 5b (view3d.js: visor 3D)
+- Siguiente paso: 6 (`src/ui/colormaps.js`: rueda de fase, mapas secuenciales y divergente, leyendas)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -30,7 +30,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 3 | `state.js` (estado ↔ URL) | hecho |
 | 4 | Interfaz: `theme.js`, `controls.js`, estilos, shell y enrutado en `app.js`, `registry.js`, módulo oculto `_galeria` | hecho |
 | 5a | `plot2d.js` | hecho |
-| 5b | `view3d.js` | pendiente |
+| 5b | `view3d.js` | hecho |
 | 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | pendiente |
 | 7 | `presets.js`, `tours.js`, `clock.js` | pendiente |
 | 8 | `presentation.js` | pendiente |
