@@ -966,3 +966,10 @@ h3 {
 .presentation-toast[hidden] {
   display: none;
 }
+
+/* ---------------------------------------------------------- Rejillas de cada módulo */
+
+/* Plantilla: dos paneles, uno al lado del otro; el primero, más ancho. */
+.plantilla-grid {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}

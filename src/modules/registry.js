@@ -9,6 +9,7 @@
 // dirección (#/<id>) y la prueba de humo los carga igualmente.
 
 import galeria from './_galeria/module.js';
+import plantilla from './_plantilla/module.js';
 
 /** @type {import('./types.js').ModuleDescriptor[]} */
-export const modules = [galeria];
+export const modules = [galeria, plantilla];

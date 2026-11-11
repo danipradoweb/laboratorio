@@ -133,8 +133,12 @@ for (const m of modules) {
 
   // Regla de arquitectura: la física no toca el DOM y las constantes salen de units.js.
   test(`[${m.id}] physics.js es puro (sin DOM) y no teclea constantes físicas`, () => {
-    const source = readFileSync(join(dir, 'physics.js'), 'utf8');
-    for (const forbidden of ['document.', 'window.', 'canvas', 'requestAnimationFrame']) {
+    // Se miran solo las líneas de código: los comentarios pueden nombrar lo prohibido.
+    const source = readFileSync(join(dir, 'physics.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+      .replace(/\s\/\/ .*$/gm, '');
+    for (const forbidden of ['document', 'window', 'canvas', 'requestAnimationFrame', 'getContext']) {
       assert.ok(!source.includes(forbidden), `physics.js no puede usar "${forbidden}"`);
     }
     // Mantisas de las constantes CODATA más comunes: deben importarse de units.js.

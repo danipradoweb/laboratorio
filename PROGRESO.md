@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 10 (portada)
-- Siguiente paso: 11 (plantilla de módulo `src/modules/_plantilla/` con LEEME.md)
+- Último paso terminado: 11 (plantilla de módulo)
+- Siguiente paso: 12a (oscilador: `src/modules/oscilador/physics.js` y `tests/oscilador.test.js`)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -36,7 +36,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 8 | `presentation.js` | hecho |
 | 9 | `markdown.js`, `ficha.js` | hecho |
 | 10 | Portada | hecho |
-| 11 | Plantilla `_plantilla/` | pendiente |
+| 11 | Plantilla `_plantilla/` | hecho |
 | 12a | Oscilador: física y tests | pendiente |
 | 12b | Oscilador: vistas | pendiente |
 | 12c | Oscilador: presets, recorrido, ficha | pendiente |
@@ -88,6 +88,9 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **La ficha se busca por convenio** en `src/modules/<id>/ficha.md` (no hace falta declararla en el descriptor) y se descarga al abrir el panel. KaTeX y su hoja de estilos se cargan en diferido la primera vez que hay una fórmula; si fallara, las fórmulas quedan como texto TeX.
 - 2026-11-11. **Abrir la ficha pliega el panel de controles** en ventanas de menos de 1500 px (no caben controles, vistas y ficha a la vez) y lo restaura al cerrarla.
 - 2026-11-11. **Miniaturas**: el descriptor declara `thumbnail: 'miniatura.png'` y `npm run miniaturas` (`tools/miniaturas.mjs`, Playwright) genera una captura de 640 × 360 del módulo en modo presentación y tema claro. Un módulo sin miniatura muestra un recuadro con su inicial. `tests/modulos.test.js` comprueba que el archivo declarado existe.
+- 2026-11-11. **La plantilla es un módulo que funciona** (`#/_plantilla`, oculto: ondas estacionarias en una cuerda) y está registrada, de modo que el test de contrato y la prueba de humo la ejercitan y no puede quedarse obsoleta. `LEEME.md` da los ocho pasos para crear un módulo y una tabla de errores frecuentes.
+- 2026-11-11. **`tests/modulos.test.js` vigila la física pura**: en `physics.js` no puede aparecer (fuera de comentarios) `document`, `window`, `canvas`… ni las mantisas de las constantes CODATA más comunes.
+- 2026-11-11. **Series con puntos** en el trazador (`points: true`, `line: false`) para datos discretos.
 
 ## Problemas abiertos
 

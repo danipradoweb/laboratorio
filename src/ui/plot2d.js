@@ -38,6 +38,8 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {PlotColor} [color] por defecto, el siguiente de la paleta
  * @property {number[]} [dash] patrón de trazos, p. ej. [6, 4]
  * @property {number} [width] grosor relativo (1 = normal)
+ * @property {boolean} [points] dibuja un punto en cada dato (para datos discretos)
+ * @property {boolean} [line] une los datos con una línea (por defecto true)
  */
 
 /**
@@ -230,7 +232,7 @@ export function createPlot(container, options = {}) {
     g.font = tickFont;
     /** @param {number} plotHeight */
     const computeYTicks = (plotHeight) => {
-      const result = niceTicks(yRange[0], yRange[1], Math.min(10, Math.max(2, plotHeight / (fs * 2.8))));
+      const result = niceTicks(yRange[0], yRange[1], Math.min(8, Math.max(2, plotHeight / (fs * 2.8))));
       const texts = result.ticks.map((t) => formatTick(t, result.step));
       return { ...result, texts, width: Math.max(0, ...texts.map((t) => g.measureText(t).width)) };
     };
@@ -358,7 +360,17 @@ export function createPlot(container, options = {}) {
         else g.moveTo(px, py);
         pen = true;
       }
-      g.stroke();
+      if (s.line !== false) g.stroke();
+      if (s.points) {
+        g.setLineDash([]);
+        g.fillStyle = g.strokeStyle;
+        for (let j = 0; j < n; j++) {
+          if (!Number.isFinite(s.x[j]) || !Number.isFinite(s.y[j])) continue;
+          g.beginPath();
+          g.arc(xScale.toPixel(s.x[j]), yScale.toPixel(s.y[j]), fs * 0.3 * (s.width ?? 1), 0, 2 * Math.PI);
+          g.fill();
+        }
+      }
     });
     g.setLineDash([]);
 
@@ -573,7 +585,7 @@ export function createPlot(container, options = {}) {
   }
 
   /**
-   * @typedef {{ label: string, color: string, kind: 'line' | 'fill', dash: number[], opacity: number, x: number, row: number }} LegendEntry
+   * @typedef {{ label: string, color: string, kind: 'line' | 'fill' | 'point', dash: number[], opacity: number, x: number, row: number }} LegendEntry
    */
 
   /**
@@ -591,7 +603,7 @@ export function createPlot(container, options = {}) {
     /** @param {Omit<LegendEntry, 'x' | 'row'>} entry */
     const push = (entry) => entries.push({ ...entry, x: 0, row: 0 });
     (data.series ?? []).forEach((s, i) => {
-      if (s.label) push({ label: s.label, color: resolve(s.color, i), kind: 'line', dash: s.dash ?? [], opacity: 1 });
+      if (s.label) push({ label: s.label, color: resolve(s.color, i), kind: s.line === false ? 'point' : 'line', dash: s.dash ?? [], opacity: 1 });
     });
     (data.areas ?? []).forEach((a, i) => {
       if (a.label) push({ label: a.label, color: resolve(a.color, i), kind: 'fill', dash: [], opacity: a.opacity ?? 0.25 });
@@ -638,6 +650,11 @@ export function createPlot(container, options = {}) {
         g.lineTo(x + sample, cy);
         g.stroke();
         g.setLineDash([]);
+      } else if (entry.kind === 'point') {
+        g.fillStyle = entry.color;
+        g.beginPath();
+        g.arc(x + sample / 2, cy, fs * 0.3, 0, 2 * Math.PI);
+        g.fill();
       } else {
         g.globalAlpha = Math.min(1, entry.opacity + 0.3);
         g.fillStyle = entry.color;
