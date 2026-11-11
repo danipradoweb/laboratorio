@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 2a (units.js)
-- Siguiente paso: 2b (`src/core/complex.js`)
+- Último paso terminado: 2b (complex.js)
+- Siguiente paso: 2c (`src/core/fft.js`)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -23,7 +23,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 |---|---|---|
 | 1 | Andamiaje: `package.json`, `tsconfig.json`, `.nojekyll`, `index.html`, `app.js`, `vendor/`, `tools/serve.mjs`, tests de estructura y humo mínimo | hecho |
 | 2a | `units.js` | hecho |
-| 2b | `complex.js` | pendiente |
+| 2b | `complex.js` | hecho |
 | 2c | `fft.js` | pendiente |
 | 2d | `linalg.js` | pendiente |
 | 2e | `interp.js` | pendiente |
@@ -67,9 +67,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 
 ## Problemas abiertos
 
-- **El push a GitHub falla (403)**: la sesión solo tiene permiso de lectura sobre `danipradoweb/laboratorio` ("Claude doesn't have GitHub access… / Resource not accessible by integration"). Los commits se van haciendo en local en la rama `claude/nifty-pascal-etf0j1` y el push se reintenta al cerrar cada paso. Si la sesión se corta antes de arreglarlo, lo no subido se pierde.
+- (resuelto 2026-11-11) El push a GitHub dio 403 al cerrar el paso 1 por falta de permiso de escritura; desde el paso 2a funciona.
 
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
-
-- **Dar permiso de escritura a Claude sobre el repositorio** `danipradoweb/laboratorio`: reconectar GitHub en https://claude.ai/connect-github y, si hace falta, instalar la app de GitHub de Claude en el repositorio con acceso de escritura (https://github.com/apps/claude/installations/select_target). Sin eso no se puede subir nada.
