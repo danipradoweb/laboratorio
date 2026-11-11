@@ -75,6 +75,8 @@
  * @property {boolean} [hidden] si es true, no aparece en la portada (plantilla, galería)
  * @property {boolean} [animated] si es true, se muestran los controles de pausa y velocidad
  * @property {string} [thumbnail] nombre del archivo de miniatura dentro de la carpeta del módulo
+ * @property {number} [transitionSeconds] duración de la transición entre presets, en segundos
+ *   (por defecto 1,5; 0 = cambio instantáneo)
  */
 
 export {};

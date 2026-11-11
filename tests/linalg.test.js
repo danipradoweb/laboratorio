@@ -62,6 +62,8 @@ test('solveTridiagonal: problema de Poisson 1D con solución exacta x(1−x)/2',
   }
 });
 
+// Caso mínimo (una ecuación: 4x = 8) y errores claros ante un pivote nulo o longitudes
+// incoherentes.
 test('solveTridiagonal: n = 1 y errores', () => {
   assert.deepEqual(Array.from(solveTridiagonal([0], [4], [0], [8])), [2]);
   assert.throws(() => solveTridiagonal([0, 1], [0, 1], [1, 0], [1, 1]), /pivote nulo/);
@@ -201,6 +203,20 @@ test('autovalores exactamente degenerados (matriz en bloques)', () => {
   checkEigenpairs(diag, off, eig, 1e-11);
 });
 
+// Principio: la matriz nula tiene todos sus autovalores iguales a 0 y cualquier base
+// ortonormal como autovectores. Es el caso extremo de degeneración (y de escala nula):
+// el resultado debe seguir siendo finito y ortonormal.
+test('matriz nula: autovalores 0 y autovectores ortonormales (sin NaN)', () => {
+  const one = eigTridiagonal([0], []);
+  assert.ok(Math.abs(one.values[0]) < 1e-15);
+  assert.ok(Math.abs(Math.abs(one.vectors[0][0]) - 1) < 1e-15);
+  const eig = eigTridiagonal([0, 0, 0], [0, 0]);
+  for (const v of eig.vectors) assert.ok(v.every(Number.isFinite), 'autovector con valores no finitos');
+  for (const value of eig.values) assert.ok(Math.abs(value) < 1e-15);
+  checkEigenpairs([0, 0, 0], [0, 0], eig, 1e-12);
+});
+
+// Robustez: argumentos incoherentes deben dar un error claro, no un resultado absurdo.
 test('eigenvaluesTridiagonal valida sus argumentos', () => {
   assert.throws(() => eigenvaluesTridiagonal([1, 2, 3], [1]), /n − 1/);
   assert.throws(() => eigenvaluesTridiagonal([1, 2], [1], 5), /count/);
@@ -256,6 +272,7 @@ test('solveComplexDense: casos analíticos, pivoteo y matriz singular', () => {
   );
 });
 
+// Las funciones del núcleo son puras: los argumentos quedan intactos.
 test('solveComplexDense no modifica sus argumentos', () => {
   const A = [
     [C.complex(2, 1), C.complex(0, 1)],

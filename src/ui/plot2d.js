@@ -21,7 +21,7 @@
 // con él sin tocar nada aquí.
 
 import { el } from './dom.js';
-import { extent, formatTick, linearScale, niceTicks, padRange } from './plot-math.js';
+import { extent, formatTicks, linearScale, niceTicks, padRange } from './plot-math.js';
 import { onThemeChange, themeColors } from '../core/theme.js';
 
 /**
@@ -253,7 +253,7 @@ export function createPlot(container, options = {}) {
       const result = options.yTicks
         ? fixedTicks(options.yTicks, yRange)
         : niceTicks(yRange[0], yRange[1], Math.min(6, Math.max(2, plotHeight / (fs * 2.8))));
-      const texts = result.ticks.map((t) => formatTick(t, result.step));
+      const texts = formatTicks(result.ticks, result.step);
       return { ...result, texts, width: Math.max(0, ...texts.map((t) => g.measureText(t).width)) };
     };
     let yTicks = computeYTicks(height - fs * 0.7 - bottom);
@@ -469,9 +469,10 @@ export function createPlot(container, options = {}) {
     g.font = tickFont;
     g.textAlign = 'center';
     g.textBaseline = 'top';
-    for (const t of xTicks.ticks) {
-      g.fillText(formatTick(t, xTicks.step), xScale.toPixel(t), plotBottom + fs * 0.4);
-    }
+    const xTickTexts = formatTicks(xTicks.ticks, xTicks.step);
+    xTicks.ticks.forEach((t, i) => {
+      g.fillText(xTickTexts[i], xScale.toPixel(t), plotBottom + fs * 0.4);
+    });
     g.textAlign = 'right';
     g.textBaseline = 'middle';
     yTicks.ticks.forEach((t, i) => {
@@ -596,11 +597,11 @@ export function createPlot(container, options = {}) {
     g.textAlign = 'left';
     g.textBaseline = 'middle';
     let widest = 0;
-    for (const t of ticks.ticks) {
-      const text = formatTick(t, ticks.step);
-      widest = Math.max(widest, g.measureText(text).width);
-      g.fillText(text, barX + barW + fs * 0.35, scale.toPixel(t));
-    }
+    const texts = formatTicks(ticks.ticks, ticks.step);
+    ticks.ticks.forEach((t, i) => {
+      widest = Math.max(widest, g.measureText(texts[i]).width);
+      g.fillText(texts[i], barX + barW + fs * 0.35, scale.toPixel(t));
+    });
     if (map.label) {
       g.save();
       g.translate(barX + barW + fs * 0.6 + widest, plotTop + plotH / 2);

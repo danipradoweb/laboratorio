@@ -67,7 +67,7 @@ const descriptor = {
         },
         {
           preset: 'por-encima',
-          text: 'Si la fuerza empuja **muy deprisa** ($\\omega \\gg \\omega_0$), la masa no tiene tiempo de responder: se mueve poco y en oposición a la fuerza. Manda la inercia, $A \\approx F_0/m\\omega^2$.',
+          text: 'Si la fuerza empuja **muy deprisa** ($\\omega \\gg \\omega_0$), la masa no tiene tiempo de responder: se mueve poco y en oposición a la fuerza. Manda la inercia: cuanto mayor es $\\omega$, más se acerca la amplitud a $F_0/m\\omega^2$.',
         },
         {
           preset: 'poco-amortiguado',

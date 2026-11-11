@@ -92,7 +92,7 @@ test('spline natural: orden 4 y cota (5/384)·h⁴ en sen x sobre [0, π]', () =
     const { xs, ys } = table(Math.sin, 0, Math.PI, n);
     const err = maxError(createNaturalSpline(xs, ys), Math.sin, 0, Math.PI);
     const h = Math.PI / n;
-    assert.ok(err <= (5 / 384) * h ** 4 * 1.02, `n=${n}: error ${err}`);
+    assert.ok(err <= (5 / 384) * h ** 4, `n=${n}: error ${err}`);
     errors.push(err);
   }
   for (let i = 1; i < errors.length; i++) {

@@ -27,6 +27,9 @@ const descriptor = {
   // Bórrala si tu módulo no tiene animación.
   animated: true,
 
+  // Duración de la transición animada entre presets, en segundos. Por defecto 1,5.
+  // transitionSeconds: 2.5,
+
   // Miniatura para la portada. Descomenta cuando el módulo esté terminado y ejecuta
   // `npm run miniaturas <id>` para generarla.
   // thumbnail: 'miniatura.png',

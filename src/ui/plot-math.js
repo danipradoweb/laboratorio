@@ -61,26 +61,72 @@ function superscript(n) {
 }
 
 /**
- * Texto de una marca de eje, con coma decimal (español) y los decimales justos para
- * distinguir marcas separadas por `step`. Los valores muy grandes o muy pequeños se
- * escriben como mantisa·10ⁿ.
+ * Decimales que pide el paso entre marcas: paso 0,5 → 1 decimal; paso 20 → 0.
+ * @param {number} step
+ * @returns {number}
+ */
+function decimalsForStep(step) {
+  return Math.max(0, -Math.floor(Math.log10(Math.abs(step)) + 1e-9));
+}
+
+/**
+ * Escribe un valor con `extra` decimales más de los que pide el paso. Devuelve el texto
+ * y el número que ese texto representa (para comprobar que no se ha perdido nada).
+ * @param {number} value
+ * @param {number} step
+ * @param {number} extra
+ * @returns {{ text: string, shown: number }}
+ */
+function writeTick(value, step, extra) {
+  if (value === 0) return { text: '0', shown: 0 };
+  const magnitude = Math.max(Math.abs(value), Math.abs(step));
+  if (magnitude >= 1e5 || magnitude < 1e-3) {
+    // Notación mantisa·10ⁿ.
+    const exponent = Math.floor(Math.log10(Math.abs(value)) + 1e-12);
+    const power = Math.pow(10, exponent);
+    const decimals = Math.min(15, decimalsForStep(step / power) + extra);
+    const mantissa = (value / power).toFixed(decimals);
+    return {
+      text: `${mantissa.replace('.', ',').replace('-', '−')}·10${superscript(exponent)}`,
+      shown: Number(mantissa) * power,
+    };
+  }
+  const fixed = value.toFixed(Math.min(15, decimalsForStep(step) + extra));
+  return { text: fixed.replace('.', ',').replace('-', '−'), shown: Number(fixed) };
+}
+
+/**
+ * Textos de las marcas de un eje, con coma decimal (español). Los valores muy grandes
+ * o muy pequeños se escriben como mantisa·10ⁿ.
+ *
+ * Garantía: el rótulo nunca enseña un número distinto del valor de la marca. Se empieza
+ * con los decimales que pide el paso y se añaden los necesarios hasta que TODAS las
+ * marcas se leen exactas (por ejemplo, marcas cada 0,25 necesitan dos decimales aunque
+ * su paso "pida" uno). Todas las marcas de un eje llevan los mismos decimales.
+ *
+ * @param {readonly number[]} ticks valores de las marcas
+ * @param {number} step separación entre marcas
+ * @returns {string[]}
+ */
+export function formatTicks(ticks, step) {
+  const tolerance = Math.abs(step) * 1e-6;
+  for (let extra = 0; extra <= 12; extra++) {
+    const written = ticks.map((value) => writeTick(value, step, extra));
+    if (extra === 12 || written.every((w, i) => Math.abs(w.shown - ticks[i]) <= tolerance)) {
+      return written.map((w) => w.text);
+    }
+  }
+  return ticks.map(String); // inalcanzable: el bucle siempre devuelve
+}
+
+/**
+ * Texto de una sola marca (ver formatTicks).
  * @param {number} value
  * @param {number} step separación entre marcas
  * @returns {string}
  */
 export function formatTick(value, step) {
-  if (value === 0) return '0';
-  const magnitude = Math.max(Math.abs(value), Math.abs(step));
-  if (magnitude >= 1e5 || magnitude < 1e-3) {
-    const exponent = Math.floor(Math.log10(Math.abs(value)) + 1e-12);
-    const mantissa = value / Math.pow(10, exponent);
-    const stepMantissa = step / Math.pow(10, exponent);
-    const decimals = Math.min(6, Math.max(0, -Math.floor(Math.log10(Math.abs(stepMantissa)) + 1e-9)));
-    const text = mantissa.toFixed(decimals).replace('.', ',').replace('-', '−');
-    return `${text}·10${superscript(exponent)}`;
-  }
-  const decimals = Math.min(8, Math.max(0, -Math.floor(Math.log10(Math.abs(step)) + 1e-9)));
-  return value.toFixed(decimals).replace('.', ',').replace('-', '−');
+  return formatTicks([value], step)[0];
 }
 
 /**

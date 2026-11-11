@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {
   steadyState,
   steadyPosition,
+  drivingForce,
   complexResponse,
   averagePower,
   halfPowerFrequencies,
@@ -256,9 +257,11 @@ test('con amortiguamiento pequeño la potencia tiende a una lorentziana', () => 
   close(lorentzianPower({ ...base, omega: base.omega0 }), averagePower({ ...base, omega: base.omega0 }), 1e-14);
 });
 
+// Principio: el factor de calidad es exactamente la amplificación en ω₀ respecto a la
+// respuesta estática, para cualquier amortiguamiento:
+//   A(ω₀)/A(0) = [F₀/(mγω₀)] / [F₀/(mω₀²)] = ω₀/γ.
 test('factor de calidad Q = ω₀/γ = amplificación en resonancia', () => {
-  close(qualityFactor(base), base.omega0 / base.gamma, 1e-15);
-  // A(ω₀)/A(0) = [F₀/(mγω₀)] / [F₀/(mω₀²)] = ω₀/γ.
+  assert.equal(qualityFactor({ gamma: 0.25, omega0: 2 }), 8); // 2/0,25, a mano
   const ratio = steadyState({ ...base, omega: base.omega0 }).amplitude / steadyState({ ...base, omega: 0 }).amplitude;
   close(ratio, qualityFactor(base), 1e-13);
 });
@@ -307,13 +310,28 @@ test('solución analítica: continua a través del amortiguamiento crítico', ()
 });
 
 // Principio: el transitorio decae como e^{−γt/2}; pasado un tiempo largo solo queda el
-// régimen estacionario, sean cuales sean las condiciones iniciales.
+// régimen estacionario, sean cuales sean las condiciones iniciales. En el caso
+// subamortiguado el transitorio es e^{−γt/2}·[C·cos(ω_d t) + (D/ω_d)·sen(ω_d t)], cuya
+// envolvente es e^{−γt/2}·√(C² + (D/ω_d)²). Las constantes se calculan aquí a partir de
+// las condiciones iniciales: C = x₀ − x_est(0), D = v₀ − v_est(0) + (γ/2)·C.
 test('el transitorio decae como e^{−γt/2}', () => {
-  const x = exactSolution(base, { x0: 3, v0: -2 });
-  for (const t of [10, 40, 100]) {
+  const x0 = 3;
+  const v0 = -2;
+  const x = exactSolution(base, { x0, v0 });
+  const { amplitude, phase } = steadyState(base);
+  const Cc = x0 - amplitude * Math.cos(phase);
+  const D = v0 - amplitude * base.omega * Math.sin(phase) + (base.gamma / 2) * Cc;
+  const omegaD = Math.sqrt(base.omega0 ** 2 - base.gamma ** 2 / 4);
+  const envelope = Math.hypot(Cc, D / omegaD);
+  let touched = 0;
+  for (let t = 0; t <= 100; t += 0.05) {
     const difference = Math.abs(x(t) - steadyPosition(base, t));
-    assert.ok(difference < 6 * Math.exp((-base.gamma * t) / 2), `t=${t}: diferencia ${difference}`);
+    const bound = envelope * Math.exp((-base.gamma * t) / 2);
+    assert.ok(difference <= bound * (1 + 1e-9) + 1e-13, `t=${t}: ${difference} supera la envolvente ${bound}`);
+    if (difference > 0.99 * bound) touched++;
   }
+  // La envolvente no es solo una cota holgada: el transitorio la toca en cada oscilación.
+  assert.ok(touched > 10, `el transitorio solo toca su envolvente ${touched} veces`);
   assert.ok(Math.abs(x(200) - steadyPosition(base, 200)) < 1e-12);
 });
 
@@ -402,6 +420,16 @@ test('con rozamiento, la energía perdida es la disipada: ΔE = −∫ mγv² dt
   const lost = energy(run.x[0], run.v[0], p) - energy(run.x[steps], run.v[steps], p);
   close(dissipated, lost, 1e-6);
   assert.ok(lost > 0);
+});
+
+// Definición de la fuerza externa: F(t) = F₀·cos(ωt). Máxima en t = 0, nula un cuarto de
+// periodo después y periódica con periodo 2π/ω.
+test('fuerza externa F₀·cos(ωt)', () => {
+  const period = (2 * Math.PI) / base.omega;
+  assert.equal(drivingForce(base, 0), base.F0);
+  assert.ok(Math.abs(drivingForce(base, period / 4)) < 1e-15 * base.F0);
+  close(drivingForce(base, period / 2), -base.F0, 1e-15);
+  close(drivingForce(base, 0.37 + period), drivingForce(base, 0.37), 1e-12);
 });
 
 // Principio: rk4Step es genérico. Caso con solución exacta conocida: dy/dt = −y, con

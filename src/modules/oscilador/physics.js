@@ -48,6 +48,16 @@ export function steadyState({ m, gamma, omega0, F0, omega }) {
 }
 
 /**
+ * Fuerza externa en el instante t: F(t) = F₀·cos(ωt).
+ * @param {{ F0: number, omega: number }} p
+ * @param {number} t
+ * @returns {number}
+ */
+export function drivingForce({ F0, omega }, t) {
+  return F0 * Math.cos(omega * t);
+}
+
+/**
  * Posición en el régimen estacionario en el instante t.
  * @param {OscillatorParams} p
  * @param {number} t
@@ -124,8 +134,8 @@ export function amplitudeResonanceFrequency({ gamma, omega0 }) {
 
 /**
  * Factor de calidad Q = ω₀/γ: número de radianes de oscilación libre en los que la
- * energía cae en un factor e. Con γ ≪ ω₀, es también la amplificación en resonancia
- * respecto a la respuesta estática.
+ * energía cae en un factor e (si γ ≪ ω₀). Es también, exactamente y para cualquier γ, la
+ * amplificación en ω₀ respecto a la respuesta estática: A(ω₀)/A(0) = Q.
  * @param {{ gamma: number, omega0: number }} p
  * @returns {number}
  */
@@ -169,7 +179,7 @@ export function rk4Step(f, t, y, dt) {
  * @returns {(t: number, y: number[]) => number[]}
  */
 export function derivative({ m, gamma, omega0, F0, omega }) {
-  return (t, [x, v]) => [v, (F0 / m) * Math.cos(omega * t) - gamma * v - omega0 * omega0 * x];
+  return (t, [x, v]) => [v, drivingForce({ F0, omega }, t) / m - gamma * v - omega0 * omega0 * x];
 }
 
 /**

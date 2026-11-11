@@ -107,7 +107,8 @@ export async function createModulePage(root, module, query, shell) {
       params: module.params,
       from: store.get(),
       to: target,
-      duration: animate ? undefined : 0,
+      // Duración: la del descriptor (transitionSeconds) o 1,5 s por defecto.
+      duration: animate ? module.transitionSeconds : 0,
       onFrame: (state) => store.replace(state, 'transition'),
       onDone: () => {
         transition = null;
@@ -244,6 +245,13 @@ export async function createModulePage(root, module, query, shell) {
   };
   const instance = await module.mount(stage, ctx);
   instance.update(store.get());
+
+  // Con el módulo ya en pantalla, y en un rato libre, se descargan la ficha y KaTeX:
+  // desde ese momento el módulo funciona entero aunque se pierda la conexión.
+  const idle = window.requestIdleCallback ?? ((/** @type {() => void} */ cb) => setTimeout(cb, 300));
+  idle(() => {
+    if (!destroyed) ficha.preload();
+  });
 
   // Varios cambios dentro del mismo fotograma producen una sola llamada a update.
   let updatePending = false;

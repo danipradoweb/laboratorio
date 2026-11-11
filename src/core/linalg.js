@@ -160,7 +160,8 @@ export function eigenvaluesTridiagonal(diag, off, count = diag.length) {
     throw new RangeError(`eigenvaluesTridiagonal: count debe estar entre 0 y ${n}`);
   }
   const [lo0, hi0] = gershgorinBounds(diag, off);
-  const scale = Math.max(Math.abs(lo0), Math.abs(hi0), Number.MIN_VALUE);
+  // Escala de la matriz. Si es la matriz nula se toma 1, para que `tiny` no sea 0.
+  const scale = Math.max(Math.abs(lo0), Math.abs(hi0)) || 1;
   const tiny = scale * Number.EPSILON;
   const values = new Float64Array(count);
   let lower = lo0 - tiny;
@@ -248,7 +249,12 @@ function solveShifted(diag, off, shift, b, tiny) {
  * autovectores, reortogonalizando entre sí los que pertenecen a autovalores muy
  * próximos (casi degenerados). Permite pedir solo los `count` estados más bajos con
  * coste O(count·n), que es lo que necesita, por ejemplo, la ecuación de Schrödinger
- * estacionaria discretizada en una malla de n puntos.
+ * estacionaria discretizada en una malla de n puntos. (Si muchos autovalores caen en un
+ * mismo grupo casi degenerado, la reortogonalización sube el coste a O(count²·n).)
+ *
+ * Límites: pensado para matrices con elementos de tamaño "razonable"; con elementos
+ * mayores que ~1e150 o menores que ~1e-140 en valor absoluto los cuadrados intermedios
+ * desbordan. Si hace falta, cambia antes de unidades.
  *
  * Los autovectores salen normalizados (Σ vᵢ² = 1). El signo de un autovector es
  * arbitrario; aquí se fija para que el resultado sea reproducible: la suma
@@ -264,7 +270,8 @@ export function eigTridiagonal(diag, off, { count = diag.length } = {}) {
   const n = diag.length;
   const values = eigenvaluesTridiagonal(diag, off, count);
   const [lo0, hi0] = gershgorinBounds(diag, off);
-  const scale = Math.max(Math.abs(lo0), Math.abs(hi0), Number.MIN_VALUE);
+  // Escala de la matriz. Si es la matriz nula se toma 1, para que `tiny` no sea 0.
+  const scale = Math.max(Math.abs(lo0), Math.abs(hi0)) || 1;
   const tiny = scale * Number.EPSILON;
   // Dos autovalores más cercanos que esto se tratan como un grupo casi degenerado
   // (mismo criterio que la rutina DSTEIN de LAPACK: 1e-3·‖T‖).

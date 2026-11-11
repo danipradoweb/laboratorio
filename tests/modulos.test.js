@@ -66,6 +66,12 @@ for (const m of modules) {
     assert.equal(typeof m.mount, 'function', 'mount debe ser una función');
     assert.ok(Array.isArray(m.presets), 'presets debe ser una lista (puede estar vacía)');
     assert.ok(Array.isArray(m.tours), 'tours debe ser una lista (puede estar vacía)');
+    if (m.transitionSeconds !== undefined) {
+      assert.ok(
+        Number.isFinite(m.transitionSeconds) && m.transitionSeconds >= 0,
+        'transitionSeconds debe ser un número de segundos ≥ 0',
+      );
+    }
   });
 
   test(`[${m.id}] params bien formados`, () => {

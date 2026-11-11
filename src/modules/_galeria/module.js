@@ -62,6 +62,8 @@ const descriptor = {
     },
   ],
   animated: true,
+  // Transición algo más lenta que la de por defecto (1,5 s), para probar que es configurable.
+  transitionSeconds: 2,
   mount,
 };
 

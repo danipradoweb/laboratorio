@@ -84,6 +84,18 @@ test('forma polar: ida y vuelta, y suma de argumentos', () => {
   assert.equal(C.arg(C.complex(-1, 0)), Math.PI);
 });
 
+// Principio: en la rama principal, un real negativo tiene fase +π tanto si su parte
+// imaginaria es +0 como si es −0 (en coma flotante existen los dos ceros, y conj de un
+// real produce −0). Así arg, log y sqrt eligen la misma rama: √(−1) = +i = e^{log(−1)/2}.
+test('eje real negativo: fase +π también con cero negativo', () => {
+  const minusOne = C.conj(C.complex(-1, 0)); // { re: −1, im: −0 }
+  assert.ok(Object.is(minusOne.im, -0));
+  assert.equal(C.arg(minusOne), Math.PI);
+  closeC(C.log(minusOne), C.complex(0, Math.PI));
+  closeC(C.sqrt(minusOne), C.I);
+  closeC(C.exp(C.scale(C.log(minusOne), 0.5)), C.sqrt(minusOne));
+});
+
 // e^{a+b} = e^a·e^b, y log es la inversa de exp en la rama principal.
 test('exponencial y logaritmo', () => {
   for (const a of samples) {

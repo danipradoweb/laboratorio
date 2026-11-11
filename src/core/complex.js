@@ -102,7 +102,10 @@ export function abs2(a) {
  * @returns {number}
  */
 export function arg(a) {
-  return Math.atan2(a.im, a.re);
+  // "+ 0" convierte un −0 en +0. Sin ello, atan2(−0, −1) = −π: un real negativo cuya
+  // parte imaginaria es un cero negativo (lo produce, por ejemplo, conj) tendría fase −π
+  // en vez de +π y se saldría del intervalo documentado.
+  return Math.atan2(a.im + 0, a.re);
 }
 
 /**
@@ -126,7 +129,7 @@ export function log(a) {
 
 /**
  * Raíz cuadrada principal (parte real ≥ 0). El corte de rama está en el eje real
- * negativo: sqrt(−1 + 0i) = +i.
+ * negativo: sqrt(−1 + 0i) = +i. Desborda (devuelve Infinity) si |a| supera ~9e307.
  * @param {Complex} a
  * @returns {Complex}
  */

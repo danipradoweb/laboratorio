@@ -16,9 +16,11 @@ import { createPlot } from '../../ui/plot2d.js';
 import { formatEs } from '../../ui/format.js';
 import {
   averagePower,
+  drivingForce,
   halfPowerFrequencies,
   lorentzianPower,
   simulate,
+  steadyPosition,
   steadyState,
 } from './physics.js';
 
@@ -38,6 +40,27 @@ const SECONDS_PER_PERIOD = 1.5;
 /** Extremo superior del eje de frecuencias (el máximo del parámetro omega). */
 const OMEGA_MAX = 3;
 const OMEGA_SAMPLES = 600;
+/** Muestras adicionales alrededor de ω₀, donde las curvas tienen un pico estrecho si el
+ *  amortiguamiento es pequeño. */
+const PEAK_SAMPLES = 240;
+
+/**
+ * Frecuencias en las que se evalúan las curvas: una malla uniforme en [0, OMEGA_MAX] más
+ * una malla fina en ω₀ ± 6γ. Sin el refuerzo, con γ = 0,02 la malla uniforme (paso 0,005)
+ * dibujaría el pico un 2–3 % más bajo de lo que es.
+ * @param {number} omega0
+ * @param {number} gamma
+ * @returns {Float64Array} frecuencias ordenadas
+ */
+function frequencyGrid(omega0, gamma) {
+  /** @type {number[]} */
+  const values = [];
+  for (let i = 0; i < OMEGA_SAMPLES; i++) values.push((OMEGA_MAX * i) / (OMEGA_SAMPLES - 1));
+  const lo = Math.max(0, omega0 - 6 * gamma);
+  const hi = Math.min(OMEGA_MAX, omega0 + 6 * gamma);
+  for (let i = 0; i < PEAK_SAMPLES; i++) values.push(lo + ((hi - lo) * i) / (PEAK_SAMPLES - 1));
+  return Float64Array.from(values).sort();
+}
 
 /**
  * @param {HTMLElement} container
@@ -89,8 +112,6 @@ export function mount(container, ctx) {
     onPick: pickOmega,
   });
 
-  const omegas = Float64Array.from({ length: OMEGA_SAMPLES }, (_, i) => (OMEGA_MAX * i) / (OMEGA_SAMPLES - 1));
-
   /** Datos de la evolución temporal del último estado (se reutilizan en cada fotograma). */
   /** @type {{ periods: Float64Array, force: Float64Array, steady: Float64Array, driven: Float64Array | null, yMax: number, phase: number } | null} */
   let timeData = null;
@@ -105,6 +126,7 @@ export function mount(container, ctx) {
     const { amplitude, phase } = steadyState(p);
     const degrees = (phase * 180) / Math.PI;
     const power = averagePower(p);
+    const omegas = frequencyGrid(p.omega0, p.gamma);
 
     // Línea de trazos fina en ω₀, común a las tres gráficas.
     const naturalLine = { x: 1, color: ctx.theme.colors().textSoft, dash: [2, 4], label: 'ω₀' };
@@ -162,8 +184,9 @@ export function mount(container, ctx) {
     for (let i = 0; i <= steps; i++) {
       const t = i * dt;
       periods[i] = t / period;
-      force[i] = Math.cos(p.omega * t);
-      steady[i] = Math.cos(p.omega * t - phase);
+      // Cada magnitud dividida por su amplitud, para comparar fases.
+      force[i] = drivingForce(p, t) / p.F0;
+      steady[i] = steadyPosition(p, t) / amplitude;
     }
     /** @type {Float64Array | null} */
     let driven = null;
@@ -174,7 +197,7 @@ export function mount(container, ctx) {
       for (const v of driven) yMax = Math.max(yMax, Math.abs(v));
     }
     timeData = { periods, force, steady, driven, yMax, phase };
-    timePanel.title.textContent = `Evolución temporal · la respuesta va ${formatEs(degrees, 0)}° por detrás de la fuerza`;
+    timePanel.title.textContent = `Evolución temporal · en régimen estacionario la respuesta va ${formatEs(degrees, 0)}° por detrás`;
     renderTime();
   }
 
@@ -201,7 +224,7 @@ export function mount(container, ctx) {
         { x: [periods[index]], y: [response[index]], color: 0, points: true, line: false },
       ],
       // Del máximo de la fuerza al máximo de la respuesta estacionaria: el desfase.
-      bands: [{ x1: PHASE_MARK_PERIOD, x2: PHASE_MARK_PERIOD + lag, color: 4, opacity: 0.35, label: 'Desfase δ' }],
+      bands: [{ x1: PHASE_MARK_PERIOD, x2: PHASE_MARK_PERIOD + lag, color: 4, opacity: 0.35, label: 'Desfase δ (estacionario)' }],
       vlines: [{ x: periods[index], color: ctx.theme.colors().textSoft, dash: [2, 3] }],
     });
   }
