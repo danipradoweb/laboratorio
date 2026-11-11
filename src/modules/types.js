@@ -54,7 +54,8 @@
 /**
  * Lo que devuelve `mount`.
  * @typedef {object} ModuleInstance
- * @property {(state: State) => void} update se llama al montar y en cada cambio de estado
+ * @property {(state: State) => void} update se llama al montar, en cada cambio de estado
+ *   y al cambiar el tema; debe redibujar todas las vistas con ese estado
  * @property {() => void} destroy libera gráficas, temporizadores y suscripciones
  */
 

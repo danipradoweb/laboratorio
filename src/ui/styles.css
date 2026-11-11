@@ -506,6 +506,26 @@ h3 {
   opacity: 1;
 }
 
+/* Leyenda de la rueda de fase (src/ui/colormaps.js). */
+.phase-wheel {
+  flex: none;
+  width: 8.5em;
+  margin: 0;
+  font-size: 0.8em;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.phase-wheel-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.phase-wheel figcaption {
+  line-height: 1.25;
+}
+
 /* Visor 3D (src/ui/view3d.js). */
 .view3d {
   position: absolute;
@@ -561,8 +581,24 @@ h3 {
 /* ----------------------------------------------------------------- Galería de componentes */
 
 .galeria-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    '. . .'
+    'tres-d tres-d .';
+}
+
+.galeria-fase {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.galeria-fase-plot {
+  flex: 1;
+  align-self: stretch;
+  min-width: 0;
+  position: relative;
 }
 
 .galeria-readout {

@@ -271,7 +271,7 @@ export function createPlot(container, options = {}) {
     const xScale = linearScale(xRange[0], xRange[1], plotLeft, plotRight);
     const yScale = linearScale(yRange[0], yRange[1], plotBottom, plotTop);
     frame = { x: xScale, y: yScale, left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
-    const xTicks = niceTicks(xRange[0], xRange[1], Math.min(10, Math.max(2, plotW / (fs * 5.5))));
+    const xTicks = niceTicks(xRange[0], xRange[1], Math.min(10, Math.max(3, plotW / (fs * 4.5))));
 
     // Todo lo que representa datos se recorta al rectángulo de la gráfica.
     g.save();
@@ -440,9 +440,11 @@ export function createPlot(container, options = {}) {
     g.fillStyle = colors.text;
     g.font = labelFont;
     if (options.xLabel) {
+      // Justo debajo de las marcas (y no pegado al borde inferior), para que siga junto
+      // a la gráfica cuando equalAspect la hace más baja que su contenedor.
       g.textAlign = 'center';
-      g.textBaseline = 'bottom';
-      g.fillText(options.xLabel, (plotLeft + plotRight) / 2, height - fs * 0.35);
+      g.textBaseline = 'top';
+      g.fillText(options.xLabel, (plotLeft + plotRight) / 2, plotBottom + fs * 1.6);
     }
     if (options.yLabel) {
       g.save();

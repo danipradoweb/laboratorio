@@ -14,6 +14,7 @@ import { el } from './dom.js';
 import { buildControls } from './controls.js';
 import { buildHash, createStore, stateFromQuery } from '../core/state.js';
 import { createClock } from '../core/clock.js';
+import { onThemeChange } from '../core/theme.js';
 
 /**
  * @typedef {import('../modules/types.js').ModuleDescriptor} ModuleDescriptor
@@ -137,6 +138,9 @@ export async function createModulePage(root, module, query, shell) {
     scheduleUpdate();
     writeUrlSoon();
   });
+  // Al cambiar el tema se vuelve a llamar a update: las vistas que eligen colores
+  // según el fondo (coloreado de fase) se rehacen sin que el módulo tenga que escuchar.
+  const offTheme = onThemeChange(scheduleUpdate);
 
   return {
     module,
@@ -155,6 +159,7 @@ export async function createModulePage(root, module, query, shell) {
       destroyed = true;
       clearTimeout(urlTimer);
       unsubscribe();
+      offTheme();
       clock.destroy();
       controls.destroy();
       instance.destroy();

@@ -5,22 +5,13 @@ import { el } from '../../ui/dom.js';
 import { addPanel, createPanelGrid } from '../../ui/panels.js';
 import { createPlot } from '../../ui/plot2d.js';
 import { createView3D } from '../../ui/view3d.js';
+import { colorizeComplex, createPhaseWheel, getColormap, phaseColor, themeBackground } from '../../ui/colormaps.js';
 import { gaussianPacket, sampleGrid } from './physics.js';
 
 /** Semianchura de la región dibujada y resolución de las mallas. */
 const HALF = 4;
 const GRID = 96;
 const SAMPLES = 400;
-
-/**
- * Mapa de grises provisional (los mapas de color de verdad llegan con colormaps.js).
- * @param {number} t
- * @returns {[number, number, number]}
- */
-function gray(t) {
-  const v = Math.round(255 * t);
-  return [v, v, v];
-}
 
 /**
  * @param {HTMLElement} container
@@ -49,14 +40,22 @@ export async function mount(container, ctx) {
     exportName: 'galeria-mapa',
   });
 
-  // 3) Visor 3D: la altura es |ψ|. createView3D es asíncrona (carga three.js).
-  const view3dPanel = addPanel(grid, 'Visor 3D: superficie |ψ(x, y)| (arrastra para girar)');
+  // 3) Coloreado de fase: tono = arg ψ, brillo = |ψ|, con la rueda de fase como leyenda.
+  const phasePanel = addPanel(grid, 'Coloreado de fase de ψ(x, y)');
+  phasePanel.body.classList.add('galeria-fase');
+  const phasePlotBox = el('div', { class: 'galeria-fase-plot' });
+  phasePanel.body.append(phasePlotBox);
+  const phasePlot = createPlot(phasePlotBox, { xLabel: 'x', yLabel: 'y', equalAspect: true, exportName: 'galeria-fase' });
+  const wheel = createPhaseWheel(phasePanel.body);
+
+  // 4) Visor 3D: la altura es |ψ| y el tono la fase. createView3D es asíncrona (carga three.js).
+  const view3dPanel = addPanel(grid, 'Visor 3D: altura |ψ|, tono arg ψ (arrastra para girar)', { area: 'tres-d' });
   const view3d = await createView3D(view3dPanel.body, { axisLabels: { z: '|ψ|' }, axisLength: 1.2 });
   const surface = view3d?.addSurface({ nx: GRID, ny: GRID, xRange: [-1, 1], yRange: [-1, 1] });
   const heights = new Float32Array(GRID * GRID);
   const surfaceColors = new Uint8ClampedArray(GRID * GRID * 3);
 
-  // 4) Estado actual, como texto.
+  // 5) Estado actual, como texto.
   const statePanel = addPanel(grid, 'Estado');
   const readout = el('pre', { class: 'galeria-readout' });
   statePanel.body.append(readout);
@@ -90,15 +89,28 @@ export async function mount(container, ctx) {
           values: field.re,
           xRange: [-HALF, HALF],
           yRange: [-HALF, HALF],
-          colormap: gray,
+          colormap: getColormap(String(state.colormap)),
           symmetric: true,
           label: 'Re ψ',
         },
       });
 
+      const background = themeBackground();
+      phasePlot.draw({
+        image: {
+          nx: GRID,
+          ny: GRID,
+          rgba: colorizeComplex(field.re, field.im, { maxAbs: 1, background }),
+          xRange: [-HALF, HALF],
+          yRange: [-HALF, HALF],
+        },
+      });
+
       for (let i = 0; i < GRID * GRID; i++) {
         heights[i] = Math.hypot(field.re[i], field.im[i]);
-        const [r, g, b] = gray(0.25 + 0.75 * heights[i]);
+        // En 3D el módulo ya se ve en la altura: se deja un brillo mínimo para que la
+        // parte plana de la superficie no desaparezca contra el fondo.
+        const [r, g, b] = phaseColor(Math.atan2(field.im[i], field.re[i]), 0.35 + 0.65 * heights[i], background);
         surfaceColors[3 * i] = r;
         surfaceColors[3 * i + 1] = g;
         surfaceColors[3 * i + 2] = b;
@@ -110,6 +122,8 @@ export async function mount(container, ctx) {
     destroy() {
       linePlot.destroy();
       mapPlot.destroy();
+      phasePlot.destroy();
+      wheel.destroy();
       view3d?.destroy();
       grid.remove();
     },

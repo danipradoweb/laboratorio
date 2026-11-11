@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 5b (view3d.js: visor 3D)
-- Siguiente paso: 6 (`src/ui/colormaps.js`: rueda de fase, mapas secuenciales y divergente, leyendas)
+- Último paso terminado: 6 (colormaps.js: rueda de fase y mapas de color)
+- Siguiente paso: 7 (`src/core/presets.js` y `src/core/tours.js`; `clock.js` ya está hecho)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -31,7 +31,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 4 | Interfaz: `theme.js`, `controls.js`, estilos, shell y enrutado en `app.js`, `registry.js`, módulo oculto `_galeria` | hecho |
 | 5a | `plot2d.js` | hecho |
 | 5b | `view3d.js` | hecho |
-| 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | pendiente |
+| 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | hecho |
 | 7 | `presets.js`, `tours.js`, `clock.js` | pendiente |
 | 8 | `presentation.js` | pendiente |
 | 9 | `markdown.js`, `ficha.js` | pendiente |
@@ -52,6 +52,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | typescript | 7.0.2 | solo `npm run check` (`tsc --noEmit`) |
 | @types/three | 0.187.0 | solo tipos |
 | @types/node | 22.20.5 | solo tipos |
+| culori | 4.0.2 | solo `tools/oklab-fixture.mjs` (referencia de OKLab para tests) |
 
 Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponibles.
 
@@ -73,6 +74,10 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Trazador 2D en dos archivos**: `src/ui/plot-math.js` (marcas 1-2-5, formato con coma decimal, escalas; puro y testeado en Node) y `src/ui/plot2d.js` (dibujo en canvas). `src/ui/panels.js` crea los paneles con título donde los módulos colocan sus vistas.
 - 2026-11-11. **La leyenda de las gráficas va en una fila encima del área de datos**, no dentro: dentro tapaba curvas y etiquetas de marcadores, y así no hay que elegir esquina en cada gráfica.
 - 2026-11-11. **Tamaño de letra de las gráficas = `font-size` del contenedor**: el modo presentación solo tendrá que cambiar ese tamaño y llamar a `refreshPlots()`.
+- 2026-11-11. **Rueda de fase en OKLCH con L = 0,72 y C = 0,12** (fase 0 = rojo, tono 30°). Son, con margen, los mayores valores que caben en sRGB para todos los tonos tanto al fundir a negro como a blanco (calculado con culori). Colores algo apagados a cambio de uniformidad perceptual. El fundido al fondo es lineal en OKLab: negro en tema oscuro, blanco en tema claro.
+- 2026-11-11. **Mapa divergente = RdBu invertido de ColorBrewer** (vía matplotlib, Apache 2.0), no `vik`: al medirlo, `vik` tiene una asimetría de luminosidad de hasta 0,09 (L de OKLab) entre +v y −v; RdBu_r, 0,02. El test falló con `vik` y se investigó en vez de relajar el umbral. Secuenciales: viridis y magma (matplotlib, CC0). Tablas generadas con `tools/colormaps.py` en `src/ui/colormap-data.js`.
+- 2026-11-11. **`culori` 4.0.2 como devDependency** solo para `tools/oklab-fixture.mjs`, que genera el fixture con el que se comprueban las matrices OKLab de `colormaps.js`.
+- 2026-11-11. **`update(state)` se vuelve a llamar al cambiar el tema**, para que las vistas coloreadas según el fondo se rehagan sin código propio en cada módulo.
 
 ## Problemas abiertos
 
