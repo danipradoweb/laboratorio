@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 2c (fft.js)
-- Siguiente paso: 2d (`src/core/linalg.js`)
+- Último paso terminado: 2d (linalg.js)
+- Siguiente paso: 2e (`src/core/interp.js`)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -25,7 +25,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 2a | `units.js` | hecho |
 | 2b | `complex.js` | hecho |
 | 2c | `fft.js` | hecho |
-| 2d | `linalg.js` | pendiente |
+| 2d | `linalg.js` | hecho |
 | 2e | `interp.js` | pendiente |
 | 3 | `state.js` (estado ↔ URL) | pendiente |
 | 4 | Interfaz: `theme.js`, `controls.js`, estilos, shell y enrutado en `app.js`, `registry.js`, módulo oculto `_galeria` | pendiente |
