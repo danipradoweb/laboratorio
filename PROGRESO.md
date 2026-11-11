@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 11 (plantilla de módulo)
-- Siguiente paso: 12a (oscilador: `src/modules/oscilador/physics.js` y `tests/oscilador.test.js`)
+- Último paso terminado: 12a (oscilador: física, tests, descriptor y ficha)
+- Siguiente paso: 12b (oscilador: vistas enlazadas en `src/modules/oscilador/view.js`)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -37,7 +37,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 9 | `markdown.js`, `ficha.js` | hecho |
 | 10 | Portada | hecho |
 | 11 | Plantilla `_plantilla/` | hecho |
-| 12a | Oscilador: física y tests | pendiente |
+| 12a | Oscilador: física y tests | hecho |
 | 12b | Oscilador: vistas | pendiente |
 | 12c | Oscilador: presets, recorrido, ficha | pendiente |
 | 13 | Prueba de humo completa | pendiente |
@@ -91,6 +91,10 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **La plantilla es un módulo que funciona** (`#/_plantilla`, oculto: ondas estacionarias en una cuerda) y está registrada, de modo que el test de contrato y la prueba de humo la ejercitan y no puede quedarse obsoleta. `LEEME.md` da los ocho pasos para crear un módulo y una tabla de errores frecuentes.
 - 2026-11-11. **`tests/modulos.test.js` vigila la física pura**: en `physics.js` no puede aparecer (fuera de comentarios) `document`, `window`, `canvas`… ni las mantisas de las constantes CODATA más comunes.
 - 2026-11-11. **Series con puntos** en el trazador (`points: true`, `line: false`) para datos discretos.
+- 2026-11-11. **Oscilador en unidades adimensionales en la interfaz** (m = ω₀ = F₀ = 1; parámetros ω/ω₀ y γ/ω₀). `physics.js` admite cualquier sistema coherente y expone `complexResponse` con el convenio e^{−iωt} (el mismo en que k > 0 significa absorción), pensando en el modelo de Lorentz del encargo 02.
+- 2026-11-11. **La anchura a media altura de la potencia es exactamente γ para cualquier amortiguamiento**, no solo en el límite pequeño que pide el encargo (ω± = √(ω₀² + γ²/4) ± γ/2). El test lo mide por bisección para γ/ω₀ entre 7e-4 y 3,3; lo que sí es una aproximación de γ ≪ ω₀ es la forma lorentziana, y también se comprueba (error ∝ γ/ω₀).
+- 2026-11-11. **Energía con γ = 0**: RK4 no conserva la energía exactamente; se comprueba contra la deriva teórica (factor 1 − θ⁶/72 + θ⁸/576 por paso, θ = ω₀·dt) con tolerancia 1e-10, además de acotar la pérdida.
+- 2026-11-11. **Tres tests del oscilador fallaron al escribirlos y se investigaron**: los tres por cómo medía el test, no por la física. (1) Orden de RK4: el error en un instante aislado cambia de signo con pasos gruesos; se mide el error máximo de la trayectoria (razón 16,0). (2) Máximo de amplitud: el barrido de 1e-4 no resolvía un pico estrecho a 1e-7; se afina con búsqueda ternaria (1e-12). (3) Comparación relativa de un valor que es exactamente 0; se usa tolerancia absoluta referida a la amplitud. No se cambió ningún valor esperado.
 
 ## Problemas abiertos
 
