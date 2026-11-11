@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 12c (oscilador completo: recorrido, ficha y miniatura)
-- Siguiente paso: 13 (repaso final de la prueba de humo)
+- Último paso terminado: 13 (prueba de humo completa)
+- Siguiente paso: 14 (revisión con subagente, árbol de `docs/ARQUITECTURA.md` al día, cierre del encargo)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -40,7 +40,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 12a | Oscilador: física y tests | hecho |
 | 12b | Oscilador: vistas | hecho |
 | 12c | Oscilador: presets, recorrido, ficha | hecho |
-| 13 | Prueba de humo completa | pendiente |
+| 13 | Prueba de humo completa | hecho |
 | 14 | Revisión con subagente, árbol de `ARQUITECTURA.md` al día, cierre | pendiente |
 
 ## Versiones fijadas
@@ -100,6 +100,8 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Paso de integración de la vista**: 60 pasos de RK4 por cada periodo (el más corto entre el de la fuerza y el propio), suficiente para que el error sea muy inferior al grosor de la línea incluso con ω = 0,05 ω₀.
 - 2026-11-11. **Añadidos al trazador**: marcas fijas (`xTicks`, `yTicks`), apilado de etiquetas de marcadores verticales que se pisarían y `src/ui/format.js` (`formatEs`, números con coma decimal).
 - 2026-11-11. **Recorrido «Qué significa resonancia»** (5 pasos, uno por preset): manda el muelle / 90° y máxima potencia / manda la inercia / poco rozamiento (Q, anchura γ) / mucho rozamiento (sin máximo de amplitud si γ ≥ √2·ω₀).
+- 2026-11-11. **Prueba de humo completa** (`tests/smoke.test.js`, dentro de `npm test`; se omite sola si no hay Playwright o con `SKIP_SMOKE=1`): portada y tarjetas; cada módulo en los dos temas, en pantalla estrecha y con su ficha; URL ↔ controles; clic en gráficas; PNG; presets con transición y cancelación; recorridos; reloj; modo presentación a 1920 × 1080 y en 4:3; navegación entre páginas. Cualquier error de consola, excepción o petición fallida hace fallar el test. Capturas en `capturas/` (no versionadas).
+- 2026-11-11. **La prueba de pantalla estrecha encontró un fallo real**: la barra superior no cabía en 390 px y desbordaba la página; ahora salta de línea y omite el título del módulo.
 
 ## Problemas abiertos
 

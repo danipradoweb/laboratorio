@@ -401,3 +401,42 @@ test('oscilador: recorrido «Qué significa resonancia» en modo presentación',
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Navegación: de la portada a un módulo por su tarjeta, vuelta a la portada, y de un
+// módulo a otro. Cada cambio destruye el módulo anterior (gráficas, WebGL, reloj): no
+// debe quedar ningún error ni ningún resto en pantalla.
+test('navegación entre portada y módulos sin errores ni restos', { skip }, async () => {
+  const { page, errors, close } = await openPage('');
+  await page.locator('.card[data-module="oscilador"]').click();
+  await page.waitForSelector('html[data-ready="true"][data-route="oscilador"]');
+  assert.equal(await page.locator('.oscilador-grid canvas').count(), 4);
+  await page.locator('.brand').click();
+  await page.waitForSelector('.cover');
+  assert.equal(await page.locator('canvas').count(), 0);
+  assert.equal(await page.locator('.page-actions button').count(), 0);
+  for (const id of ['_galeria', '_plantilla', 'oscilador', '_galeria']) {
+    await page.evaluate((/** @type {string} */ hash) => (location.hash = hash), `#/${id}`);
+    await page.waitForSelector(`html[data-ready="true"][data-route="${id}"]`);
+    assert.equal(await page.locator('.module-page').count(), 1);
+    assert.equal(await page.locator('.module-page').getAttribute('data-module'), id);
+  }
+  // El botón "atrás" del navegador vuelve al módulo anterior.
+  await page.goBack();
+  await page.waitForSelector('html[data-ready="true"][data-route="oscilador"]');
+  await close();
+  assert.deepEqual(errors, []);
+});
+
+// Pantalla estrecha (móvil): todo se apila en una columna, sin errores y sin que la
+// página se desborde hacia los lados.
+for (const m of modules) {
+  test(`[${m.id}] carga en una pantalla estrecha (390 px)`, { skip }, async () => {
+    const { page, errors, close } = await openPage(`#/${m.id}`, { width: 390, height: 800 });
+    await page.waitForTimeout(300);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(overflow <= 1, `la página se desborda ${overflow} px a lo ancho`);
+    await page.screenshot({ path: join(shots, `${m.id}-movil.png`), fullPage: true });
+    await close();
+    assert.deepEqual(errors, []);
+  });
+}

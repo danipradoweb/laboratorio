@@ -802,6 +802,25 @@ h3 {
   body {
     height: auto;
   }
+  /* La barra superior pasa a varias líneas: el título del módulo se omite y los
+     botones saltan de línea si no caben. */
+  .topbar {
+    height: auto;
+    min-height: var(--topbar-h);
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+    padding: 0.4rem 0.75rem;
+  }
+  .topbar-title {
+    display: none;
+  }
+  .topbar-actions,
+  .page-actions {
+    flex-wrap: wrap;
+  }
+  .stage-frame {
+    padding: 0.5rem;
+  }
   .module-page,
   .module-page[data-panel='closed'] {
     height: auto;
