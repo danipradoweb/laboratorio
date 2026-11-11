@@ -141,3 +141,24 @@ test('controles, estado y URL están sincronizados', { skip }, async () => {
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Trazador 2D: un clic en la gráfica cambia el estado (vistas enlazadas) y el botón PNG
+// descarga una imagen.
+test('plot2d: clic en la gráfica y exportación a PNG', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/_galeria');
+  const canvas = page.locator('.galeria-grid .panel').first().locator('canvas');
+  const box = await canvas.boundingBox();
+  // Clic a tres cuartos del ancho: x > 0, así que σ cambia a un valor distinto de 1.
+  await page.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.5);
+  await page.waitForFunction(() => !location.hash.includes('sigma=1&'));
+  const sigma = Number(new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('sigma'));
+  assert.ok(sigma > 1 && sigma <= 2, `σ = ${sigma}`);
+
+  const downloadPromise = page.waitForEvent('download');
+  await canvas.hover();
+  await page.locator('.galeria-grid .panel').first().locator('.plot-export').click();
+  const download = await downloadPromise;
+  assert.equal(download.suggestedFilename(), 'galeria-series.png');
+  await close();
+  assert.deepEqual(errors, []);
+});

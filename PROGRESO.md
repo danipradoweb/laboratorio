@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 4 (interfaz base: temas, controles, enrutado, registro, galería)
-- Siguiente paso: 5a (`src/ui/plot2d.js`: trazador Canvas 2D)
+- Último paso terminado: 5a (plot2d.js: trazador Canvas 2D)
+- Siguiente paso: 5b (`src/ui/view3d.js`: envoltorio de three.js)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -29,7 +29,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 2e | `interp.js` | hecho |
 | 3 | `state.js` (estado ↔ URL) | hecho |
 | 4 | Interfaz: `theme.js`, `controls.js`, estilos, shell y enrutado en `app.js`, `registry.js`, módulo oculto `_galeria` | hecho |
-| 5a | `plot2d.js` | pendiente |
+| 5a | `plot2d.js` | hecho |
 | 5b | `view3d.js` | pendiente |
 | 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | pendiente |
 | 7 | `presets.js`, `tours.js`, `clock.js` | pendiente |
@@ -70,6 +70,9 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **`update(state)` se agrupa por fotograma**: varios cambios de estado en el mismo fotograma producen una sola llamada a la vista.
 - 2026-11-11. **`store.set` recorta los números fuera de rango** (interacción), mientras que la URL los ignora con aviso (como pide la arquitectura).
 - 2026-11-11. **Módulo oculto `_galeria`** (`hidden: true`, `#/_galeria`): banco de pruebas visual de los servicios comunes; lo usa la prueba de humo.
+- 2026-11-11. **Trazador 2D en dos archivos**: `src/ui/plot-math.js` (marcas 1-2-5, formato con coma decimal, escalas; puro y testeado en Node) y `src/ui/plot2d.js` (dibujo en canvas). `src/ui/panels.js` crea los paneles con título donde los módulos colocan sus vistas.
+- 2026-11-11. **La leyenda de las gráficas va en una fila encima del área de datos**, no dentro: dentro tapaba curvas y etiquetas de marcadores, y así no hay que elegir esquina en cada gráfica.
+- 2026-11-11. **Tamaño de letra de las gráficas = `font-size` del contenedor**: el modo presentación solo tendrá que cambiar ese tamaño y llamar a `refreshPlots()`.
 
 ## Problemas abiertos
 

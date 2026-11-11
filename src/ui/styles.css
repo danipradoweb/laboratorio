@@ -471,6 +471,41 @@ h3 {
   position: relative;
 }
 
+/* Gráficas (src/ui/plot2d.js): el lienzo ocupa todo su contenedor. */
+.plot {
+  position: absolute;
+  inset: 0;
+}
+
+.plot-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.plot-export {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  padding: 0.05rem 0.4rem;
+  font: inherit;
+  font-size: 0.7rem;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.plot:hover .plot-export,
+.plot-export:focus-visible {
+  opacity: 1;
+}
+
 /* Pantallas estrechas: el panel lateral pasa arriba y los paneles se apilan. */
 @media (max-width: 760px) {
   html,
@@ -510,6 +545,11 @@ h3 {
 }
 
 /* ----------------------------------------------------------------- Galería de componentes */
+
+.galeria-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
 
 .galeria-readout {
   margin: 0;
