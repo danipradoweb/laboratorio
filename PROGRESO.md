@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 12a (oscilador: física, tests, descriptor y ficha)
-- Siguiente paso: 12b (oscilador: vistas enlazadas en `src/modules/oscilador/view.js`)
+- Último paso terminado: 12b (oscilador: vistas enlazadas)
+- Siguiente paso: 12c (oscilador: recorrido «Qué significa resonancia», miniatura, repaso de la ficha)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -38,7 +38,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 10 | Portada | hecho |
 | 11 | Plantilla `_plantilla/` | hecho |
 | 12a | Oscilador: física y tests | hecho |
-| 12b | Oscilador: vistas | pendiente |
+| 12b | Oscilador: vistas | hecho |
 | 12c | Oscilador: presets, recorrido, ficha | pendiente |
 | 13 | Prueba de humo completa | pendiente |
 | 14 | Revisión con subagente, árbol de `ARQUITECTURA.md` al día, cierre | pendiente |
@@ -95,6 +95,10 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **La anchura a media altura de la potencia es exactamente γ para cualquier amortiguamiento**, no solo en el límite pequeño que pide el encargo (ω± = √(ω₀² + γ²/4) ± γ/2). El test lo mide por bisección para γ/ω₀ entre 7e-4 y 3,3; lo que sí es una aproximación de γ ≪ ω₀ es la forma lorentziana, y también se comprueba (error ∝ γ/ω₀).
 - 2026-11-11. **Energía con γ = 0**: RK4 no conserva la energía exactamente; se comprueba contra la deriva teórica (factor 1 − θ⁶/72 + θ⁸/576 por paso, θ = ω₀·dt) con tolerancia 1e-10, además de acotar la pérdida.
 - 2026-11-11. **Tres tests del oscilador fallaron al escribirlos y se investigaron**: los tres por cómo medía el test, no por la física. (1) Orden de RK4: el error en un instante aislado cambia de signo con pasos gruesos; se mide el error máximo de la trayectoria (razón 16,0). (2) Máximo de amplitud: el barrido de 1e-4 no resolvía un pico estrecho a 1e-7; se afina con búsqueda ternaria (1e-12). (3) Comparación relativa de un valor que es exactamente 0; se usa tolerancia absoluta referida a la amplitud. No se cambió ningún valor esperado.
+- 2026-11-11. **Vistas del oscilador en rejilla 2 × 2**: tiempo y potencia a la izquierda, amplitud y desfase a la derecha (las dos últimas comparten el eje ω). Las tres gráficas en función de ω llevan un marcador en la ω actual y una línea de trazos en ω₀, y un clic o arrastre en cualquiera fija ω. Los títulos de los paneles muestran los valores numéricos (A, δ, % de la potencia máxima).
+- 2026-11-11. **En la evolución temporal, fuerza y posición van normalizadas** (F/F₀ y x/A, con A la amplitud estacionaria) para comparar fases; el tamaño real de la respuesta está en la gráfica de amplitud. La ficha lo dice. El eje de tiempo va en periodos de la fuerza (8 periodos) y el desfase se marca en el periodo 6 con una banda.
+- 2026-11-11. **Paso de integración de la vista**: 60 pasos de RK4 por cada periodo (el más corto entre el de la fuerza y el propio), suficiente para que el error sea muy inferior al grosor de la línea incluso con ω = 0,05 ω₀.
+- 2026-11-11. **Añadidos al trazador**: marcas fijas (`xTicks`, `yTicks`), apilado de etiquetas de marcadores verticales que se pisarían y `src/ui/format.js` (`formatEs`, números con coma decimal).
 
 ## Problemas abiertos
 

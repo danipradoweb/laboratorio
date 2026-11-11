@@ -335,3 +335,47 @@ test('el texto del recorrido se pinta como Markdown con KaTeX', { skip }, async 
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Oscilador: criterio de terminado del encargo 00 (estado en URL, vistas enlazadas,
+// presets con transición, modo presentación). Guarda capturas de cada preset.
+test('oscilador: URL, vistas enlazadas, presets y presentación', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/oscilador?omega=1&gamma=0.1&transient=0', { width: 1440, height: 900 });
+  // La URL reproduce el estado: en resonancia el desfase es de 90° y A = ω₀/γ = 10.
+  assert.match(await page.locator('.oscilador-grid .panel-title').nth(3).textContent(), /δ = 90°/);
+  assert.match(await page.locator('.oscilador-grid .panel-title').nth(1).textContent(), /A = 10,00/);
+  assert.match(await page.locator('.oscilador-grid .panel-title').nth(2).textContent(), /100 % del máximo/);
+
+  // Vistas enlazadas: un clic en la gráfica de amplitud cambia ω en todas partes.
+  const amplitude = page.locator('.oscilador-grid .panel').nth(1).locator('canvas');
+  const box = await amplitude.boundingBox();
+  await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.5);
+  await page.waitForFunction(() => !location.hash.includes('omega=1&'));
+  const omega = Number(new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('omega'));
+  assert.ok(omega > 2 && omega <= 3, `ω = ${omega}`);
+  assert.equal(Number(await page.locator('[data-key="omega"] input[type="range"]').inputValue()), omega);
+  const delta = Number((await page.locator('.oscilador-grid .panel-title').nth(3).textContent()).match(/δ = (\d+)°/)[1]);
+  assert.ok(delta > 170, `por encima de la resonancia el desfase se acerca a 180°: ${delta}`);
+
+  // Cada preset, con su captura.
+  for (const [id, expected] of [
+    ['por-debajo', 'omega=0.2&gamma=0.2'],
+    ['resonancia', 'omega=1&gamma=0.2'],
+    ['por-encima', 'omega=3&gamma=0.2'],
+    ['poco-amortiguado', 'omega=1&gamma=0.05'],
+    ['muy-amortiguado', 'omega=1&gamma=1.5'],
+  ]) {
+    await page.locator(`.preset[data-preset="${id}"]`).click();
+    await page.waitForFunction((/** @type {string} */ e) => location.hash.includes(e), expected);
+    assert.equal(await page.locator(`.preset[data-preset="${id}"]`).getAttribute('aria-pressed'), 'true');
+    await page.screenshot({ path: join(shots, `oscilador-preset-${id}.png`) });
+  }
+
+  // Modo presentación con el preset 2 (resonancia).
+  await page.keyboard.press('p');
+  await page.keyboard.press('2');
+  await page.waitForFunction(() => location.hash.includes('omega=1&gamma=0.2'));
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(shots, 'oscilador-presentacion.png') });
+  await close();
+  assert.deepEqual(errors, []);
+});

@@ -121,12 +121,30 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {[number, number]} [xRange] intervalo fijo; si falta, se ajusta a los datos
  * @property {[number, number]} [yRange]
  * @property {boolean} [legend] leyenda en una fila encima de la gráfica (por defecto true)
+ * @property {number[]} [xTicks] posiciones de las marcas del eje x (por defecto, automáticas)
+ * @property {number[]} [yTicks] posiciones de las marcas del eje y (p. ej. [0, 45, 90, 135, 180])
  * @property {boolean} [exportButton] botón "PNG" al pasar el ratón (por defecto true)
  * @property {string} [exportName] nombre del archivo PNG, sin extensión
  * @property {boolean} [equalAspect] misma escala en x e y (útil en mapas espaciales)
  * @property {(x: number, y: number) => void} [onPick] se llama al hacer clic o arrastrar
  *   sobre la gráfica, con las coordenadas de datos del puntero (vistas enlazadas)
  */
+
+/**
+ * Marcas fijadas a mano: se quedan las que caen dentro del intervalo, y el "paso" (que
+ * decide cuántos decimales se escriben) es la menor separación entre ellas.
+ * @param {number[]} positions
+ * @param {[number, number]} range
+ * @returns {{ ticks: number[], step: number }}
+ */
+function fixedTicks(positions, range) {
+  const lo = Math.min(range[0], range[1]);
+  const hi = Math.max(range[0], range[1]);
+  const ticks = positions.filter((v) => v >= lo && v <= hi).sort((a, b) => a - b);
+  let step = hi - lo || 1;
+  for (let i = 1; i < ticks.length; i++) step = Math.min(step, ticks[i] - ticks[i - 1]);
+  return { ticks, step };
+}
 
 /** Trazadores vivos, para poder redibujarlos todos (refreshPlots). @type {Set<() => void>} */
 const livePlots = new Set();
@@ -232,7 +250,9 @@ export function createPlot(container, options = {}) {
     g.font = tickFont;
     /** @param {number} plotHeight */
     const computeYTicks = (plotHeight) => {
-      const result = niceTicks(yRange[0], yRange[1], Math.min(8, Math.max(2, plotHeight / (fs * 2.8))));
+      const result = options.yTicks
+        ? fixedTicks(options.yTicks, yRange)
+        : niceTicks(yRange[0], yRange[1], Math.min(6, Math.max(2, plotHeight / (fs * 2.8))));
       const texts = result.ticks.map((t) => formatTick(t, result.step));
       return { ...result, texts, width: Math.max(0, ...texts.map((t) => g.measureText(t).width)) };
     };
@@ -273,7 +293,9 @@ export function createPlot(container, options = {}) {
     const xScale = linearScale(xRange[0], xRange[1], plotLeft, plotRight);
     const yScale = linearScale(yRange[0], yRange[1], plotBottom, plotTop);
     frame = { x: xScale, y: yScale, left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
-    const xTicks = niceTicks(xRange[0], xRange[1], Math.min(10, Math.max(3, plotW / (fs * 4.5))));
+    const xTicks = options.xTicks
+      ? fixedTicks(options.xTicks, xRange)
+      : niceTicks(xRange[0], xRange[1], Math.min(10, Math.max(3, plotW / (fs * 4.5))));
 
     // Todo lo que representa datos se recorta al rectángulo de la gráfica.
     g.save();
@@ -378,6 +400,8 @@ export function createPlot(container, options = {}) {
     /** @type {{ text: string, x: number, y: number, align: CanvasTextAlign, color: string }[]} */
     const markerLabels = [];
     const markerWidth = Math.max(1.5, fs * 0.12);
+    /** Cajas ya ocupadas por etiquetas de marcadores verticales. @type {{ row: number, x0: number, x1: number }[]} */
+    const vlineLabelBoxes = [];
     for (const marker of data.vlines ?? []) {
       if (marker.x === undefined || !Number.isFinite(marker.x)) continue;
       const px = xScale.toPixel(marker.x);
@@ -390,13 +414,19 @@ export function createPlot(container, options = {}) {
       g.lineTo(px, plotBottom);
       g.stroke();
       if (marker.label) {
-        // La etiqueta va a la derecha de la línea, o a la izquierda si no cabe.
+        // La etiqueta va a la derecha de la línea, o a la izquierda si no cabe. Si pisaría
+        // la etiqueta de otro marcador cercano, baja a la fila siguiente.
         g.font = tickFont;
-        const fits = px + fs * 0.4 + g.measureText(marker.label).width < plotRight;
+        const textWidth = g.measureText(marker.label).width;
+        const fits = px + fs * 0.4 + textWidth < plotRight;
+        const x0 = fits ? px + fs * 0.4 : px - fs * 0.4 - textWidth;
+        let row = 0;
+        while (vlineLabelBoxes.some((b) => b.row === row && x0 < b.x1 + fs * 0.3 && x0 + textWidth > b.x0 - fs * 0.3)) row++;
+        vlineLabelBoxes.push({ row, x0, x1: x0 + textWidth });
         markerLabels.push({
           text: marker.label,
           x: px + (fits ? fs * 0.4 : -fs * 0.4),
-          y: plotTop + fs * 1.1,
+          y: plotTop + fs * 1.1 + row * fs * 1.2,
           align: fits ? 'left' : 'right',
           color,
         });

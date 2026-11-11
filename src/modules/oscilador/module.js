@@ -18,7 +18,7 @@ const descriptor = {
   params: [
     {
       key: 'omega',
-      label: 'Frecuencia de la fuerza, ω/ω₀',
+      label: 'Frecuencia ω/ω₀',
       type: 'range',
       min: 0.05,
       max: 3,
@@ -28,7 +28,7 @@ const descriptor = {
     },
     {
       key: 'gamma',
-      label: 'Amortiguamiento, γ/ω₀',
+      label: 'Amortiguamiento γ/ω₀',
       type: 'range',
       min: 0.02,
       max: 2,
