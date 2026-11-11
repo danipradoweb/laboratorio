@@ -47,6 +47,9 @@
  *   cambia parámetros desde una vista (por ejemplo, al hacer clic en una gráfica);
  *   los controles, la URL y las demás vistas se actualizan solos
  * @property {import('../core/clock.js').Clock} clock reloj de animación (pausa y velocidad)
+ * @property {{ name: () => 'light' | 'dark', colors: () => import('../core/theme.js').ThemeColors }} theme
+ *   tema actual y sus colores (para dibujar en canvas con los colores del tema)
+ * @property {{ isActive: () => boolean }} presentation modo presentación
  * @property {null} materials biblioteca de materiales (llegará con el encargo 01)
  * @property {null} color motor espectro → color (llegará con el encargo 01)
  */
@@ -54,8 +57,8 @@
 /**
  * Lo que devuelve `mount`.
  * @typedef {object} ModuleInstance
- * @property {(state: State) => void} update se llama al montar, en cada cambio de estado
- *   y al cambiar el tema; debe redibujar todas las vistas con ese estado
+ * @property {(state: State) => void} update se llama al montar, en cada cambio de estado,
+ *   al cambiar el tema y al entrar o salir del modo presentación; debe redibujar todas las vistas con ese estado
  * @property {() => void} destroy libera gráficas, temporizadores y suscripciones
  */
 

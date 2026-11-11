@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 7 (presets con transición, recorridos, reloj)
-- Siguiente paso: 8 (`src/core/presentation.js`: modo presentación con atajos)
+- Último paso terminado: 8 (modo presentación)
+- Siguiente paso: 9 (`src/core/markdown.js` y `src/ui/ficha.js`: fichas con KaTeX)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -33,7 +33,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 5b | `view3d.js` | hecho |
 | 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | hecho |
 | 7 | `presets.js`, `tours.js`, `clock.js` | hecho |
-| 8 | `presentation.js` | pendiente |
+| 8 | `presentation.js` | hecho |
 | 9 | `markdown.js`, `ficha.js` | pendiente |
 | 10 | Portada | pendiente |
 | 11 | Plantilla `_plantilla/` | pendiente |
@@ -81,6 +81,9 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Transiciones**: `createTransition` interpola con la curva 3t²−2t³ durante 1,5 s (configurable) y entrega exactamente el estado de destino en el último fotograma; los parámetros discretos cambian al final. Si el usuario toca un control, edita la URL o hace clic en una vista durante una transición, esta se cancela (manda el usuario).
 - 2026-11-11. **Un preset fija sus claves y deja el resto en su valor por defecto** (no en el valor actual), para que un preset reproduzca siempre el mismo estado.
 - 2026-11-11. **Piezas de interfaz en archivos pequeños**: `src/ui/preset-list.js`, `src/ui/tour-bar.js`, `src/ui/clock-controls.js`; `module-page.js` solo las conecta. Los controles de animación solo aparecen si el descriptor tiene `animated: true`.
+- 2026-11-11. **Modo presentación solo con CSS + un atributo**: `data-presentation="true"` en `<html>`; el lienzo es `min(100vw, 177,78vh)` de ancho y 16:9, y el tamaño de letra raíz es 1/96 de ese ancho (20 px a 1080p), de modo que toda la interfaz en `rem` y las gráficas escalan juntas.
+- 2026-11-11. **Atajos añadidos a los de la arquitectura**: `C` cambia el tema (además del selector flotante), `RePág`/`AvPág` mueven el recorrido (es lo que envían los mandos de presentación) y las flechas del recorrido funcionan también fuera del modo presentación. En teclados españoles los corchetes valen con AltGr y también con las dos teclas físicas a la derecha de la P.
+- 2026-11-11. **`ctx.theme` y `ctx.presentation`** añadidos al contexto de los módulos, como describe la arquitectura.
 
 ## Problemas abiertos
 

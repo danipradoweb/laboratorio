@@ -12,6 +12,7 @@ import { getTheme, toggleTheme, onThemeChange } from './src/core/theme.js';
 import { el } from './src/ui/dom.js';
 import { renderCover } from './src/ui/cover.js';
 import { createModulePage } from './src/ui/module-page.js';
+import { createPresentation } from './src/core/presentation.js';
 
 const root = /** @type {HTMLElement} */ (document.getElementById('app'));
 const titleBox = /** @type {HTMLElement} */ (document.getElementById('topbar-title'));
@@ -38,6 +39,9 @@ let current = null;
 /** Número de la navegación en curso: si llega otra mientras un módulo carga, la vieja se descarta. */
 let navigation = 0;
 
+// Modo presentación (tecla P): un único servicio que actúa sobre el módulo abierto.
+const presentation = createPresentation({ getPage: () => current });
+
 async function route() {
   const ticket = ++navigation;
   const { moduleId, query } = parseHash(location.hash);
@@ -50,6 +54,7 @@ async function route() {
     return;
   }
 
+  presentation.reset();
   current?.destroy();
   current = null;
   const module = modules.find((m) => m.id === moduleId);
@@ -73,7 +78,7 @@ async function route() {
   } else {
     document.title = `${module.title} · Laboratorio de física`;
     titleBox.textContent = module.title;
-    const page = await createModulePage(root, module, query, { actions: pageActions });
+    const page = await createModulePage(root, module, query, { actions: pageActions, presentation });
     if (ticket !== navigation) {
       page.destroy(); // el usuario ya se ha ido a otra página
       return;

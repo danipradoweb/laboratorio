@@ -213,3 +213,71 @@ test('presets con transición, recorrido guiado y reloj de animación', { skip }
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Modo presentación: lienzo 16:9, controles ocultos y atajos de teclado. Se guardan
+// capturas a 1920 × 1080 en los dos temas para revisarlas a ojo.
+for (const theme of /** @type {const} */ (['light', 'dark'])) {
+  test(`modo presentación a 1920 × 1080 (tema ${theme})`, { skip }, async () => {
+    const { page, errors, close } = await openPage('#/_galeria', { width: 1920, height: 1080, theme });
+    await page.keyboard.press('p');
+    await page.waitForSelector('html[data-presentation="true"]');
+    assert.equal(await page.locator('.topbar').isVisible(), false);
+    assert.equal(await page.locator('.side-panel').isVisible(), false);
+    const frame = await page.locator('.stage-frame').boundingBox();
+    assert.ok(Math.abs(frame.width / frame.height - 16 / 9) < 0.01, 'el lienzo no es 16:9');
+    assert.ok(Math.abs(frame.width - 1920) < 1 && Math.abs(frame.height - 1080) < 1);
+
+    // 1–9: salta a un preset.
+    await page.keyboard.press('2');
+    await page.waitForFunction(() => location.hash.includes('k=1.5&sigma=1.8&colormap=viridis'));
+    // Espacio: pausa. Corchetes: velocidad.
+    await page.keyboard.press(' ');
+    assert.equal(await page.locator('.presentation-toast').textContent(), 'Pausa');
+    await page.keyboard.press(']');
+    assert.equal(await page.locator('.presentation-toast').textContent(), 'Velocidad ×2');
+    await page.keyboard.press('[');
+    await page.keyboard.press('[');
+    assert.equal(await page.locator('.presentation-toast').textContent(), 'Velocidad ×0,5');
+    // C: cambia el tema.
+    await page.keyboard.press('c');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), theme === 'light' ? 'dark' : 'light');
+    await page.keyboard.press('c');
+    await page.waitForTimeout(1300);
+    await page.screenshot({ path: join(shots, `presentacion-${theme}.png`) });
+
+    // Recorrido dentro del modo presentación: flechas y tecla T.
+    await page.keyboard.press('p');
+    await page.locator('.tour-start').first().click();
+    await page.keyboard.press('p');
+    await page.keyboard.press('ArrowRight');
+    assert.match(await page.locator('.tour-counter').textContent(), /Paso 2 de 3/);
+    await page.keyboard.press('ArrowRight');
+    assert.match(await page.locator('.tour-counter').textContent(), /Paso 3 de 3/);
+    await page.waitForTimeout(1800);
+    await page.screenshot({ path: join(shots, `presentacion-recorrido-${theme}.png`) });
+    await page.keyboard.press('t');
+    assert.equal(await page.locator('.tour-bar').isVisible(), false);
+    await page.keyboard.press('t');
+    assert.equal(await page.locator('.tour-bar').isVisible(), true);
+
+    // Esc sale y todo vuelve a su sitio.
+    await page.keyboard.press('Escape');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.presentation), undefined);
+    assert.equal(await page.locator('.topbar').isVisible(), true);
+    await close();
+    assert.deepEqual(errors, []);
+  });
+}
+
+// En una ventana que no es 16:9, el lienzo se ajusta al lado que limita y queda centrado.
+test('modo presentación: lienzo 16:9 centrado en una ventana 4:3', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/_galeria', { width: 1024, height: 768 });
+  await page.locator('.page-actions button', { hasText: 'Presentación' }).click();
+  await page.waitForSelector('html[data-presentation="true"]');
+  const frame = await page.locator('.stage-frame').boundingBox();
+  assert.ok(Math.abs(frame.width - 1024) < 1);
+  assert.ok(Math.abs(frame.height - 576) < 1);
+  assert.ok(Math.abs(frame.y - (768 - 576) / 2) < 1);
+  await close();
+  assert.deepEqual(errors, []);
+});

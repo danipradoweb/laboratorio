@@ -17,7 +17,8 @@ import { buildPresetList } from './preset-list.js';
 import { createTourBar } from './tour-bar.js';
 import { buildClockControls } from './clock-controls.js';
 import { createClock } from '../core/clock.js';
-import { onThemeChange } from '../core/theme.js';
+import { getTheme, onThemeChange, themeColors } from '../core/theme.js';
+import { refreshPlots } from './plot2d.js';
 import { createTransition, findActivePreset, presetState } from '../core/presets.js';
 import { createTourRunner } from '../core/tours.js';
 
@@ -35,7 +36,8 @@ const URL_SYNC_DELAY_MS = 200;
  * @param {HTMLElement} root
  * @param {ModuleDescriptor} module
  * @param {Record<string, string>} query parámetros de la URL, como texto
- * @param {{ actions: HTMLElement }} shell actions: zona de botones de la barra superior
+ * @param {{ actions: HTMLElement, presentation: import('../core/presentation.js').Presentation }} shell
+ *   actions: zona de botones de la barra superior; presentation: servicio de modo presentación
  */
 export async function createModulePage(root, module, query, shell) {
   // --- Estado -------------------------------------------------------------------------
@@ -167,7 +169,14 @@ export async function createModulePage(root, module, query, shell) {
       setTimeout(() => (copyButton.textContent = 'Copiar enlace'), 1800);
     },
   });
-  shell.actions.replaceChildren(copyButton);
+  const presentButton = el('button', {
+    class: 'btn',
+    type: 'button',
+    text: 'Presentación',
+    title: 'Modo presentación (tecla P)',
+    onclick: () => shell.presentation.enter(),
+  });
+  shell.actions.replaceChildren(presentButton, copyButton);
 
   // --- URL ----------------------------------------------------------------------------
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -198,6 +207,8 @@ export async function createModulePage(root, module, query, shell) {
       store.set(patch, 'view').forEach((w) => console.warn(`[${module.id}] ${w}`));
     },
     clock,
+    theme: { name: getTheme, colors: themeColors },
+    presentation: { isActive: () => shell.presentation.isActive() },
     materials: null,
     color: null,
   };
@@ -228,6 +239,12 @@ export async function createModulePage(root, module, query, shell) {
   // Al cambiar el tema se vuelve a llamar a update: las vistas que eligen colores
   // según el fondo (coloreado de fase) se rehacen sin que el módulo tenga que escuchar.
   const offTheme = onThemeChange(scheduleUpdate);
+  // Lo mismo al entrar o salir del modo presentación; además cambia la tipografía,
+  // así que las gráficas se redibujan cuando el nuevo tamaño ya está aplicado.
+  const offPresentation = shell.presentation.onChange(() => {
+    scheduleUpdate();
+    requestAnimationFrame(refreshPlots);
+  });
 
   return {
     module,
@@ -264,6 +281,7 @@ export async function createModulePage(root, module, query, shell) {
       transition?.cancel();
       unsubscribe();
       offTheme();
+      offPresentation();
       clock.destroy();
       controls.destroy();
       clockControls?.destroy();

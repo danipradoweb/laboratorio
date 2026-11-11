@@ -10,6 +10,7 @@
  *   4. Portada
  *   5. Página de módulo: panel lateral, controles, escenario
  *   6. Paneles de las vistas
+ *   7. Modo presentación
  */
 
 /* ---------------------------------------------------------------- 1. Variables y temas */
@@ -548,6 +549,8 @@ h3 {
   display: flex;
   flex-direction: column;
   padding: var(--gap);
+  /* Las gráficas toman de aquí el tamaño de su letra. */
+  font-size: 0.875rem;
 }
 
 .stage {
@@ -723,4 +726,98 @@ h3 {
 .galeria-readout {
   margin: 0;
   font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------------- 7. Modo presentación */
+
+/* Se activa con data-presentation="true" en <html> (src/core/presentation.js).
+ * El lienzo es un rectángulo 16:9 centrado, lo más grande que quepa en la ventana.
+ * Toda la tipografía cuelga del tamaño de letra raíz, que se fija en proporción al
+ * ancho del lienzo: 20 px cuando el lienzo mide 1920 px (vídeo 1080p). */
+
+:root[data-presentation='true'] {
+  --pres-w: min(100vw, 177.778vh);
+  font-size: calc(var(--pres-w) / 96);
+  --gap: 0.6rem;
+}
+
+:root[data-presentation='true'] body {
+  overflow: hidden;
+}
+
+:root[data-presentation='true'] .topbar,
+:root[data-presentation='true'] .side-panel,
+:root[data-presentation='true'] .panel-toggle,
+:root[data-presentation='true'] .plot-export,
+:root[data-presentation='true'] .tour-nav {
+  display: none;
+}
+
+:root[data-presentation='true'] .module-page {
+  display: block;
+}
+
+:root[data-presentation='true'] .stage-frame {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: var(--pres-w);
+  height: calc(var(--pres-w) * 9 / 16);
+  transform: translate(-50%, -50%);
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  background: var(--bg);
+}
+
+:root[data-presentation='true'] .panel-title {
+  font-size: 0.95rem;
+}
+
+:root[data-presentation='true'] .tour-text {
+  max-width: none;
+  font-size: 1.45rem;
+  line-height: 1.35;
+}
+
+:root[data-presentation='true'][data-tour-text='hidden'] .tour-bar {
+  display: none;
+}
+
+/* Barra flotante (tema y salida): solo se ve un momento al mover el ratón. */
+.presentation-toolbar {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 20;
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.presentation-toolbar[hidden] {
+  display: none;
+}
+
+.presentation-toolbar[data-visible='true'] {
+  opacity: 0.92;
+  pointer-events: auto;
+}
+
+.presentation-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 20;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.9rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+}
+
+.presentation-toast[hidden] {
+  display: none;
 }
