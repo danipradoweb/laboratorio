@@ -1,51 +1,517 @@
-/* Estilos del laboratorio. Los colores salen de variables CSS para que los temas
-   claro y oscuro (src/core/theme.js) solo tengan que cambiar estas variables. */
+/* Estilos del laboratorio.
+ *
+ * Todos los colores son variables CSS. Los temas claro y oscuro (src/core/theme.js)
+ * solo cambian estas variables; las gráficas en canvas las leen con themeColors().
+ *
+ * Índice:
+ *   1. Variables y temas
+ *   2. Base
+ *   3. Barra superior y botones
+ *   4. Portada
+ *   5. Página de módulo: panel lateral, controles, escenario
+ *   6. Paneles de las vistas
+ */
+
+/* ---------------------------------------------------------------- 1. Variables y temas */
 
 :root {
-  --bg: #f6f7f9;
+  --bg: #f4f5f7;
   --surface: #ffffff;
-  --text: #1c2430;
-  --text-soft: #5b6676;
-  --border: #d9dee6;
-  --accent: #0b6bcb;
+  --surface-2: #eef0f4;
+  --text: #1b2430;
+  --text-soft: #586474;
+  --border: #d5dae2;
+  --grid: #e6e9ee;
+  --accent: #0b63c4;
+  --accent-contrast: #ffffff;
+  --focus: #0b63c4;
+  /* Series de las gráficas: paleta de Okabe e Ito, distinguible con daltonismo. */
+  --series-1: #0072b2;
+  --series-2: #d55e00;
+  --series-3: #009e73;
+  --series-4: #cc79a7;
+  --series-5: #b8860b;
+  --series-6: #56b4e9;
+
+  --topbar-h: 3rem;
+  --side-w: 19rem;
+  --radius: 8px;
+  --gap: 0.75rem;
+
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
+  color-scheme: light;
 }
 
 :root[data-theme='dark'] {
-  --bg: #12161c;
-  --surface: #1a2029;
-  --text: #e6eaf0;
-  --text-soft: #9aa6b6;
-  --border: #2c3542;
+  --bg: #11151b;
+  --surface: #191f28;
+  --surface-2: #222a35;
+  --text: #e7ebf1;
+  --text-soft: #9ba7b7;
+  --border: #303a48;
+  --grid: #262f3b;
   --accent: #6cb6ff;
+  --accent-contrast: #0c1219;
+  --focus: #6cb6ff;
+  --series-1: #6cb6ff;
+  --series-2: #ff9d5c;
+  --series-3: #3ccfa4;
+  --series-4: #e7a1c8;
+  --series-5: #f2c14e;
+  --series-6: #a9dcf7;
+  color-scheme: dark;
 }
 
-* { box-sizing: border-box; }
+/* ----------------------------------------------------------------------------- 2. Base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
 
 body {
   margin: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--text);
 }
 
+a {
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.notice {
+  color: var(--text-soft);
+}
+
+/* ------------------------------------------------------- 3. Barra superior y botones */
+
 .topbar {
+  flex: none;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.6rem 1rem;
+  padding: 0 1rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 
 .brand {
-  font-weight: 600;
+  font-weight: 650;
   color: var(--text);
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.topbar-title { color: var(--text-soft); }
-.topbar-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+.topbar-title {
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-#app { padding: 1.5rem; }
+.topbar-title:not(:empty)::before {
+  content: '/';
+  margin-right: 1rem;
+  color: var(--border);
+}
+
+.topbar-actions,
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar-actions {
+  margin-left: auto;
+}
+
+.btn {
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.3rem 0.75rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--surface-2);
+}
+
+.btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+/* -------------------------------------------------------------------------- 4. Portada */
+
+#app {
+  flex: 1;
+  min-height: 0;
+}
+
+.cover {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.cover h1 {
+  font-size: 2rem;
+  letter-spacing: -0.01em;
+}
+
+.cover-intro {
+  max-width: 44rem;
+  margin: 0.75rem 0 2rem;
+  font-size: 1.1rem;
+  color: var(--text-soft);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-body h2 {
+  font-size: 1.05rem;
+}
+
+.card-body p {
+  margin: 0.35rem 0 0;
+  font-size: 0.925rem;
+  color: var(--text-soft);
+}
+
+/* ----------------------------------------------------------------- 5. Página de módulo */
+
+.module-page {
+  height: 100%;
+  display: grid;
+  grid-template-columns: var(--side-w) auto minmax(0, 1fr);
+}
+
+.module-page[data-panel='closed'] {
+  grid-template-columns: 0 auto minmax(0, 1fr);
+}
+
+.side-panel {
+  min-width: 0;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.module-page[data-panel='closed'] .side-panel {
+  visibility: hidden;
+  border-right: none;
+}
+
+.side-section {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.side-section:last-child {
+  border-bottom: none;
+}
+
+.side-section > h2 {
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+/* Botón estrecho entre el panel y el escenario para plegar el panel. */
+.panel-toggle {
+  width: 1rem;
+  padding: 0;
+  color: var(--text-soft);
+  background: var(--bg);
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.panel-toggle::before {
+  content: '‹';
+}
+
+.module-page[data-panel='closed'] .panel-toggle::before {
+  content: '›';
+}
+
+.panel-toggle:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Controles generados desde params (src/ui/controls.js). */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.control-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+}
+
+.control-range input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.control-label {
+  font-size: 0.9rem;
+}
+
+.control-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.control-number {
+  width: 4.75rem;
+  padding: 0.1rem 0.3rem;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: right;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.control-number::-webkit-inner-spin-button,
+.control-number::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.control-number:hover,
+.control-number:focus {
+  border-color: var(--border);
+  background: var(--bg);
+}
+
+.control-unit {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.control-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.control-select select {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.control-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Conmutador: una casilla de verificación dibujada como interruptor. */
+.switch {
+  flex: none;
+  appearance: none;
+  width: 2.25rem;
+  height: 1.25rem;
+  margin: 0;
+  position: relative;
+  background: var(--border);
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.25rem - 4px);
+  height: calc(1.25rem - 4px);
+  background: var(--surface);
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+
+.switch:checked {
+  background: var(--accent);
+}
+
+.switch:checked::before {
+  transform: translateX(1rem);
+}
+
+/* Escenario: zona donde el módulo monta sus vistas. */
+
+.stage-frame {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap);
+}
+
+.stage {
+  flex: 1;
+  min-height: 0;
+}
+
+/* --------------------------------------------------------------- 6. Paneles de las vistas */
+
+/* Rejilla de paneles. Cada módulo fija sus columnas y filas con una clase propia. */
+.panel-grid {
+  height: 100%;
+  display: grid;
+  gap: var(--gap);
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+.panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.75rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.panel-title {
+  flex: none;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* Pantallas estrechas: el panel lateral pasa arriba y los paneles se apilan. */
+@media (max-width: 760px) {
+  html,
+  body {
+    height: auto;
+  }
+  .module-page,
+  .module-page[data-panel='closed'] {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .side-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .module-page[data-panel='closed'] .side-panel {
+    display: none;
+  }
+  .panel-toggle {
+    width: 100%;
+    height: 1.25rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-toggle::before,
+  .module-page[data-panel='closed'] .panel-toggle::before {
+    content: '⋯';
+  }
+  .panel-grid {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-auto-rows: auto;
+  }
+  .panel {
+    min-height: 18rem;
+  }
+}
+
+/* ----------------------------------------------------------------- Galería de componentes */
+
+.galeria-readout {
+  margin: 0;
+  font-size: 0.85rem;
+}
