@@ -27,49 +27,77 @@ El usuario destaca en razonamiento verbal y tiene dificultad con la visión espa
 
 ## Estructura del repositorio
 
+Los archivos marcados con (01) llegan con el encargo 01; el resto existe desde el encargo 00.
+
 ```
-index.html                 portada: lista de módulos con miniatura y descripción
-app.js                     arranque, enrutado por hash, registro de módulos
+index.html                 página única: barra superior, mapa de importación de vendor/
+app.js                     arranque y enrutado por hash (#/ portada, #/<id> módulo)
+.nojekyll                  imprescindible en GitHub Pages (carpetas que empiezan por "_")
+package.json               scripts: test, test:unit, check, serve, vendor, miniaturas
 src/
-  core/
+  core/                    sin DOM al importar; se prueba en Node
     complex.js             aritmética compleja
     fft.js                 FFT radix-2 1D y 2D
-    linalg.js              tridiagonal, autovalores simétricos, utilidades
+    linalg.js              tridiagonal, autovalores simétricos, sistema complejo denso
     units.js               constantes físicas (CODATA 2018) y conversiones
-    interp.js              interpolación (lineal, spline cúbica)
-    state.js               estado del módulo <-> URL
+    interp.js              interpolación (lineal, spline cúbica natural)
+    state.js               estado del módulo <-> URL, almacén con suscriptores
     presets.js             estados guardados y transiciones animadas
-    tours.js               recorridos guiados
-    presentation.js        modo presentación
+    tours.js               recorridos guiados (lógica de pasos)
+    clock.js               reloj de animación: pausa y velocidad
+    presentation.js        modo presentación y atajos de teclado
     theme.js               temas claro y oscuro
+    markdown.js            conversor mínimo de Markdown (fichas y recorridos)
   ui/
+    module-page.js         página de un módulo: conecta estado, URL, controles y vistas
+    cover.js               portada con las tarjetas de los módulos
     controls.js            deslizadores, selectores, conmutadores (declarativos)
+    preset-list.js         lista de presets
+    tour-bar.js            barra de recorrido (texto, contador, flechas)
+    clock-controls.js      botones de pausa y velocidad
+    panels.js              paneles con título donde los módulos ponen sus vistas
     plot2d.js              trazador Canvas 2D
+    plot-math.js           marcas de ejes, formato y escalas (parte pura del trazador)
     view3d.js              envoltorio fino de three.js
-    colormaps.js           mapas de color y coloreado de fase complejo
+    colormaps.js           mapas de color, coloreado de fase y rueda de fase
+    colormap-data.js       tablas de los mapas de color (generado por tools/colormaps.py)
     ficha.js               panel de ficha con KaTeX
-  color/
+    format.js              números con coma decimal
+    dom.js                 ayudante el() para crear elementos
+    styles.css             todos los estilos; temas con variables CSS
+  color/                   (01)
     cie.js                 funciones de igualación CIE 1931 2°, iluminantes
     spectrum.js            espectro -> XYZ -> sRGB
-  materials/
+  materials/               (01)
     library.js             biblioteca de materiales: n(λ), k(λ), metadatos
     dielectric.js          ε = (n + ik)², modelos de Drude y Lorentz
   modules/
-    _plantilla/            plantilla para módulos nuevos
+    registry.js            REGISTRO: único sitio donde se da de alta un módulo
+    types.js               tipos JSDoc del contrato de módulo
+    _plantilla/            plantilla que funciona (#/_plantilla) + LEEME.md paso a paso
+    _galeria/              banco de pruebas visual de los servicios (#/_galeria, oculto)
     <id>/
-      module.js            descriptor: id, título, parámetros, presets, vistas
+      module.js            descriptor: id, título, parámetros, presets, recorridos
       physics.js           física pura
       view.js              presentación
       ficha.md             ficha del módulo
-data/
+      miniatura.png        miniatura para la portada (npm run miniaturas <id>)
+data/                      (01)
   cie/                     CMF y iluminantes (JSON)
   materials/               un JSON por material
   xray/                    factores de forma atómicos (Cromer-Mann)
 tests/
-  *.test.js
+  <archivo>.test.js        un archivo de tests por cada archivo de core/ y por cada módulo
+  modulos.test.js          contrato de todos los módulos registrados
+  estructura.test.js       rutas relativas, .nojekyll, vendor/
+  smoke.test.js            prueba de humo con navegador sin cabeza (capturas en capturas/)
   fixtures/                valores de referencia generados con tools/
 tools/                     scripts de generación (no se sirven)
-vendor/                    three.js, KaTeX
+  serve.mjs                servidor local bajo /laboratorio/, como GitHub Pages
+  vendor.mjs               copia three.js y KaTeX a vendor/
+  miniaturas.mjs           genera las miniaturas de la portada
+  codata.py, linalg_fixture.py, colormaps.py, oklab-fixture.mjs   datos y referencias
+vendor/                    three.js, KaTeX (copiados; ver vendor/README.md)
 docs/                      arquitectura, encargos, temario, backlog
 ```
 
@@ -93,6 +121,8 @@ export default {
 ```
 
 `ctx` da acceso al tema, al modo presentación, a la biblioteca de materiales y al motor de color. El núcleo genera los controles a partir de `params`, sincroniza el estado con la URL y llama a `update(state)` en cada cambio.
+
+La definición exacta del contrato (campos opcionales `hidden`, `animated` y `thumbnail`, contenido de `ctx`) está en `src/modules/types.js`, y la guía para crear un módulo, en `src/modules/_plantilla/LEEME.md`. Un módulo se da de alta en `src/modules/registry.js` y en ningún otro sitio. `module.js` y `view.js` no pueden usar `document` fuera de sus funciones, porque los tests los importan en Node.
 
 ## Servicios comunes
 
