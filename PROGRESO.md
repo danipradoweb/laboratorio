@@ -14,15 +14,15 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 1 (andamiaje)
-- Siguiente paso: 2a (`src/core/units.js` con test contra CODATA 2018)
+- Último paso terminado: 2a (units.js)
+- Siguiente paso: 2b (`src/core/complex.js`)
 
 ### Plan del encargo 00 (pasos y estado)
 
 | # | Paso | Estado |
 |---|---|---|
 | 1 | Andamiaje: `package.json`, `tsconfig.json`, `.nojekyll`, `index.html`, `app.js`, `vendor/`, `tools/serve.mjs`, tests de estructura y humo mínimo | hecho |
-| 2a | `units.js` | pendiente |
+| 2a | `units.js` | hecho |
 | 2b | `complex.js` | pendiente |
 | 2c | `fft.js` | pendiente |
 | 2d | `linalg.js` | pendiente |
@@ -62,9 +62,14 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Mapa de importación en `index.html`** (`three`, `three/addons/`, `katex` → `./vendor/...`). Motivo: es nativo del navegador, no requiere compilar y evita parchear los addons de three, que importan `'three'` por nombre.
 - 2026-11-11. **three sin minificar**: la versión 0.187 ya no publica `three.module.min.js`; se copian `three.module.js` + `three.core.js` (≈2,1 MB, se cargarán en diferido solo al abrir una vista 3D).
 - 2026-11-11. **`npm test` usa `node --test "tests/*.test.js"`** (en Node 22 no vale pasar la carpeta). Incluye la prueba de humo, que se omite sola si no hay Playwright; `npm run test:unit` la salta siempre.
+- 2026-11-11. **CODATA 2018 desde SciPy**: `tools/codata.py` vuelca la tabla `_physical_constants_2018` de SciPy 1.18.1 a `tests/fixtures/codata2018.json`; `tests/units.test.js` compara contra ese fixture (no contra valores tecleados). Entorno Python en `.venv/` (no versionado), dependencias en `tools/requirements.txt`.
 - 2026-11-11. **`tools/serve.mjs`** sirve el repositorio bajo `/laboratorio/` (`npm run serve`) para reproducir GitHub Pages en local. Lo usa la prueba de humo.
 
 ## Problemas abiertos
 
+- **El push a GitHub falla (403)**: la sesión solo tiene permiso de lectura sobre `danipradoweb/laboratorio` ("Claude doesn't have GitHub access… / Resource not accessible by integration"). Los commits se van haciendo en local en la rama `claude/nifty-pascal-etf0j1` y el push se reintenta al cerrar cada paso. Si la sesión se corta antes de arreglarlo, lo no subido se pierde.
+
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
+
+- **Dar permiso de escritura a Claude sobre el repositorio** `danipradoweb/laboratorio`: reconectar GitHub en https://claude.ai/connect-github y, si hace falta, instalar la app de GitHub de Claude en el repositorio con acceso de escritura (https://github.com/apps/claude/installations/select_target). Sin eso no se puede subir nada.

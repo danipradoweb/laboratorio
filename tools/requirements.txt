@@ -1,0 +1,6 @@
+# Dependencias de Python de los scripts de tools/ (solo para generar datos y referencias;
+# la web nunca depende de Python).
+#   python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
+scipy==1.18.1
+matplotlib
+cmcrameri

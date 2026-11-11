@@ -1,0 +1,77 @@
+{
+  "_fuente": "CODATA 2018 (NIST) vía scipy.constants._codata, SciPy 1.18.1",
+  "_licencia": "Datos de NIST en dominio público; SciPy BSD-3-Clause",
+  "_generado_por": "tools/codata.py",
+  "h": {
+    "nombre": "Planck constant",
+    "valor": 6.62607015e-34,
+    "unidad": "J Hz^-1",
+    "incertidumbre": 0.0
+  },
+  "hbar": {
+    "nombre": "reduced Planck constant",
+    "valor": 1.0545718176461565e-34,
+    "unidad": "J s",
+    "incertidumbre": 0.0
+  },
+  "c": {
+    "nombre": "speed of light in vacuum",
+    "valor": 299792458.0,
+    "unidad": "m s^-1",
+    "incertidumbre": 0.0
+  },
+  "e": {
+    "nombre": "elementary charge",
+    "valor": 1.602176634e-19,
+    "unidad": "C",
+    "incertidumbre": 0.0
+  },
+  "m_e": {
+    "nombre": "electron mass",
+    "valor": 9.1093837015e-31,
+    "unidad": "kg",
+    "incertidumbre": 2.8e-40
+  },
+  "epsilon_0": {
+    "nombre": "vacuum electric permittivity",
+    "valor": 8.8541878128e-12,
+    "unidad": "F m^-1",
+    "incertidumbre": 1.3e-21
+  },
+  "k_B": {
+    "nombre": "Boltzmann constant",
+    "valor": 1.380649e-23,
+    "unidad": "J K^-1",
+    "incertidumbre": 0.0
+  },
+  "alpha": {
+    "nombre": "fine-structure constant",
+    "valor": 0.0072973525693,
+    "unidad": "",
+    "incertidumbre": 1.1e-12
+  },
+  "rydberg_eV": {
+    "nombre": "Rydberg constant times hc in eV",
+    "valor": 13.605693122994,
+    "unidad": "eV",
+    "incertidumbre": 2.6e-11
+  },
+  "bohr_radius": {
+    "nombre": "Bohr radius",
+    "valor": 5.29177210903e-11,
+    "unidad": "m",
+    "incertidumbre": 8e-21
+  },
+  "eV_in_J": {
+    "nombre": "electron volt-joule relationship",
+    "valor": 1.602176634e-19,
+    "unidad": "J",
+    "incertidumbre": 0.0
+  },
+  "hartree_eV": {
+    "nombre": "Hartree energy in eV",
+    "valor": 27.211386245988,
+    "unidad": "eV",
+    "incertidumbre": 5.3e-11
+  }
+}
