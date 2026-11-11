@@ -16,21 +16,28 @@ rm src/modules/tunel/LEEME.md
 
 ## 2. Regístralo (único sitio)
 
-En `src/modules/registry.js` añade dos líneas:
+En `src/modules/registry.js` haz dos cosas, sin borrar nada de lo que ya hay:
+
+1. Añade una línea `import` junto a las demás:
 
 ```js
 import tunel from './tunel/module.js';
-
-export const modules = [galeria, plantilla, tunel];
 ```
 
-El orden de la lista es el orden de las tarjetas en la portada.
+2. Añade `tunel` a la lista `modules`, dejando los que ya están. Por ejemplo, si la lista era `[oscilador, galeria, plantilla]`:
+
+```js
+export const modules = [oscilador, tunel, galeria, plantilla];
+```
+
+El orden de la lista es el orden de las tarjetas en la portada. No quites ningún módulo de la lista: `tests/modulos.test.js` falla si una carpeta de `src/modules/` no está registrada.
 
 ## 3. Rellena el descriptor: `module.js`
 
 - Cambia `id` (igual que la carpeta), `title` y `summary`.
 - Borra la línea `hidden: true` para que salga en la portada.
 - Deja `animated: true` solo si el módulo tiene animación.
+- `transitionSeconds` es opcional: duración de la transición entre presets (por defecto 1,5 s).
 - Escribe `params`: un parámetro por cada cosa que el usuario pueda cambiar. De aquí salen los controles y la URL; no se crean controles a mano en ningún otro sitio.
 - Deja `presets: []` y `tours: []` vacíos por ahora.
 
@@ -52,6 +59,7 @@ Comprueba: `npm test` en verde.
 
 - `mount(container, ctx)` crea los paneles y las gráficas y devuelve `{ update, destroy }`.
 - `update(state)` recibe el estado completo y lo redibuja todo llamando a `physics.js`.
+- Mapas de color: lee el convenio de malla en `src/ui/plot2d.js` (comentario de `Heatmap`): los rangos son los bordes y cada valor está en el centro de su celda.
 - Gráficas 2D: `createPlot` de `src/ui/plot2d.js` (series con línea o con puntos, áreas, bandas, marcadores, mapas de color, imágenes). Los rótulos de los ejes son texto plano: usa caracteres Unicode (`ω₀`, `ψ`, `²`), no TeX.
 - 3D: `createView3D` de `src/ui/view3d.js`. Es asíncrona: `mount` debe ser `async` y usar `await`. Mira `src/modules/_galeria/view.js`.
 - Funciones complejas: `colorizeComplex` y `createPhaseWheel` de `src/ui/colormaps.js`. La rueda de fase debe estar siempre visible junto a cualquier vista coloreada por fase.

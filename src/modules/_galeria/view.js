@@ -51,7 +51,11 @@ export async function mount(container, ctx) {
   // 4) Visor 3D: la altura es |ψ| y el tono la fase. createView3D es asíncrona (carga three.js).
   const view3dPanel = addPanel(grid, 'Visor 3D: altura |ψ|, tono arg ψ (arrastra para girar)', { area: 'tres-d' });
   const view3d = await createView3D(view3dPanel.body, { axisLabels: { z: '|ψ|' }, axisLength: 1.2 });
-  const surface = view3d?.addSurface({ nx: GRID, ny: GRID, xRange: [-1, 1], yRange: [-1, 1] });
+  // Los valores de sampleGrid están en centros de celda; en la superficie cada valor es
+  // un vértice, así que el primero y el último quedan media celda hacia dentro del
+  // cuadrado [−1, 1]² (escala de la escena: 1 unidad = HALF).
+  const inset = 1 - 1 / GRID;
+  const surface = view3d?.addSurface({ nx: GRID, ny: GRID, xRange: [-inset, inset], yRange: [-inset, inset] });
   const heights = new Float32Array(GRID * GRID);
   const surfaceColors = new Uint8ClampedArray(GRID * GRID * 3);
 

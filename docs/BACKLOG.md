@@ -69,6 +69,16 @@ Entrada al laboratorio por objetos cotidianos en lugar de por fenómenos. Cada o
 - Proyección estereográfica.
 - Visualizador de grupos espaciales.
 
+## Pendientes de la revisión del encargo 00
+Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
+- `linalg.js`: reescalar la matriz por dentro para admitir elementos fuera de ~1e-140…1e150 (hoy está documentado como límite). Con todo el espectro en un mismo grupo casi degenerado, pedir todos los autovectores cuesta O(n³) (n = 1000: 1 s); si hiciera falta, cambiar a QL implícito para el caso "todos".
+- `solveTridiagonal` no pivota (documentado): añadir una variante con pivoteo si aparece una matriz que no sea diagonalmente dominante.
+- `complex.sqrt` desborda si |a| > ~9e307 (documentado).
+- Rueda de fase: su uniformidad se comprueba en OKLab, el mismo espacio en que se construye. En CIELAB, L* varía entre 65,6 y 69,4 y el paso de color entre fases a 30° va de 16,8 a 26,3: razonable, pero no perfecto. Comparar con CAM16-UCS si algún día importa.
+- Servicio de funcionamiento sin conexión completo: hoy la ficha y KaTeX se precargan al abrir un módulo, pero three.js solo se descarga al abrir la primera vista 3D y las fichas de otros módulos, al visitarlos.
+- Duración de la transición por preset (ahora es por módulo, `transitionSeconds`).
+- Oscilador: dibujar la masa y el muelle moviéndose junto a la gráfica de tiempo.
+
 ## Infraestructura
 - Miniaturas de la portada en los dos temas (ahora solo se genera la del tema claro).
 - Escala logarítmica en los ejes del trazador 2D y en los deslizadores (útil para espectros y para parámetros que abarcan varios órdenes de magnitud).

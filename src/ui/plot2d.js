@@ -74,8 +74,14 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  */
 
 /**
- * Mapa de color: valores escalares en una malla regular nx × ny, por filas
+ * Mapa de color: valores escalares en una malla regular de nx × ny celdas, por filas
  * (índice iy·nx + ix); la fila iy = 0 es la de menor y (abajo).
+ *
+ * CONVENIO DE MALLA: xRange e yRange son los BORDES del rectángulo, y cada valor
+ * corresponde al CENTRO de su celda:
+ *   x = xRange[0] + (ix + ½)·Δx,   Δx = (xRange[1] − xRange[0]) / nx      (igual en y)
+ * Si tus muestras están en nodos que incluyen los extremos (x₀, x₀ + h, …, x₁), pasa
+ * como bordes [x₀ − h/2, x₁ + h/2]; si no, el dibujo queda desplazado media celda.
  * @typedef {object} Heatmap
  * @property {number} nx
  * @property {number} ny
@@ -92,7 +98,8 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  */
 
 /**
- * Imagen ya coloreada (por ejemplo, fase y módulo de una función compleja).
+ * Imagen ya coloreada (por ejemplo, fase y módulo de una función compleja). Mismo
+ * convenio de malla que Heatmap: rangos = bordes, valores = centros de celda.
  * @typedef {object} RgbaImage
  * @property {number} nx
  * @property {number} ny

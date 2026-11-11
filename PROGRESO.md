@@ -6,16 +6,16 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 | Encargo | Estado |
 |---|---|
-| 00 Base y servicios comunes | en curso |
+| 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
 | 01 Plasmón, Mie y color | pendiente |
 | 02 Luz y materia | pendiente |
 | 03 Ondas clásicas y función de onda | pendiente |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 00 Base y servicios comunes
-- Último paso terminado: 13 (prueba de humo completa)
-- Siguiente paso: 14 (revisión con subagente, árbol de `docs/ARQUITECTURA.md` al día, cierre del encargo)
+- Encargo: 00 Base y servicios comunes (terminado). El siguiente es `docs/encargos/01-plasmon-mie.md`.
+- Último paso terminado: 14 (revisión independiente, correcciones y cierre). Encargo 00 terminado
+- Siguiente paso: encargo 01 (`docs/encargos/01-plasmon-mie.md`), en una sesión nueva
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -41,7 +41,35 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 12b | Oscilador: vistas | hecho |
 | 12c | Oscilador: presets, recorrido, ficha | hecho |
 | 13 | Prueba de humo completa | hecho |
-| 14 | Revisión con subagente, árbol de `ARQUITECTURA.md` al día, cierre | pendiente |
+| 14 | Revisión con subagente, árbol de `ARQUITECTURA.md` al día, cierre | hecho |
+
+### Cómo queda el encargo 00
+
+- `npm test`: 193 tests en verde (169 unitarios y de contrato de módulos + 24 de humo con navegador sin cabeza). `npm run check`: limpio.
+- Módulos registrados: `oscilador` (visible en la portada), `_galeria` y `_plantilla` (ocultos, se abren por su dirección).
+- Para un módulo nuevo: `src/modules/_plantilla/LEEME.md`.
+- Comandos además de los de `CLAUDE.md`: `npm run serve` (web en `http://127.0.0.1:8080/laboratorio/`), `npm run test:unit` (sin navegador), `npm run miniaturas [id]`, `npm run vendor`.
+- Para regenerar datos y referencias: `python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt`, y después los scripts de `tools/`.
+- La rama de trabajo es `claude/nifty-pascal-etf0j1`. **No está fusionada en `main`**: GitHub Pages no mostrará nada hasta que se fusione (ver "Necesito de Daniel").
+
+### Revisión independiente (paso 14)
+
+Un subagente con contexto limpio revisó solo la física y el cumplimiento del encargo, con scripts propios (no los tests del proyecto). Una ronda.
+
+- **Sin errores** en la física del oscilador (régimen estacionario, convenio de signos, potencia, media potencia, máximo de amplitud, solución analítica en los tres regímenes, RK4), en `units`, `fft`, `interp`, `colormaps` ni en la plantilla. Ningún test con valor esperado o tolerancia ajustados para pasar.
+- **Corregido** (cada punto con su test):
+  1. Rótulos de ejes que podían mostrar un número distinto del valor de la marca (marcas cada 0,25 → «0,3»; intervalos muy estrechos → rótulos repetidos). Ahora `formatTicks` añade decimales hasta que todas las marcas se leen exactas.
+  2. `eigTridiagonal` devolvía `NaN` con la matriz nula.
+  3. `arg` y `log` de un real negativo con parte imaginaria −0 daban −π en vez de +π.
+  4. Ficha del oscilador: «Im χ proporcional a la potencia» → ⟨P⟩ = ½·ω·F₀²·Im χ; «Q oscilaciones dura el transitorio» → cae un factor e cada Q/π oscilaciones.
+  5. Vista del oscilador: con γ = 0,02 la curva dibujada quedaba un 2–3 % por debajo del pico real (malla uniforme); ahora hay una malla fina en ω₀ ± 6γ. Los títulos y la leyenda dicen que el desfase marcado es el del régimen estacionario.
+  6. Convenio de mallas de los mapas de color (bordes frente a centros de celda): fijado y documentado en `plot2d.js`; la galería lo cumple.
+  7. Requisito a medias: duración de la transición configurable → campo opcional `transitionSeconds` en el descriptor.
+  8. Requisito a medias: «funciona sin conexión una vez cargado» → la ficha y KaTeX se precargan en un rato libre al abrir el módulo.
+  9. `LEEME.md` de la plantilla: el ejemplo del registro omitía módulos existentes.
+  10. Tests: cota del transitorio derivada de las condiciones iniciales en lugar de una constante sin justificar; comentarios de principio que faltaban; una comprobación tautológica sustituida.
+- **Anotado en `docs/BACKLOG.md`** (sección "Pendientes de la revisión del encargo 00"): límites de escala y coste de `linalg.js`, uniformidad de la rueda de fase medida en otro espacio de color, funcionamiento sin conexión completo, duración de transición por preset.
+- **No verificado**: las referencias bibliográficas de las fichas (Feynman I, caps. 21, 23, 24 y 49; Griffiths 4.ª ed. §9.4.3; Bohren y Huffman §9.1) no se han cotejado con los libros delante. Conviene que Daniel las compruebe.
 
 ## Versiones fijadas
 
@@ -71,6 +99,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **`update(state)` se agrupa por fotograma**: varios cambios de estado en el mismo fotograma producen una sola llamada a la vista.
 - 2026-11-11. **`store.set` recorta los números fuera de rango** (interacción), mientras que la URL los ignora con aviso (como pide la arquitectura).
 - 2026-11-11. **Módulo oculto `_galeria`** (`hidden: true`, `#/_galeria`): banco de pruebas visual de los servicios comunes; lo usa la prueba de humo.
+- 2026-11-11. **Convenio de mallas**: en los mapas de `plot2d.js` los rangos son los bordes del rectángulo y cada valor está en el centro de su celda; en `view3d.addSurface` cada valor es un vértice y los rangos son el primer y el último vértice. Documentado en ambos archivos.
 - 2026-11-11. **Trazador 2D en dos archivos**: `src/ui/plot-math.js` (marcas 1-2-5, formato con coma decimal, escalas; puro y testeado en Node) y `src/ui/plot2d.js` (dibujo en canvas). `src/ui/panels.js` crea los paneles con título donde los módulos colocan sus vistas.
 - 2026-11-11. **La leyenda de las gráficas va en una fila encima del área de datos**, no dentro: dentro tapaba curvas y etiquetas de marcadores, y así no hay que elegir esquina en cada gráfica.
 - 2026-11-11. **Tamaño de letra de las gráficas = `font-size` del contenedor**: el modo presentación solo tendrá que cambiar ese tamaño y llamar a `refreshPlots()`.
@@ -109,3 +138,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
+
+- **Fusionar la rama `claude/nifty-pascal-etf0j1` en `main`** (con un pull request o directamente) para que GitHub Pages publique el laboratorio, y comprobar en Ajustes → Pages que se sirve desde `main`, carpeta raíz.
+- **Cotejar las referencias bibliográficas** de `src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md` con los libros (capítulos y secciones citados de memoria).
+- Opcional: probar el modo presentación en el equipo de grabación (tecla P, después F para pantalla completa) y decir si el tamaño de letra a 1080p es el que quieres.

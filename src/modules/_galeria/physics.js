@@ -20,8 +20,11 @@ export function gaussianPacket(x, y, { sigma, k }) {
 }
 
 /**
- * Muestrea el paquete en una malla regular de nx × ny puntos sobre el cuadrado
- * [−half, half]². El punto (ix, iy) queda en el índice iy·nx + ix (por filas).
+ * Muestrea el paquete en una malla regular de nx × ny celdas que cubre el cuadrado
+ * [−half, half]². Cada valor se toma en el CENTRO de su celda, que es el convenio de
+ * los mapas de plot2d.js:
+ *   x = −half + (ix + ½)·(2·half/nx),    y = −half + (iy + ½)·(2·half/ny)
+ * El punto (ix, iy) queda en el índice iy·nx + ix (por filas).
  * @param {{ sigma: number, k: number }} p
  * @param {number} nx
  * @param {number} ny
@@ -32,9 +35,9 @@ export function sampleGrid(p, nx, ny, half) {
   const re = new Float64Array(nx * ny);
   const im = new Float64Array(nx * ny);
   for (let iy = 0; iy < ny; iy++) {
-    const y = -half + (2 * half * iy) / (ny - 1);
+    const y = -half + ((iy + 0.5) * 2 * half) / ny;
     for (let ix = 0; ix < nx; ix++) {
-      const x = -half + (2 * half * ix) / (nx - 1);
+      const x = -half + ((ix + 0.5) * 2 * half) / nx;
       const z = gaussianPacket(x, y, p);
       re[iy * nx + ix] = z.re;
       im[iy * nx + ix] = z.im;

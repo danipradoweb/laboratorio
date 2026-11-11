@@ -178,6 +178,9 @@ export async function createView3D(container, options = {}) {
   /**
    * Añade una superficie z(x, y) sobre una malla regular, con un color por vértice.
    * La malla va por filas (índice iy·nx + ix), igual que en fft.js y plot2d.js.
+   * CONVENIO: aquí cada valor es un VÉRTICE, y xRange/yRange son las coordenadas del
+   * primer y del último vértice (extremos incluidos). Ojo: en los mapas de plot2d.js los
+   * rangos son bordes de celda; ver el comentario de Heatmap allí.
    * @param {{ nx: number, ny: number, xRange: [number, number], yRange: [number, number] }} grid
    */
   function addSurface({ nx, ny, xRange, yRange }) {

@@ -18,15 +18,21 @@ test('módulo y fase del paquete gaussiano', () => {
   }
 });
 
-// La malla va por filas: el índice iy·nx + ix corresponde a (x_ix, y_iy).
-test('sampleGrid ordena la malla por filas', () => {
+// Convenio de mallas: por filas (índice iy·nx + ix) y con cada valor en el CENTRO de su
+// celda, igual que los mapas de plot2d.js. Con nx = 5 y half = 2 las celdas miden 0,8 y
+// sus centros están en x = −1,6; −0,8; 0; 0,8; 1,6. Con ny = 3: y = −4/3; 0; 4/3.
+test('sampleGrid: malla por filas con valores en el centro de cada celda', () => {
   const p = { sigma: 1, k: 3 };
   const nx = 5;
   const ny = 3;
   const { re, im } = sampleGrid(p, nx, ny, 2);
-  const z = gaussianPacket(1, -2, p); // ix = 3 (x = 1), iy = 0 (y = −2)
+  const z = gaussianPacket(0.8, -4 / 3, p); // ix = 3, iy = 0
   assert.ok(Math.abs(re[0 * nx + 3] - z.re) < 1e-15);
   assert.ok(Math.abs(im[0 * nx + 3] - z.im) < 1e-15);
-  const center = gaussianPacket(0, 0, p); // ix = 2, iy = 1
-  assert.equal(re[1 * nx + 2], center.re);
+  const center = gaussianPacket(0, 0, p); // ix = 2, iy = 1: el centro del cuadrado
+  assert.ok(Math.abs(re[1 * nx + 2] - center.re) < 1e-15);
+  // Simetría: la celda de la esquina opuesta está en (−x, −y), donde |ψ| vale lo mismo.
+  const a = Math.hypot(re[0], im[0]);
+  const b = Math.hypot(re[nx * ny - 1], im[nx * ny - 1]);
+  assert.ok(Math.abs(a - b) < 1e-15);
 });
