@@ -281,3 +281,43 @@ test('modo presentación: lienzo 16:9 centrado en una ventana 4:3', { skip }, as
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Fichas: cada módulo abre su ficha, con sus cinco secciones y las fórmulas dibujadas
+// por KaTeX (sin peticiones fallidas: las fuentes deben estar en vendor/).
+for (const m of modules) {
+  test(`[${m.id}] la ficha se abre y KaTeX dibuja las fórmulas`, { skip }, async () => {
+    const { page, errors, close } = await openPage(`#/${m.id}`);
+    await page.locator('.page-actions button', { hasText: 'Ficha' }).click();
+    await page.waitForSelector('.ficha-panel[data-loaded="true"]');
+    const headings = await page.locator('.ficha-panel h2').allTextContents();
+    assert.deepEqual(headings, [
+      'Qué estás viendo',
+      'Qué es físico y qué es representación',
+      'Ecuaciones',
+      'Límites del modelo',
+      'Referencias',
+    ]);
+    const formulas = await page.locator('.ficha-panel .math').count();
+    assert.ok(formulas > 0, 'la ficha no tiene fórmulas');
+    assert.equal(await page.locator('.ficha-panel .math .katex').count(), formulas, 'hay fórmulas sin dibujar');
+    assert.equal(await page.locator('.ficha-panel .katex-error').count(), 0, 'KaTeX no entiende alguna fórmula');
+    await page.waitForTimeout(300); // carga de las fuentes
+    await page.screenshot({ path: join(shots, `${m.id}-ficha.png`) });
+    // Se cierra con el mismo botón.
+    await page.locator('.page-actions button', { hasText: 'Ficha' }).click();
+    assert.equal(await page.locator('.ficha-panel').isVisible(), false);
+    await close();
+    assert.deepEqual(errors, []);
+  });
+}
+
+// El texto de los recorridos también es Markdown con fórmulas.
+test('el texto del recorrido se pinta como Markdown con KaTeX', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/_galeria');
+  await page.locator('.tour-start').first().click();
+  await page.waitForSelector('.tour-text .katex');
+  assert.equal(await page.locator('.tour-text strong').textContent(), 'estrecho');
+  assert.equal(await page.locator('.tour-text .katex-error').count(), 0);
+  await close();
+  assert.deepEqual(errors, []);
+});

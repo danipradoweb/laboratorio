@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 8 (modo presentación)
-- Siguiente paso: 9 (`src/core/markdown.js` y `src/ui/ficha.js`: fichas con KaTeX)
+- Último paso terminado: 9 (fichas con Markdown y KaTeX)
+- Siguiente paso: 10 (portada: tarjetas con miniatura y enlace a la web personal)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -34,7 +34,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | hecho |
 | 7 | `presets.js`, `tours.js`, `clock.js` | hecho |
 | 8 | `presentation.js` | hecho |
-| 9 | `markdown.js`, `ficha.js` | pendiente |
+| 9 | `markdown.js`, `ficha.js` | hecho |
 | 10 | Portada | pendiente |
 | 11 | Plantilla `_plantilla/` | pendiente |
 | 12a | Oscilador: física y tests | pendiente |
@@ -84,6 +84,9 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Modo presentación solo con CSS + un atributo**: `data-presentation="true"` en `<html>`; el lienzo es `min(100vw, 177,78vh)` de ancho y 16:9, y el tamaño de letra raíz es 1/96 de ese ancho (20 px a 1080p), de modo que toda la interfaz en `rem` y las gráficas escalan juntas.
 - 2026-11-11. **Atajos añadidos a los de la arquitectura**: `C` cambia el tema (además del selector flotante), `RePág`/`AvPág` mueven el recorrido (es lo que envían los mandos de presentación) y las flechas del recorrido funcionan también fuera del modo presentación. En teclados españoles los corchetes valen con AltGr y también con las dos teclas físicas a la derecha de la P.
 - 2026-11-11. **`ctx.theme` y `ctx.presentation`** añadidos al contexto de los módulos, como describe la arquitectura.
+- 2026-11-11. **Markdown mínimo propio** (`src/core/markdown.js`, puro y con tests): títulos, párrafos, listas, negrita, cursiva (solo con asteriscos, para no chocar con los guiones bajos de TeX), código, enlaces y fórmulas `$…$` / `$$…$$`. Sin tablas, imágenes ni listas anidadas. Las fórmulas se apartan antes de interpretar nada, así que el TeX llega intacto a KaTeX.
+- 2026-11-11. **La ficha se busca por convenio** en `src/modules/<id>/ficha.md` (no hace falta declararla en el descriptor) y se descarga al abrir el panel. KaTeX y su hoja de estilos se cargan en diferido la primera vez que hay una fórmula; si fallara, las fórmulas quedan como texto TeX.
+- 2026-11-11. **Abrir la ficha pliega el panel de controles** en ventanas de menos de 1500 px (no caben controles, vistas y ficha a la vez) y lo restaura al cerrarla.
 
 ## Problemas abiertos
 

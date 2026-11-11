@@ -246,6 +246,15 @@ h3 {
   grid-template-columns: 0 auto minmax(0, 1fr);
 }
 
+/* Con la ficha abierta se añade una cuarta columna a la derecha. */
+.module-page[data-ficha='open'] {
+  grid-template-columns: var(--side-w) auto minmax(0, 1fr) minmax(17rem, 25rem);
+}
+
+.module-page[data-ficha='open'][data-panel='closed'] {
+  grid-template-columns: 0 auto minmax(0, 1fr) minmax(17rem, 25rem);
+}
+
 .side-panel {
   min-width: 0;
   overflow-y: auto;
@@ -541,6 +550,91 @@ h3 {
   font-size: 1.05rem;
 }
 
+/* Ficha del módulo (src/ui/ficha.js) y texto en Markdown en general (.prose). */
+
+.ficha-panel {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 1rem 1.25rem 2rem;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+}
+
+.ficha-panel[hidden] {
+  display: none;
+}
+
+.prose h1 {
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose h2 {
+  margin: 1.5rem 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.prose h3 {
+  margin: 1rem 0 0.3rem;
+  font-size: 1rem;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0 0 0.75rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25rem;
+}
+
+.prose li {
+  margin-bottom: 0.3rem;
+}
+
+.prose code,
+.tour-text code {
+  padding: 0.05rem 0.3rem;
+  font-size: 0.875em;
+  background: var(--surface-2);
+  border-radius: 4px;
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface-2);
+  border-radius: 6px;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+}
+
+/* Fórmulas: en bloque ocupan su propia línea y pueden desplazarse si no caben. */
+.math-block {
+  display: block;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-align: center;
+}
+
+.tour-text p {
+  margin: 0;
+}
+
+.tour-text p + p {
+  margin-top: 0.4rem;
+}
+
 /* Escenario: zona donde el módulo monta sus vistas. */
 
 .stage-frame {
@@ -591,6 +685,7 @@ h3 {
   flex: 1;
   min-height: 0;
   position: relative;
+  overflow: hidden;
 }
 
 /* Gráficas (src/ui/plot2d.js): el lienzo ocupa todo su contenedor. */
@@ -673,6 +768,14 @@ h3 {
     height: auto;
     grid-template-columns: minmax(0, 1fr);
   }
+  .module-page[data-ficha='open'],
+  .module-page[data-ficha='open'][data-panel='closed'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ficha-panel {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
   .side-panel {
     border-right: none;
     border-bottom: 1px solid var(--border);
@@ -724,7 +827,9 @@ h3 {
 }
 
 .galeria-readout {
+  height: 100%;
   margin: 0;
+  overflow: auto;
   font-size: 0.85rem;
 }
 
@@ -749,6 +854,7 @@ h3 {
 :root[data-presentation='true'] .side-panel,
 :root[data-presentation='true'] .panel-toggle,
 :root[data-presentation='true'] .plot-export,
+:root[data-presentation='true'] .ficha-panel,
 :root[data-presentation='true'] .tour-nav {
   display: none;
 }

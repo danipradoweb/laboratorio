@@ -16,6 +16,7 @@ import { buildHash, createStore, stateFromQuery } from '../core/state.js';
 import { buildPresetList } from './preset-list.js';
 import { createTourBar } from './tour-bar.js';
 import { buildClockControls } from './clock-controls.js';
+import { createFichaPanel, renderMarkdownInto } from './ficha.js';
 import { createClock } from '../core/clock.js';
 import { getTheme, onThemeChange, themeColors } from '../core/theme.js';
 import { refreshPlots } from './plot2d.js';
@@ -30,6 +31,10 @@ import { createTourRunner } from '../core/tours.js';
 /** Espera (ms) tras el último cambio antes de escribir la URL. Los navegadores limitan
  *  cuántas veces por segundo se puede llamar a history.replaceState. */
 const URL_SYNC_DELAY_MS = 200;
+
+/** Anchura de ventana (px) a partir de la cual caben a la vez el panel de controles,
+ *  las vistas y la ficha. */
+const FICHA_AND_PANEL_MIN_WIDTH = 1500;
 
 /**
  * Crea la página de un módulo dentro de `root`.
@@ -48,6 +53,8 @@ export async function createModulePage(root, module, query, shell) {
   let destroyed = false;
 
   // --- Estructura ---------------------------------------------------------------------
+  /** ¿Plegó la ficha el panel de controles por falta de sitio? (para restaurarlo) */
+  let panelClosedByFicha = false;
   const controlsBox = el('div', { class: 'controls' });
   const presetsBox = el('div');
   const toursBox = el('div', { class: 'tour-list' });
@@ -67,6 +74,7 @@ export async function createModulePage(root, module, query, shell) {
     'aria-label': 'Ocultar o mostrar el panel de controles',
     onclick: () => {
       page.dataset.panel = page.dataset.panel === 'closed' ? 'open' : 'closed';
+      panelClosedByFicha = false; // lo ha decidido el usuario: no se toca más
     },
   });
   const stage = el('div', { class: 'stage' });
@@ -79,6 +87,7 @@ export async function createModulePage(root, module, query, shell) {
     stageFrame,
   );
   root.replaceChildren(page);
+  const ficha = createFichaPanel(page, module.id);
 
   const controls = buildControls(controlsBox, module.params, store);
   const clockControls = module.animated ? buildClockControls(clockBox, clock) : null;
@@ -126,7 +135,7 @@ export async function createModulePage(root, module, query, shell) {
   function startTour(tour) {
     tourRunner = createTourRunner(tour, (step, index) => {
       tourBar.show({ title: tour.title, index, total: tour.steps.length });
-      tourBar.textElement.textContent = step.text;
+      renderMarkdownInto(tourBar.textElement, step.text);
       const preset = module.presets.find((p) => p.id === step.preset);
       if (preset) goToPreset(preset);
     });
@@ -176,7 +185,28 @@ export async function createModulePage(root, module, query, shell) {
     title: 'Modo presentación (tecla P)',
     onclick: () => shell.presentation.enter(),
   });
-  shell.actions.replaceChildren(presentButton, copyButton);
+  const fichaButton = el('button', {
+    class: 'btn',
+    type: 'button',
+    text: 'Ficha',
+    title: 'Qué estás viendo, ecuaciones, límites del modelo y referencias',
+    'aria-pressed': 'false',
+    onclick: () => {
+      const open = ficha.toggle();
+      fichaButton.setAttribute('aria-pressed', String(open));
+      page.dataset.ficha = open ? 'open' : 'closed';
+      // En ventanas que no son muy anchas no caben a la vez controles, vistas y ficha:
+      // al abrir la ficha se pliega el panel de controles, y al cerrarla se restaura.
+      if (open && page.dataset.panel === 'open' && window.innerWidth < FICHA_AND_PANEL_MIN_WIDTH) {
+        page.dataset.panel = 'closed';
+        panelClosedByFicha = true;
+      } else if (!open && panelClosedByFicha) {
+        page.dataset.panel = 'open';
+        panelClosedByFicha = false;
+      }
+    },
+  });
+  shell.actions.replaceChildren(fichaButton, presentButton, copyButton);
 
   // --- URL ----------------------------------------------------------------------------
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -287,6 +317,7 @@ export async function createModulePage(root, module, query, shell) {
       clockControls?.destroy();
       presetList.destroy();
       tourBar.destroy();
+      ficha.destroy();
       instance.destroy();
       shell.actions.replaceChildren();
       page.remove();
