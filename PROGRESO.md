@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 2e (interp.js). Núcleo matemático completo
-- Siguiente paso: 3 (`src/core/state.js`: estado ↔ URL)
+- Último paso terminado: 3 (state.js)
+- Siguiente paso: 4 (interfaz: theme.js, controls.js, estilos, enrutado en app.js, registry.js, módulo oculto `_galeria`)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -27,7 +27,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 2c | `fft.js` | hecho |
 | 2d | `linalg.js` | hecho |
 | 2e | `interp.js` | hecho |
-| 3 | `state.js` (estado ↔ URL) | pendiente |
+| 3 | `state.js` (estado ↔ URL) | hecho |
 | 4 | Interfaz: `theme.js`, `controls.js`, estilos, shell y enrutado en `app.js`, `registry.js`, módulo oculto `_galeria` | pendiente |
 | 5a | `plot2d.js` | pendiente |
 | 5b | `view3d.js` | pendiente |
