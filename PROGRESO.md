@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 2b (complex.js)
-- Siguiente paso: 2c (`src/core/fft.js`)
+- Último paso terminado: 2c (fft.js)
+- Siguiente paso: 2d (`src/core/linalg.js`)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -24,7 +24,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 1 | Andamiaje: `package.json`, `tsconfig.json`, `.nojekyll`, `index.html`, `app.js`, `vendor/`, `tools/serve.mjs`, tests de estructura y humo mínimo | hecho |
 | 2a | `units.js` | hecho |
 | 2b | `complex.js` | hecho |
-| 2c | `fft.js` | pendiente |
+| 2c | `fft.js` | hecho |
 | 2d | `linalg.js` | pendiente |
 | 2e | `interp.js` | pendiente |
 | 3 | `state.js` (estado ↔ URL) | pendiente |
