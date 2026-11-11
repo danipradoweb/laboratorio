@@ -114,14 +114,14 @@ test('controles, estado y URL están sincronizados', { skip }, async () => {
   assert.equal(await page.locator('[data-key="k"] input[type="range"]').inputValue(), '5');
   assert.equal(await page.locator('[data-key="sigma"] input[type="range"]').inputValue(), '1');
   assert.equal(await page.locator('[data-key="colormap"] select').inputValue(), 'magma');
-  assert.equal(new URL(page.url()).hash, '#/_galeria?k=5&sigma=1&colormap=magma&markers=1');
+  assert.equal(new URL(page.url()).hash, '#/_galeria?k=5&sigma=1&colormap=magma&markers=1&rotar=0');
 
   // Mover controles actualiza la URL.
   await page.locator('[data-key="colormap"] select').selectOption('viridis');
   await page.locator('[data-key="markers"] input').uncheck();
   await page.locator('[data-key="k"] .control-number').fill('2.5');
   await page.locator('[data-key="k"] .control-number').press('Enter');
-  await page.waitForFunction(() => location.hash === '#/_galeria?k=2.5&sigma=1&colormap=viridis&markers=0');
+  await page.waitForFunction(() => location.hash === '#/_galeria?k=2.5&sigma=1&colormap=viridis&markers=0&rotar=0');
   assert.equal(await page.locator('[data-key="k"] input[type="range"]').inputValue(), '2.5');
 
   // Editar la URL a mano actualiza los controles, sin recargar la página.
@@ -159,6 +159,57 @@ test('plot2d: clic en la gráfica y exportación a PNG', { skip }, async () => {
   await page.locator('.galeria-grid .panel').first().locator('.plot-export').click();
   const download = await downloadPromise;
   assert.equal(download.suggestedFilename(), 'galeria-series.png');
+  await close();
+  assert.deepEqual(errors, []);
+});
+
+// Presets con transición animada, recorrido guiado y reloj, sobre la galería.
+test('presets con transición, recorrido guiado y reloj de animación', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/_galeria');
+  const k = page.locator('[data-key="k"] input[type="range"]');
+
+  // Clic en un preset: los valores cambian poco a poco (transición de 1,5 s) y acaban
+  // exactamente en el preset; la URL y el botón activo se actualizan.
+  await page.locator('.preset[data-preset="estrecho"]').click();
+  await page.waitForTimeout(500);
+  const midway = Number(await k.inputValue());
+  assert.ok(midway > 3 && midway < 6, `a mitad de transición k = ${midway}`);
+  await page.waitForFunction(() => location.hash.includes('k=6&sigma=0.5&'));
+  assert.equal(await page.locator('.preset[data-preset="estrecho"]').getAttribute('aria-pressed'), 'true');
+
+  // Tocar un control durante una transición la cancela: manda el usuario.
+  await page.locator('.preset[data-preset="ancho"]').click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-key="k"] .control-number').fill('4');
+  await page.locator('[data-key="k"] .control-number').press('Enter');
+  await page.waitForTimeout(1700);
+  assert.equal(await k.inputValue(), '4');
+  assert.equal(await page.locator('.preset[aria-pressed="true"]').count(), 0);
+
+  // Recorrido: empieza en el primer paso y avanza con las flechas de la barra.
+  await page.locator('.tour-start[data-tour="servicios"]').click();
+  assert.match(await page.locator('.tour-counter').textContent(), /Paso 1 de 3/);
+  await page.waitForFunction(() => location.hash.includes('k=6&sigma=0.5&'));
+  await page.locator('.tour-nav button[aria-label="Paso siguiente"]').click();
+  assert.match(await page.locator('.tour-counter').textContent(), /Paso 2 de 3/);
+  // El parámetro discreto (mapa de color) cambia al final de la transición.
+  await page.waitForFunction(() => location.hash.includes('k=1.5&sigma=1.8&colormap=viridis'));
+  await page.screenshot({ path: join(shots, '_galeria-recorrido.png') });
+  await page.locator('.tour-nav button', { hasText: 'Terminar' }).click();
+  assert.equal(await page.locator('.tour-bar').isVisible(), false);
+
+  // Reloj: con la fase girando, la gráfica cambia sola; en pausa, se queda quieta.
+  await page.locator('[data-key="rotar"] input').check();
+  const canvas = page.locator('.galeria-grid .panel').first().locator('canvas');
+  const frame = () => canvas.evaluate((/** @type {HTMLCanvasElement} */ c) => c.toDataURL());
+  const a = await frame();
+  await page.waitForTimeout(300);
+  assert.notEqual(await frame(), a, 'la animación no avanza');
+  await page.locator('.clock-play').click();
+  assert.equal(await page.locator('.clock-play').textContent(), 'Reanudar');
+  const b = await frame();
+  await page.waitForTimeout(300);
+  assert.equal(await frame(), b, 'en pausa la gráfica no debe cambiar');
   await close();
   assert.deepEqual(errors, []);
 });

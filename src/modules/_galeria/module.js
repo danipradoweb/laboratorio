@@ -28,9 +28,40 @@ const descriptor = {
       default: 'divergente',
     },
     { key: 'markers', label: 'Marcadores y áreas', type: 'toggle', default: true },
+    {
+      key: 'rotar',
+      label: 'Girar la fase global',
+      type: 'toggle',
+      default: false,
+      help: 'Multiplica ψ por e^(−it). Sirve para probar el reloj de animación: pausa y velocidad.',
+    },
   ],
-  presets: [],
-  tours: [],
+  presets: [
+    { id: 'estrecho', label: 'Paquete estrecho y rápido', state: { k: 6, sigma: 0.5 } },
+    { id: 'ancho', label: 'Paquete ancho y lento', state: { k: 1.5, sigma: 1.8, colormap: 'viridis' } },
+    { id: 'sin-onda', label: 'Sin oscilación (k = 0)', state: { k: 0, sigma: 1, markers: false } },
+  ],
+  tours: [
+    {
+      id: 'servicios',
+      title: 'Qué se prueba aquí',
+      steps: [
+        {
+          preset: 'estrecho',
+          text: 'Un paquete **estrecho** en el espacio: $\\sigma = 0{,}5$. La transición entre presets interpola los parámetros numéricos.',
+        },
+        {
+          preset: 'ancho',
+          text: 'Un paquete *ancho*. Los parámetros discretos, como el mapa de color, cambian al final de la transición.',
+        },
+        {
+          preset: 'sin-onda',
+          text: 'Con $k = 0$ no hay oscilación y la fase es constante: $$\\psi(x, y) = e^{-(x^2+y^2)/2\\sigma^2}$$',
+        },
+      ],
+    },
+  ],
+  animated: true,
   mount,
 };
 

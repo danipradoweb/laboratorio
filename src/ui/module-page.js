@@ -13,8 +13,13 @@
 import { el } from './dom.js';
 import { buildControls } from './controls.js';
 import { buildHash, createStore, stateFromQuery } from '../core/state.js';
+import { buildPresetList } from './preset-list.js';
+import { createTourBar } from './tour-bar.js';
+import { buildClockControls } from './clock-controls.js';
 import { createClock } from '../core/clock.js';
 import { onThemeChange } from '../core/theme.js';
+import { createTransition, findActivePreset, presetState } from '../core/presets.js';
+import { createTourRunner } from '../core/tours.js';
 
 /**
  * @typedef {import('../modules/types.js').ModuleDescriptor} ModuleDescriptor
@@ -42,10 +47,16 @@ export async function createModulePage(root, module, query, shell) {
 
   // --- Estructura ---------------------------------------------------------------------
   const controlsBox = el('div', { class: 'controls' });
+  const presetsBox = el('div');
+  const toursBox = el('div', { class: 'tour-list' });
+  const clockBox = el('div');
   const sidePanel = el(
     'aside',
     { class: 'side-panel', 'aria-label': 'Controles' },
     el('section', { class: 'side-section' }, el('h2', { text: 'Parámetros' }), controlsBox),
+    module.presets.length > 0 && el('section', { class: 'side-section' }, el('h2', { text: 'Presets' }), presetsBox),
+    module.tours.length > 0 && el('section', { class: 'side-section' }, el('h2', { text: 'Recorridos' }), toursBox),
+    module.animated && el('section', { class: 'side-section' }, el('h2', { text: 'Animación' }), clockBox),
   );
   const panelToggle = el('button', {
     class: 'panel-toggle',
@@ -68,6 +79,76 @@ export async function createModulePage(root, module, query, shell) {
   root.replaceChildren(page);
 
   const controls = buildControls(controlsBox, module.params, store);
+  const clockControls = module.animated ? buildClockControls(clockBox, clock) : null;
+
+  // --- Presets y transiciones ---------------------------------------------------------
+  /** @type {ReturnType<typeof createTransition> | null} */
+  let transition = null;
+
+  /**
+   * Lleva el módulo a un estado, con transición animada (o de golpe si animate es false).
+   * @param {import('../core/state.js').State} target
+   * @param {boolean} [animate]
+   */
+  function goToState(target, animate = true) {
+    transition?.cancel();
+    transition = createTransition({
+      params: module.params,
+      from: store.get(),
+      to: target,
+      duration: animate ? undefined : 0,
+      onFrame: (state) => store.replace(state, 'transition'),
+      onDone: () => {
+        transition = null;
+      },
+    });
+  }
+
+  /** @param {import('../modules/types.js').Preset} preset */
+  const goToPreset = (preset) => goToState(presetState(module.params, preset));
+  const presetList = buildPresetList(presetsBox, module.presets, goToPreset);
+  const markActivePreset = () =>
+    presetList.setActive(findActivePreset(module.params, module.presets, store.get()));
+  markActivePreset();
+
+  // --- Recorridos guiados -------------------------------------------------------------
+  /** @type {import('../core/tours.js').TourRunner | null} */
+  let tourRunner = null;
+  const tourBar = createTourBar(stageFrame, {
+    onPrevious: () => tourRunner?.previous(),
+    onNext: () => tourRunner?.next(),
+    onClose: () => stopTour(),
+  });
+
+  /** @param {import('../modules/types.js').Tour} tour */
+  function startTour(tour) {
+    tourRunner = createTourRunner(tour, (step, index) => {
+      tourBar.show({ title: tour.title, index, total: tour.steps.length });
+      tourBar.textElement.textContent = step.text;
+      const preset = module.presets.find((p) => p.id === step.preset);
+      if (preset) goToPreset(preset);
+    });
+    page.dataset.tour = tour.id;
+  }
+
+  function stopTour() {
+    tourRunner = null;
+    tourBar.hide();
+    delete page.dataset.tour;
+  }
+
+  for (const tour of module.tours) {
+    toursBox.append(
+      el('button', {
+        class: 'btn tour-start',
+        type: 'button',
+        text: tour.title,
+        title: 'Empezar este recorrido guiado',
+        dataset: { tour: tour.id },
+        onclick: () => startTour(tour),
+      }),
+    );
+  }
 
   // --- Barra superior -----------------------------------------------------------------
   const copyButton = el('button', {
@@ -134,9 +215,15 @@ export async function createModulePage(root, module, query, shell) {
     });
   }
 
-  const unsubscribe = store.subscribe(() => {
+  const unsubscribe = store.subscribe((_state, change) => {
+    // Si el usuario toca algo durante una transición, manda el usuario.
+    if (change.source !== 'transition' && transition?.running) {
+      transition.cancel();
+      transition = null;
+    }
     scheduleUpdate();
     writeUrlSoon();
+    markActivePreset();
   });
   // Al cambiar el tema se vuelve a llamar a update: las vistas que eligen colores
   // según el fondo (coloreado de fase) se rehacen sin que el módulo tenga que escuchar.
@@ -145,6 +232,22 @@ export async function createModulePage(root, module, query, shell) {
   return {
     module,
     store,
+    clock,
+    /** Elementos que el modo presentación necesita manejar. */
+    elements: { page, stageFrame },
+    /**
+     * Salta al preset número `index` (empezando en 0), si existe.
+     * @param {number} index
+     */
+    goToPresetIndex(index) {
+      const preset = module.presets[index];
+      if (preset) goToPreset(preset);
+    },
+    /** Recorrido en curso (null si no hay ninguno). */
+    get tour() {
+      return tourRunner;
+    },
+    stopTour,
     /**
      * La URL ha cambiado a mano dentro del mismo módulo: se aplica al estado.
      * @param {Record<string, string>} newQuery
@@ -158,10 +261,14 @@ export async function createModulePage(root, module, query, shell) {
     destroy() {
       destroyed = true;
       clearTimeout(urlTimer);
+      transition?.cancel();
       unsubscribe();
       offTheme();
       clock.destroy();
       controls.destroy();
+      clockControls?.destroy();
+      presetList.destroy();
+      tourBar.destroy();
       instance.destroy();
       shell.actions.replaceChildren();
       page.remove();

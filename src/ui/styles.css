@@ -421,6 +421,125 @@ h3 {
   transform: translateX(1rem);
 }
 
+/* Presets, recorridos y reloj en el panel lateral. */
+
+.preset-list,
+.tour-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.preset,
+.tour-start {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  white-space: normal;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.preset:hover,
+.tour-start:hover {
+  border-color: var(--accent);
+}
+
+.preset[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.preset kbd {
+  flex: none;
+  min-width: 1.4rem;
+  padding: 0 0.3rem;
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.clock-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.clock-controls .btn {
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+}
+
+.clock-play {
+  min-width: 5.2rem;
+}
+
+.clock-speed {
+  min-width: 2.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-soft);
+}
+
+/* Barra de recorrido guiado, bajo las vistas. */
+
+.tour-bar {
+  flex: none;
+  margin-top: var(--gap);
+  padding: 0.6rem 0.9rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.tour-bar[hidden] {
+  display: none;
+}
+
+.tour-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.tour-title {
+  font-weight: 650;
+}
+
+.tour-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.tour-nav .btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tour-text {
+  max-width: 60rem;
+  margin-top: 0.25rem;
+  font-size: 1.05rem;
+}
+
 /* Escenario: zona donde el módulo monta sus vistas. */
 
 .stage-frame {

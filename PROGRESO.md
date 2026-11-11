@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 00 Base y servicios comunes
-- Último paso terminado: 6 (colormaps.js: rueda de fase y mapas de color)
-- Siguiente paso: 7 (`src/core/presets.js` y `src/core/tours.js`; `clock.js` ya está hecho)
+- Último paso terminado: 7 (presets con transición, recorridos, reloj)
+- Siguiente paso: 8 (`src/core/presentation.js`: modo presentación con atajos)
 
 ### Plan del encargo 00 (pasos y estado)
 
@@ -32,7 +32,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 5a | `plot2d.js` | hecho |
 | 5b | `view3d.js` | hecho |
 | 6 | `colormaps.js` (rueda de fase, secuenciales, divergente) | hecho |
-| 7 | `presets.js`, `tours.js`, `clock.js` | pendiente |
+| 7 | `presets.js`, `tours.js`, `clock.js` | hecho |
 | 8 | `presentation.js` | pendiente |
 | 9 | `markdown.js`, `ficha.js` | pendiente |
 | 10 | Portada | pendiente |
@@ -78,6 +78,9 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Mapa divergente = RdBu invertido de ColorBrewer** (vía matplotlib, Apache 2.0), no `vik`: al medirlo, `vik` tiene una asimetría de luminosidad de hasta 0,09 (L de OKLab) entre +v y −v; RdBu_r, 0,02. El test falló con `vik` y se investigó en vez de relajar el umbral. Secuenciales: viridis y magma (matplotlib, CC0). Tablas generadas con `tools/colormaps.py` en `src/ui/colormap-data.js`.
 - 2026-11-11. **`culori` 4.0.2 como devDependency** solo para `tools/oklab-fixture.mjs`, que genera el fixture con el que se comprueban las matrices OKLab de `colormaps.js`.
 - 2026-11-11. **`update(state)` se vuelve a llamar al cambiar el tema**, para que las vistas coloreadas según el fondo se rehagan sin código propio en cada módulo.
+- 2026-11-11. **Transiciones**: `createTransition` interpola con la curva 3t²−2t³ durante 1,5 s (configurable) y entrega exactamente el estado de destino en el último fotograma; los parámetros discretos cambian al final. Si el usuario toca un control, edita la URL o hace clic en una vista durante una transición, esta se cancela (manda el usuario).
+- 2026-11-11. **Un preset fija sus claves y deja el resto en su valor por defecto** (no en el valor actual), para que un preset reproduzca siempre el mismo estado.
+- 2026-11-11. **Piezas de interfaz en archivos pequeños**: `src/ui/preset-list.js`, `src/ui/tour-bar.js`, `src/ui/clock-controls.js`; `module-page.js` solo las conecta. Los controles de animación solo aparecen si el descriptor tiene `animated: true`.
 
 ## Problemas abiertos
 

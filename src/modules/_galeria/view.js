@@ -62,11 +62,29 @@ export async function mount(container, ctx) {
 
   const xs = Float64Array.from({ length: SAMPLES }, (_, i) => -HALF + (2 * HALF * i) / (SAMPLES - 1));
 
-  return {
-    update(state) {
+  /** Último estado recibido, para redibujar en cada fotograma de la animación. */
+  /** @type {import('../types.js').State | null} */
+  let lastState = null;
+  // Reloj de animación: con "Girar la fase global", ψ se multiplica por e^(−it).
+  const offTick = ctx.clock.onTick(() => {
+    if (lastState?.rotar) render(lastState);
+  });
+
+  /** @param {import('../types.js').State} state */
+  function render(state) {
       const p = { sigma: Number(state.sigma), k: Number(state.k) };
-      const re = xs.map((x) => gaussianPacket(x, 0, p).re);
-      const im = xs.map((x) => gaussianPacket(x, 0, p).im);
+      // Fase global: giro de ángulo −t (solo si está activado).
+      const theta = state.rotar ? -ctx.clock.time : 0;
+      const cos = Math.cos(theta);
+      const sin = Math.sin(theta);
+      const re = xs.map((x) => {
+        const z = gaussianPacket(x, 0, p);
+        return z.re * cos - z.im * sin;
+      });
+      const im = xs.map((x) => {
+        const z = gaussianPacket(x, 0, p);
+        return z.re * sin + z.im * cos;
+      });
       const envelope = xs.map((x) => Math.exp(-(x * x) / (2 * p.sigma * p.sigma)));
       const markers = Boolean(state.markers);
       linePlot.draw({
@@ -82,6 +100,12 @@ export async function mount(container, ctx) {
       });
 
       const field = sampleGrid(p, GRID, GRID, HALF);
+      for (let i = 0; i < field.re.length; i++) {
+        const a = field.re[i];
+        const b = field.im[i];
+        field.re[i] = a * cos - b * sin;
+        field.im[i] = a * sin + b * cos;
+      }
       mapPlot.draw({
         heatmap: {
           nx: GRID,
@@ -118,8 +142,15 @@ export async function mount(container, ctx) {
       surface?.update(heights, surfaceColors);
 
       readout.textContent = JSON.stringify(state, null, 2);
+  }
+
+  return {
+    update(state) {
+      lastState = state;
+      render(state);
     },
     destroy() {
+      offTick();
       linePlot.destroy();
       mapPlot.destroy();
       phasePlot.destroy();
