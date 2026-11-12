@@ -1,6 +1,6 @@
 # Plasmón, teoría de Mie y color
 
-Una partícula metálica de unas decenas de nanómetros iluminada con luz blanca. El módulo calcula cuánta luz de cada color quita del haz y enseña por qué: sus electrones de conducción oscilan empujados por la luz, y a cierta frecuencia lo hacen con una amplitud enorme.
+Una partícula metálica de unas decenas de nanómetros iluminada con luz blanca. El módulo calcula cuánta luz de cada color quita del haz y enseña por qué: sus electrones de conducción oscilan empujados por la luz, y cerca de cierta frecuencia lo hacen con la amplitud y el retraso que más energía le quitan al haz.
 
 ## Qué estás viendo
 
@@ -13,7 +13,7 @@ Una partícula metálica de unas decenas de nanómetros iluminada con luz blanca
 
 Tres ideas que conviene comprobar moviendo los controles:
 
-1. La nube oscila **siempre** a la frecuencia de la luz: es una oscilación forzada, como la del módulo [oscilador](#/oscilador). «Resonar» no es algo distinto de «ser inducida»: es el punto del barrido donde la amplitud es máxima, y al cruzarlo el desfase gira (hasta cerca de 90° si el metal absorbe poco, como la plata).
+1. La nube oscila **siempre** a la frecuencia de la luz: es una oscilación forzada, como la del módulo [oscilador](#/oscilador). «Resonar» no es algo distinto de «ser inducida»: es la zona del barrido donde la amplitud pasa por su máximo y el desfase gira (hasta cerca de 90° si el metal absorbe poco, como la plata). Lo que la partícula absorbe en cada ciclo es $\propto |\alpha|\sin\delta$: una nube que se mueve en fase con la fuerza ($\delta \approx 0$, en el infrarrojo) casi no absorbe aunque se mueva.
 2. La partícula **no emite otro color**. Absorbe (calor) o dispersa (misma $\lambda$). El color a contraluz es lo que queda.
 3. Mientras la partícula es mucho menor que $\lambda$, el pico **no depende del tamaño**: lo fijan el material y el medio. El corrimiento al rojo de las partículas grandes viene del retardo, y la **forma** pesa más que el tamaño.
 
@@ -38,7 +38,7 @@ El denominador casi se anula cuando $\mathrm{Re}\,\varepsilon(\omega) = -2\varep
 
 $$\alpha = 4\pi a^3\left(1 + \frac{3 i\,\varepsilon_m}{\mathrm{Im}\,\varepsilon}\right), \qquad \tan\delta = \frac{3\varepsilon_m}{\mathrm{Im}\,\varepsilon}$$
 
-El «1» es una respuesta de fondo en fase con la fuerza; el otro término es el resonante, con 90° de retraso. Con pocas pérdidas (plata) domina el resonante y $\delta \approx 90°$, como en el oscilador forzado; en el oro, que absorbe más, $\delta$ se queda en unos 60°.
+El «1» es una respuesta de fondo en fase con la fuerza; el otro término es el resonante, con 90° de retraso. Con pocas pérdidas (plata) domina el resonante y $\delta \approx 90°$, como en el oscilador forzado; en el oro, que absorbe más, $\delta$ se queda en unos 60°. Por lo mismo, en el oro de 20 nm no coinciden exactamente la condición de Fröhlich (≈ 515 nm), el máximo de extinción (521 nm) y el máximo de amplitud (≈ 539 nm); en la plata los tres caen a pocos nanómetros.
 
 **Esfera de cualquier tamaño (Mie).** Con $m = (n + ik)/n_m$ y $x = ka$:
 
@@ -52,7 +52,7 @@ $Q = C/\pi a^2$, $Q_{abs} = Q_{ext} - Q_{sca}$ y $n_{max} = x + 4x^{1/3} + 2$. $
 
 $$\alpha_j = V\,\frac{\varepsilon - \varepsilon_m}{\varepsilon_m + L_j(\varepsilon - \varepsilon_m)}, \qquad \langle C_{abs} \rangle = \frac{k}{3}\,\mathrm{Im}\left(\alpha_\parallel + 2\alpha_\perp\right)$$
 
-Cada eje resuena cuando $\mathrm{Re}\,\varepsilon = -\varepsilon_m (1 - L_j)/L_j$.
+Cada eje resuena cuando $\mathrm{Re}\,\varepsilon = -\varepsilon_m (1 - L_j)/L_j$. La dispersión promediada es $\langle C_{sca} \rangle = \frac{k^4}{18\pi}\left(|\alpha_\parallel|^2 + 2|\alpha_\perp|^2\right)$.
 
 **Campo cercano de la esfera** (aproximación dipolar), con $\beta = (\varepsilon - \varepsilon_m)/(\varepsilon + 2\varepsilon_m)$:
 
@@ -63,12 +63,13 @@ $$\frac{\mathbf{E}}{E_0} = \hat{\mathbf{z}} + \beta\left(\frac{a}{r}\right)^3\le
 ## Límites del modelo
 
 - Las constantes ópticas son las del **metal macizo**. Por debajo de unos 10 nm los electrones chocan con la superficie y el pico real es más ancho y más bajo que el calculado; por debajo de unos 2 nm aparecen efectos cuánticos. El módulo no incluye ninguna de las dos cosas.
-- Las tablas de Johnson & Christy tienen un punto cada 15–40 nm en el visible y se interpolan linealmente: la posición de un pico puede quedar «atraída» unos nanómetros hacia un punto de la tabla.
+- Las tablas de Johnson & Christy tienen un punto cada 16–52 nm en el visible y se interpolan linealmente: la posición de un pico puede quedar «atraída» unos nanómetros hacia un punto de la tabla.
 - El medio es transparente y sin dispersión (un solo número, $n_m$).
 - **Bastón**: la teoría de Gans es cuasiestática (sin retardo) y trata el bastón como un esferoide. Vale si el largo es mucho menor que $\lambda$; los bastones reales, con extremos planos o semiesféricos, tienen el pico algo desplazado.
 - **Campo cercano**: es la solución electrostática. En la esfera equivale al término dipolar sin retardo, y deja de ser fiable cuando $x \gtrsim 0{,}3$ (la línea superior lo avisa). En el bastón se dibuja el caso del campo paralelo al eje largo.
-- **Diagrama de dispersión del bastón**: el de un dipolo, que es lo que da la aproximación cuasiestática.
-- **Coloide**: partículas idénticas, independientes y con dispersión simple (ley de Beer-Lambert). Un coloide real tiene una distribución de tamaños; si las partículas se agregan, el espectro cambia por completo (acoplamiento entre plasmones), y eso no está aquí.
+- **Diagrama de dispersión del bastón**: el promedio sobre orientaciones de un dipolo anisótropo, coherente con el espectro. Por eso, a 90° la luz polarizada en el plano no se anula como en la esfera: los bastones inclinados giran la polarización.
+- **Nube electrónica y campo cercano del bastón**: muestran, en cambio, un solo bastón alineado con el campo (su modo longitudinal), no el promedio.
+- **Coloide**: partículas idénticas, independientes y con dispersión simple (ley de Beer-Lambert). El color «de lado» sale de la dispersión total $C_{sca}(\lambda)$, no de la de un ángulo concreto, y no descuenta que esa luz se atenúa al salir de la cubeta. Un coloide real tiene una distribución de tamaños; si las partículas se agregan, el espectro cambia por completo (acoplamiento entre plasmones), y eso no está aquí.
 - **Copa de Licurgo**: el preset usa partículas de aleación Au-Ag (30 % Au, 70 % Ag) de 70 nm en vidrio de índice 1,5. El vidrio real contiene además otras partículas y la proporción es aproximada.
 
 ## Referencias

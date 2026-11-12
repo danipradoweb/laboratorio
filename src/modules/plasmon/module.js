@@ -116,11 +116,11 @@ const descriptor = {
       steps: [
         {
           preset: 'oro-20-lejos',
-          text: 'La luz es un campo eléctrico que oscila y **empuja** a los electrones de conducción de la partícula. La nube electrónica oscila *siempre* a la frecuencia de la luz: es una **oscilación forzada**. Aquí, en el infrarrojo ($\\lambda = 800$ nm), la nube sigue a la fuerza casi en fase y se mueve poco: apenas hay extinción.',
+          text: 'La luz es un campo eléctrico que oscila y **empuja** a los electrones de conducción de la partícula. La nube electrónica oscila *siempre* a la frecuencia de la luz: es una **oscilación forzada**. Aquí, en el infrarrojo ($\\lambda = 800$ nm), la nube sigue a la fuerza casi en fase ($\\delta \\approx 1°$). Se mueve, y no poco (a la mitad de su amplitud máxima), pero una fuerza en fase con el desplazamiento devuelve en medio ciclo la energía que dio en el otro medio: no cede energía neta y apenas hay extinción.',
         },
         {
           preset: 'oro-20',
-          text: 'En $\\lambda \\approx 520$ nm se cumple $\\mathrm{Re}\\,\\varepsilon(\\omega) = -2\\varepsilon_m$ (condición de Fröhlich): **resonancia de plasmón**. No es un fenómeno distinto de «inducir» la oscilación: es la misma oscilación forzada, en el punto del barrido donde su amplitud es máxima. Arrastra $\\lambda$ sobre el espectro: la amplitud crece y el desfase $\\delta$ gira, como en el oscilador forzado.',
+          text: 'Cerca de $\\lambda \\approx 520$ nm se cumple $\\mathrm{Re}\\,\\varepsilon(\\omega) = -2\\varepsilon_m$ (condición de Fröhlich): **resonancia de plasmón**. No es un fenómeno distinto de «inducir» la oscilación: es la misma oscilación forzada, en la zona del barrido donde la amplitud pasa por su máximo y la nube se retrasa respecto a la fuerza. La energía absorbida en cada ciclo es $\\propto |\\alpha|\\sin\\delta$: aquí es unas cien veces mayor que en 800 nm. Arrastra $\\lambda$ sobre el espectro y mira crecer la amplitud y girar el desfase, como en el oscilador forzado.',
         },
         {
           preset: 'oro-20',
@@ -158,7 +158,7 @@ const descriptor = {
         },
         {
           preset: 'baston-3',
-          text: 'La **forma** pesa más que el tamaño. Un bastón de solo $30 \\times 10$ nm tiene su pico en el rojo: a lo largo del eje largo el factor de despolarización $L$ es menor que $1/3$ y la resonancia pide $\\mathrm{Re}\\,\\varepsilon = -\\varepsilon_m (1-L)/L$. Queda otro pico pequeño cerca de 520 nm: la oscilación a lo ancho.',
+          text: 'La **forma** pesa más que el tamaño. Un bastón de solo $30 \\times 10$ nm tiene su pico en el rojo: a lo largo del eje largo el factor de despolarización $L$ es menor que $1/3$ y la resonancia pide $\\mathrm{Re}\\,\\varepsilon = -\\varepsilon_m (1-L)/L$. Queda otro pico pequeño hacia 505 nm: la oscilación a lo ancho.',
         },
       ],
     },

@@ -7,15 +7,41 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | Encargo | Estado |
 |---|---|
 | 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
-| 01 Plasmón, Mie y color | **en curso** (rama `claude/bold-goldberg-s51hqd`) |
+| 01 Plasmón, Mie y color | **terminado** (2026-11-12), revisado. Rama `claude/bold-goldberg-s51hqd`, sin fusionar en `main` |
 | 02 Luz y materia | pendiente |
 | 03 Ondas clásicas y función de onda | pendiente |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
-- Último paso terminado: 10a (documentación de los servicios, arquitectura y backlog al día)
-- Siguiente paso: 10b (revisión con subagente de contexto limpio, correcciones y cierre). **Estado: revisión lanzada el 2026-11-12 y todavía sin resultado.** Un primer intento se cortó por el límite de uso sin entregar nada. Si esta sesión se corta antes de anotar aquí el resultado, hay que relanzar la revisión (una sola ronda): solo física y cumplimiento del encargo, con scripts propios y sin modificar el repositorio.
+- Encargo: 01 Plasmón, Mie y color (terminado). El siguiente es `docs/encargos/02-luz-materia.md`.
+- Último paso terminado: 10b (revisión independiente, correcciones y cierre). Encargo 01 terminado
+- Siguiente paso: encargo 02 (`docs/encargos/02-luz-materia.md`), en una sesión nueva
+
+### Cómo queda el encargo 01
+
+- `npm test`: 315 tests en verde (284 unitarios y de contrato + 31 de humo con navegador sin cabeza). `npm run check`: limpio.
+- Módulo nuevo `plasmon` (visible en la portada, `#/plasmon`): cinco vistas enlazadas, ocho presets, dos recorridos, ficha y miniatura.
+- Servicios nuevos para los módulos siguientes: motor de color (`ctx.color.load()`, guía en `src/color/LEEME.md`) y biblioteca de materiales (`ctx.materials.load(id)`, guía en `src/materials/LEEME.md`). Fuentes y licencias de los datos: `data/README.md`.
+- Para regenerar datos y referencias: `python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt`; después `tools/cie.py`, `node tools/materials.mjs`, `tools/materials_fixture.py`, `tools/mie_fixture.py`.
+- No hizo falta ningún dato de prueba: la red permitió descargar todo (PyPI y la base de datos de refractiveindex.info en GitHub).
+- La rama `claude/bold-goldberg-s51hqd` **no está fusionada en `main`**: GitHub Pages no mostrará el módulo hasta que se fusione (ver "Necesito de Daniel").
+
+### Revisión independiente del encargo 01 (paso 10b)
+
+Un subagente con contexto limpio revisó solo la física y el cumplimiento del encargo, con scripts propios (mpmath, scipy, colour-science, Monte Carlo de orientaciones; no los tests del proyecto) y sin modificar el repositorio. Una ronda. (Un primer intento se cortó por el límite de uso sin entregar nada; se relanzó.)
+
+- **Sin errores** en fórmulas, factores, unidades ni convenios de signo. Comprobado por el revisor: Mie frente a su propio mpmath en 130 casos (≤ 10⁻⁹), normalización de Bohren & Huffman de Q_back, g, S₁ y S₂, convenio e^{−iωt} de los materiales a la fase dibujada, α = 6πi·a₁/k³, promedio de Gans en absorción y dispersión (Monte Carlo: 1,000 ± 0,001), factores de despolarización (2·10⁻¹⁵), campo cercano del esferoide (10⁻⁸), unidades de la cubeta, cadena de color frente a colour-science (10⁻¹⁵ en XYZ) y los 9 JSON frente a sus originales. Ningún requisito del encargo incumplido; ningún test con valor esperado o tolerancia ajustados.
+- **Corregido** (cada punto comprobado antes por mi cuenta):
+  1. Diagrama polar del bastón: dibujaba un dipolo alineado con el campo (|S₂|² = cos²θ, nulo a 90°) mientras el espectro es un promedio de orientaciones. Ahora dibuja el promedio de un dipolo anisótropo (`gansScatteringPattern`: I_⊥ = A + B, I_∥ = (A − B)cos²θ + 2B), con test contra una integración directa sobre orientaciones y contra ⟨C_sca⟩. En el pico longitudinal, I_∥(90°)/I_⊥ = 50 %.
+  2. Recorrido 1, paso 1: decía que a 800 nm la nube «se mueve poco»; la interfaz muestra el 47 % de la amplitud máxima. Lo que es 100 veces menor es Im α = |α| sen δ, lo que se absorbe. Reescrito: en fase, la fuerza no cede energía neta.
+  3. Recorrido 1, paso 2 y ficha: «el punto donde la amplitud es máxima» y «una amplitud enorme». En el oro de 20 nm no coinciden la condición de Fröhlich (514,5 nm), el máximo de extinción (521 nm) y el máximo de |α| (539 nm), y |α| solo se duplica. Reescrito, y explicado en la ficha.
+  4. Recorrido 2, último paso: el pico transversal del bastón está en 506 nm, no «cerca de 520».
+  5. Ficha: la tabla de Johnson & Christy tiene un punto cada 16–52 nm en el visible, no cada 15–40. La ficha dice ahora que la nube y el campo cercano del bastón son los de un bastón alineado, y cómo se calcula el color «de lado».
+  6. Amplitud relativa de la nube: el máximo de |α| se tomaba de la malla de 2 nm y en la plata podía salir «102 %». Ahora se afina como el pico.
+  7. Comentario de un test: decía que las dos fórmulas de los factores de despolarización eran independientes; son algebraicamente equivalentes (la comprobación independiente es la integral, que ya existía).
+  8. Metadato: el agua declaraba `modulos: ["plasmon"]` sin que el módulo la cargue.
+- **Anotado en `docs/BACKLOG.md`** (sección "Pendientes de la revisión del encargo 01"): anclaje del pico del oro al punto de 520,9 nm de la tabla por la interpolación lineal, color «de lado» con dispersión total, precisión de Mie con x ≈ 10⁻³, coeficiente de extinción molar, test de cableado, referencia de la copa de Licurgo.
+- **No verificado** (ni por mí ni por el revisor): capítulos, secciones y números de ecuación de Bohren & Huffman citados en la ficha, el código y los tests; el capítulo de Gaponenko; Kreibig & Vollmer cap. 2; «CIE 15:2004, tabla T.3» y «Jackson §4.4» en comentarios de tests. Los artículos de las constantes ópticas salen de la propia base de datos.
 
 ### Plan del encargo 01 (pasos y estado)
 
@@ -32,7 +58,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 9 | Ficha y miniatura | hecho |
 | 9b | Prueba de humo propia del módulo (URL, vistas enlazadas, presets, recorridos, presentación) | hecho |
 | 10a | Documentación para reutilizar los servicios: `src/color/LEEME.md`, `src/materials/LEEME.md`, `data/README.md`; árbol de `ARQUITECTURA.md` y `BACKLOG.md` al día | hecho |
-| 10b | Revisión con subagente (una ronda), correcciones y cierre | pendiente |
+| 10b | Revisión con subagente (una ronda), correcciones y cierre | hecho |
 
 ### Evidencia por paso (encargo 01)
 
@@ -159,7 +185,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 
 - Paso 3: `tests/materials.test.js`, 37 tests en verde. Los 9 JSON coinciden fila a fila con los originales leídos con PyYAML; n, k ↔ ε en todas las filas; sílice n_d = 1,4585; agua n(589 nm) = 1,333; Drude y Lorentz contra límites analíticos y contra `complexResponse` del oscilador.
 
-- Pasos 4–5: `tests/plasmon.test.js`, 36 tests en verde. Mie frente a `miepython`/`mpmath` en 196 casos (m reales y absorbentes, x de 0,01 a 100): peor error relativo 5·10⁻¹¹ en Q_ext, 2·10⁻¹⁰ en Q_back y 6·10⁻⁸ en g (tolerancia 10⁻⁶); amplitudes S₁, S₂ a 10⁻¹⁰ de |S(0°)|. Rayleigh, Q_abs = 0 con m real, teorema óptico e integral angular, Q_ext → 2. Cuasiestática frente a Mie en Au de radio 5 nm: desviación máxima 1,93 % (400–800 nm). Drude: pico en ω_p/√(1 + 2ε_m). Gans: factores que suman 1 y coinciden con su integral, esfera recuperada, corrimiento monótono. Campo cercano: condiciones de contorno, divergencia y rotacional nulos.
+- Pasos 4–5: `tests/plasmon.test.js` (38 tests tras la revisión). Mie frente a `miepython`/`mpmath` en 196 casos (m reales y absorbentes, x de 0,01 a 100): peor error relativo 5·10⁻¹¹ en Q_ext, 2·10⁻¹⁰ en Q_back y 6·10⁻⁸ en g (tolerancia 10⁻⁶); amplitudes S₁, S₂ a 10⁻¹⁰ de |S(0°)|. Rayleigh, Q_abs = 0 con m real, teorema óptico e integral angular, Q_ext → 2. Cuasiestática frente a Mie en Au de radio 5 nm: desviación máxima 1,93 % (400–800 nm). Drude: pico en ω_p/√(1 + 2ε_m). Gans: factores que suman 1 y coinciden con su integral, esfera recuperada, corrimiento monótono. Campo cercano: condiciones de contorno, divergencia y rotacional nulos.
 - **Valores con datos reales (Johnson & Christy), sin ajustar nada**: Au de 20 nm en agua, pico en **521,1 nm** (intervalo pedido 515–528); Ag de 20 nm en agua, **386,9 nm** (385–410); Au de 40 → 150 nm: 524 → 536 → 549 → 570 → 591 → 640 nm; Au de 20 nm con n_m de 1 a 2: 506 → 588 nm; bastón de Au con relación de aspecto 1 → 5: 521 → 868 nm (672 nm con 3). Color: Au de 20 nm a contraluz, L*a*b* = (70, +49, +21); copa de Licurgo (Au-Ag 30:70 de 70 nm en n = 1,5): a contraluz a* = +53 (roja), dispersada a* = −61 (verde).
 - Pasos 6–9: `npm test` 311 en verde (la prueba de humo general ya carga el módulo en los dos temas, en pantalla estrecha y con su ficha, sin errores de consola). Capturas revisadas a ojo: tema claro, tema oscuro con el bastón, y modo presentación a 1920 × 1080 con oro de 150 nm.
 
@@ -171,7 +197,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Materiales y fuentes elegidas** (9): Au, Ag y Cu de Johnson & Christy 1972; Al de Rakić 1995; agua de Hale & Querry 1973 (trae n y k, y cubre de 200 nm a 200 µm); sílice fundida de Malitson 1965 (fórmula de Sellmeier, tabulada cada 5 nm hasta 1000 nm y cada 50 nm hasta 6700 nm); TiO₂ de Siefke et al. 2016 (película delgada, n y k desde 120 nm: incluye el borde de absorción ultravioleta); Si de Schinke et al. 2015 (250–1450 nm: incluye el borde de la banda prohibida en 1100 nm, que Aspnes & Studna no alcanza). **Añadido: aleación Au-Ag 30:70** (Rioux et al. 2014, modelo analítico ajustado a elipsometría), necesaria para el preset de la copa de Licurgo.
 - 2026-11-11. **Importador en `tools/refractiveindex-yaml.mjs`** (funciones puras, probadas en `tests/materials.test.js`) y generador en `tools/materials.mjs`. El importador no es un lector general de YAML: entiende la forma de esos archivos y tres tipos de datos (`tabulated nk`, `tabulated n`, `formula 1`); con cualquier otro falla con un mensaje que dice qué ampliar. Referencia independiente: los mismos originales leídos con PyYAML (`tools/materials_fixture.py`).
 - 2026-11-11. **Metadatos en español en los JSON** (`nombre`, `familia`, `mecanismo`, `modulos`, `fuente`, `licencia`), como los nombra `docs/ARQUITECTURA.md`: son datos, no identificadores de código. Las tablas son `wavelength_nm`, `n`, `k`.
-- 2026-11-11. **Interpolación lineal de n y k por defecto** (spline opcional): con tablas experimentales poco densas (Johnson & Christy: un punto cada 15–40 nm en el visible) una spline puede inventar oscilaciones. Fuera del intervalo tabulado, `RangeError` (o `outOfRange: 'clamp'` si se pide).
+- 2026-11-11. **Interpolación lineal de n y k por defecto** (spline opcional): con tablas experimentales poco densas (Johnson & Christy: un punto cada 16–52 nm en el visible) una spline puede inventar oscilaciones. Fuera del intervalo tabulado, `RangeError` (o `outOfRange: 'clamp'` si se pide).
 - 2026-11-11. **`ctx.materials` y `ctx.color`** dejan de ser `null`: son servicios perezosos (`ctx.materials.load(id)`, `ctx.materials.list()`, `ctx.color.load()`) que devuelven promesas; no se descarga nada hasta que un módulo lo pide.
 
 - 2026-11-11. **Datos CIE sin transformar**: `data/cie/` guarda las tablas tal como las distribuye `colour-science` (funciones de igualación cada 1 nm de 360 a 830 nm; D65 y A cada 5 nm de 300 a 780 nm; E constante). `src/color/cie.js` pasa los iluminantes a 1 nm por interpolación lineal y **no extrapola**: D65 y A acaban en 780 nm y el motor integra solo donde hay datos (lo que queda fuera aporta menos de 10⁻⁵).
@@ -204,6 +230,6 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
 
 - **Fusionar la rama `claude/bold-goldberg-s51hqd` en `main`** (pull request o directamente) para que GitHub Pages publique el módulo de plasmón.
-- **Cotejar las referencias bibliográficas con los libros delante** (citadas de memoria, sin verificar): en `src/modules/plasmon/ficha.md`, Bohren & Huffman cap. 4, 5 y 12 y apéndice A; Gaponenko, capítulo de nanoplasmónica; Kreibig & Vollmer cap. 2; Gans 1912. Siguen pendientes las del encargo 00 (`src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md`).
+- **Cotejar las referencias bibliográficas con los libros delante** (citadas de memoria, sin verificar): en `src/modules/plasmon/ficha.md`, Bohren & Huffman cap. 4, 5 y 12 y apéndice A; Gaponenko, capítulo de nanoplasmónica (falta el número de capítulo); Kreibig & Vollmer cap. 2; Gans 1912. También los números de ecuación de Bohren & Huffman citados en comentarios de `src/modules/plasmon/physics.js` y `tests/plasmon.test.js` (4.47, 4.53, 4.88, 5.4, 5.32–5.34). Y decidir si se cita una referencia para la copa de Licurgo (ver `docs/BACKLOG.md`). Siguen pendientes las del encargo 00 (`src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md`).
 - **Leer los textos de `mecanismo`** de `data/materials/catalogo.json` (por qué cada material tiene su color): son frases de física escritas para la biblioteca, con umbrales de transiciones interbanda y bandas prohibidas dados como valores aproximados de manual.
 - Opcional: probar el modo presentación del plasmón en el equipo de grabación (tecla P; teclas 1–8 para los presets) y decir si el tamaño de letra y la velocidad de la animación de la nube son los que quieres.

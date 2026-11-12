@@ -63,7 +63,7 @@
       "pagina": "shelf=main&book=H2O&page=Hale",
       "familia": "líquido",
       "mecanismo": "Transparente en el visible: sus transiciones electrónicas están en el ultravioleta lejano. Los sobretonos de las vibraciones O–H absorben débilmente el rojo, y por eso el agua en gran espesor se ve azulada.",
-      "modulos": ["plasmon"]
+      "modulos": []
     },
     {
       "id": "SiO2",

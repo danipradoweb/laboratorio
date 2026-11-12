@@ -467,7 +467,9 @@ test('plasmón: URL, cinco vistas enlazadas, colores y presets', { skip }, async
     } else if (id === 'baston-3') {
       assert.match(String(await page.locator('.plasmon-model').textContent()), /teoría de Gans \(aproximación cuasiestática/);
       assert.match(await title(0), /pico de extinción en 67\d nm/);
-      assert.match(await title(4), /dipolo/);
+      // El diagrama del bastón es un promedio de orientaciones: a 90° la polarización
+      // paralela no se anula (en el pico longitudinal vale la mitad que la perpendicular).
+      assert.match(await title(4), /promedio de orientaciones · a 90°: ∥\/⊥ = (4[89]|5[0-2]) %/);
     } else if (id === 'licurgo') {
       // Roja a contraluz, verde por dispersión.
       const cuvette = await rgbOf('.plasmon-cuvette');

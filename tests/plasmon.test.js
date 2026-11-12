@@ -22,6 +22,7 @@ import {
   drivenOscillation,
   ellipsoidPolarizability,
   findPeak,
+  gansScatteringPattern,
   gansSpheroid,
   mie,
   mieCoefficients,
@@ -458,7 +459,10 @@ test('desfase en la condición de Fröhlich: tan δ = 3ε_m/Im ε', () => {
 // =============================================================================================
 
 // Los tres factores de despolarización de cualquier elipsoide suman 1 (B&H, ec. 5.34).
-// Aquí L_∥ y L_⊥ salen de fórmulas distintas, así que la suma es una comprobación real.
+// OJO: las dos formas cerradas son algebraicamente equivalentes a L_⊥ = (1 − L_∥)/2, así
+// que este test solo comprueba que el código las evalúa de forma coherente (incluida la
+// rama en serie cerca de la esfera). La comprobación física independiente es el test
+// siguiente, contra la definición integral.
 test('Gans: los factores de despolarización suman 1', () => {
   for (const aspectRatio of [1, 1.0001, 1.01, 1.1, 1.5, 2, 3, 5, 10, 50]) {
     const { long, trans } = depolarizationFactors(aspectRatio);
@@ -543,9 +547,84 @@ test('Gans, Au en agua: el pico longitudinal se va al rojo de forma monótona co
   for (let i = 1; i < peaks.length; i++) assert.ok(peaks[i] > peaks[i - 1] + 10, `picos: ${peaks.map((p) => p.toFixed(0))}`);
   assert.ok(peaks[0] > 515 && peaks[0] < 528, `con R = 1 es la esfera: ${peaks[0]}`);
   assert.ok(peaks[4] > 600 && peaks[4] < 750, `con R = 3 el pico está en el rojo: ${peaks[4]}`);
-  // El modo transversal sigue cerca de 520 nm: máximo local de la extinción por debajo de 560 nm.
+  // El modo transversal queda algo al azul de la esfera (≈ 506 nm): máximo local de la
+  // extinción por debajo de 560 nm.
   const transverse = peakWavelength(particle(gold, 10, { shape: 'rod', aspectRatio: 3 }), 480, 560);
   assert.ok(transverse > 500 && transverse < 525, `pico transversal en ${transverse} nm`);
+});
+
+// Diagrama de dispersión de esferoides orientados al azar. Tres comprobaciones:
+// (1) la esfera (α_∥ = α_⊥) da el dipolo: 1 y cos²θ;
+// (2) contra una integración directa sobre orientaciones, hecha aquí sin usar la fórmula:
+//     para cada eje n̂ se calcula el dipolo p = α_⊥·ê_i + Δ·(n̂·ê_i)·n̂ y la intensidad que
+//     radia hacia la dirección de dispersión, |p|² − |p·r̂|², y se promedia sobre la esfera;
+// (3) conservación: la integral del diagrama en todas las direcciones, para luz no
+//     polarizada, es la sección eficaz de dispersión promediada de gansSpheroid:
+//     ⟨C_sca⟩ = (k⁴/16π²)·∫ ½(I_⊥ + I_∥) dΩ.
+test('Gans: diagrama de dispersión promediado sobre orientaciones', () => {
+  const sphere = gansScatteringPattern({ re: 2, im: 1 }, { re: 2, im: 1 }, [0, 60, 90, 180]);
+  assert.deepEqual(sphere.perpendicular, [5, 5, 5, 5]);
+  assert.ok(Math.abs(sphere.parallel[1] - 5 * 0.25) < 1e-14 && Math.abs(sphere.parallel[2]) < 1e-30);
+  assert.equal(sphere.B, 0);
+
+  const wavelength = 672;
+  const rod = gansSpheroid({ shortRadius: 5, aspectRatio: 3, wavelength, epsilon: gold.epsilon(wavelength), mediumIndex: WATER });
+  const angles = [0, 35, 90, 140, 180];
+  const pattern = gansScatteringPattern(rod.alphaLong, rod.alphaTrans, angles);
+  const delta = { re: rod.alphaLong.re - rod.alphaTrans.re, im: rod.alphaLong.im - rod.alphaTrans.im };
+  /**
+   * Intensidad radiada hacia r̂ por el dipolo inducido, promediada sobre orientaciones
+   * (regla del punto medio en cos ϑ y φ: uniforme sobre la esfera).
+   * @param {number[]} ei polarización incidente
+   * @param {number[]} r dirección de dispersión
+   */
+  const averaged = (ei, r) => {
+    const N = 120;
+    let sum = 0;
+    for (let a = 0; a < N; a++) {
+      const cosT = -1 + (2 * (a + 0.5)) / N;
+      const sinT = Math.sqrt(1 - cosT * cosT);
+      for (let b = 0; b < N; b++) {
+        const phi = (2 * Math.PI * (b + 0.5)) / N;
+        const n = [sinT * Math.cos(phi), sinT * Math.sin(phi), cosT];
+        const nei = n[0] * ei[0] + n[1] * ei[1] + n[2] * ei[2];
+        let p2 = 0;
+        const pr = { re: 0, im: 0 };
+        for (let c = 0; c < 3; c++) {
+          const re = rod.alphaTrans.re * ei[c] + delta.re * nei * n[c];
+          const im = rod.alphaTrans.im * ei[c] + delta.im * nei * n[c];
+          p2 += re * re + im * im;
+          pr.re += re * r[c];
+          pr.im += im * r[c];
+        }
+        sum += p2 - (pr.re * pr.re + pr.im * pr.im);
+      }
+    }
+    return sum / (N * N);
+  };
+  angles.forEach((angle, i) => {
+    const theta = (angle * Math.PI) / 180;
+    // Luz que viaja en +z; plano de dispersión xz; dirección de dispersión a un ángulo θ.
+    const r = [Math.sin(theta), 0, Math.cos(theta)];
+    const perpendicular = averaged([0, 1, 0], r);
+    const parallel = averaged([1, 0, 0], r);
+    assert.ok(Math.abs(perpendicular / pattern.perpendicular[i] - 1) < 1e-3, `⊥ a ${angle}°: ${perpendicular} frente a ${pattern.perpendicular[i]}`);
+    assert.ok(Math.abs(parallel / pattern.parallel[i] - 1) < 1e-3, `∥ a ${angle}°: ${parallel} frente a ${pattern.parallel[i]}`);
+  });
+  // Despolarización: en el pico longitudinal α_∥ domina y I_∥(90°)/I_∥(0°) → 2B/(A + B) = 1/2.
+  assert.ok(Math.abs(pattern.parallel[2] / pattern.parallel[0] - 0.5) < 0.02, `I∥(90°)/I∥(0°) = ${pattern.parallel[2] / pattern.parallel[0]}`);
+
+  // Conservación: integral angular = ⟨C_sca⟩.
+  const fine = range(0, 180, 0.5);
+  const full = gansScatteringPattern(rod.alphaLong, rod.alphaTrans, fine);
+  const h = Math.PI / (fine.length - 1);
+  let integral = 0;
+  fine.forEach((angle, i) => {
+    const w = (i === 0 || i === fine.length - 1 ? 1 : i % 2 === 1 ? 4 : 2) * (h / 3);
+    integral += w * 2 * Math.PI * Math.sin((angle * Math.PI) / 180) * 0.5 * (full.perpendicular[i] + full.parallel[i]);
+  });
+  const k = wavenumber(wavelength, WATER);
+  assert.ok(Math.abs((k ** 4 * integral) / (16 * Math.PI ** 2) / rod.csca - 1) < 1e-9);
 });
 
 // =============================================================================================
@@ -690,6 +769,9 @@ test('experimental: en Au el pico se va al rojo de forma monótona de 40 a 150 n
   }
   assert.ok(peaks[peaks.length - 1] - peaks[0] > 80, 'de 40 a 150 nm el desplazamiento supera los 80 nm');
   // En cambio, por debajo de 20 nm (régimen cuasiestático) el pico no se mueve ni 2 nm.
+  // (Con la interpolación lineal de la tabla el pico queda además anclado al punto de
+  // 520,9 nm de Johnson & Christy; con una spline se movería ≈ 1 nm de 5 a 20 nm. La
+  // conclusión es la misma, pero el «casi cero» exacto es en parte un efecto de la tabla.)
   assert.ok(Math.abs(peakWavelength(particle(gold, 5), 450, 650) - peakWavelength(particle(gold, 20), 450, 650)) < 2);
 });
 

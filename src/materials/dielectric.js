@@ -68,7 +68,7 @@ export function epsilonToNk(epsilon) {
  *
  * Se interpolan n y k (no ε) en función de λ. Por defecto la interpolación es lineal:
  * no inventa oscilaciones entre puntos, que es lo prudente con tablas experimentales
- * poco densas (Johnson & Christy tiene un punto cada 15–40 nm en el visible). Con
+ * poco densas (Johnson & Christy tiene un punto cada 16–52 nm en el visible). Con
  * `interpolation: 'spline'` se usa una spline cúbica natural, adecuada para tablas
  * densas y suaves.
  *

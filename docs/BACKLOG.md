@@ -92,6 +92,15 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - El importador de materiales solo entiende tres tipos de datos de refractiveindex.info (`tabulated nk`, `tabulated n`, `formula 1`); faltan las demás fórmulas de dispersión y los archivos con varios bloques.
 - Escala logarítmica opcional en el diagrama polar para esferas muy grandes.
 
+## Pendientes de la revisión del encargo 01
+Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
+- Interpolación de Johnson & Christy: con interpolación lineal de n y k el pico del oro queda anclado al punto de 520,9 nm de la tabla (de 5 a 30 nm no se mueve nada); con spline se movería de 522,3 a 524,7 nm. La ficha lo avisa. Valorar una spline monótona o los ajustes analíticos de la función dieléctrica (Etchegoin, Rioux) para tener picos suaves.
+- Color «de lado»: usa la dispersión total C_sca(λ), no la diferencial a 90°, y no atenúa la luz dispersada al salir de la cubeta (dicho en la ficha). Para esferas grandes el espectro a 90° difiere del total.
+- Mie con x ≈ 10⁻³ y m ≈ 1 pierde precisión por cancelación (error relativo 2·10⁻⁶ en Q_ext; g sin significado). Queda fuera del uso de la interfaz (x ≥ 0,008) y de la malla del encargo (x ≥ 0,01); si hiciera falta, añadir el desarrollo en serie de partícula pequeña.
+- El coeficiente de extinción molar calculado para Au de 20 nm (≈ 1,1·10⁹ M⁻¹cm⁻¹) es algo mayor que el experimental habitual (≈ 9·10⁸): coherente con usar constantes del metal macizo, sin el amortiguamiento de superficie.
+- El test de `particleSpectrum` compara con las mismas funciones que usa (es un test de cableado, no de física).
+- Referencia bibliográfica para la copa de Licurgo en la ficha (el revisor sugiere, de memoria, Barber & Freestone, *Archaeometry* 1990, y Freestone et al., *Gold Bulletin* 2007: comprobar antes de citar).
+
 ## Infraestructura
 - Miniaturas de la portada en los dos temas (ahora solo se genera la del tema claro).
 - Escala logarítmica en los ejes del trazador 2D y en los deslizadores (útil para espectros y para parámetros que abarcan varios órdenes de magnitud).

@@ -27,6 +27,8 @@ import {
   colloidSpectra,
   drivenOscillation,
   findPeak,
+  gansScatteringPattern,
+  gansSpheroid,
   mieSphere,
   particleResponse,
   particleSpectrum,
@@ -343,6 +345,11 @@ export async function mount(container, ctx) {
             quasiStaticSphere({ radius: short, wavelength, epsilon: particle.epsilon(wavelength), mediumIndex: particle.mediumIndex }).cext,
           )
         : null;
+    // Máximo de |α| afinado igual que el pico: en una resonancia estrecha (plata) la malla
+    // de 2 nm puede quedarse un 2 % corta y la amplitud relativa pasaría del 100 %.
+    const amplitudes = WAVELENGTHS.map((_, i) => Math.hypot(spectrum.alphaRe[i], spectrum.alphaIm[i]));
+    const alphaPeak = refinedPeak(amplitudes, (wavelength) => drivenOscillation(particleResponse(particle, wavelength).alpha).amplitude);
+    maxAlpha = Math.max(maxAlpha, alphaPeak.y);
     cache = { key, spectrum, peak, quasiStaticPeak: qsPeak && qsPeak.interior ? qsPeak.x : null, maxAlpha, maxPoleIntensity };
     return cache;
   }
@@ -372,7 +379,8 @@ export async function mount(container, ctx) {
         `Bastón de ${name} de ${formatEs(length, 0)} × ${formatEs(particle.diameter, 0)} nm · teoría de Gans (aproximación cuasiestática, promedio de orientaciones): ` +
         (tooBig
           ? `⚠ el bastón ya no es mucho menor que la longitud de onda (x = ${formatEs(x)}); el resultado es solo orientativo.`
-          : `vale porque el bastón es mucho menor que la longitud de onda (x = ${formatEs(x)}).`);
+          : `vale porque el bastón es mucho menor que la longitud de onda (x = ${formatEs(x)}).`) +
+        ' La nube y el campo cercano muestran un bastón alineado con el campo.';
       modelLine.dataset.warning = String(tooBig);
     } else {
       modelLine.textContent =
@@ -443,7 +451,7 @@ export async function mount(container, ctx) {
 
     // (c) Nube electrónica: amplitud y desfase de la oscilación forzada, de α(ω).
     const oscillation = drivenOscillation(now.alpha);
-    const relativeAmplitude = maxAlpha > 0 ? oscillation.amplitude / maxAlpha : 0;
+    const relativeAmplitude = maxAlpha > 0 ? Math.min(1, oscillation.amplitude / maxAlpha) : 0;
     const degrees = (oscillation.phase * 180) / Math.PI;
     cloud = { amplitude: relativeAmplitude, phase: oscillation.phase, lambda, aspect: long / short, tint: METAL_TINT[String(state.material)] ?? METAL_TINT.Au };
     cloudPanel.title.textContent = `Nube electrónica · amplitud ${formatEs(100 * relativeAmplitude, 0)} % del máximo · desfase δ = ${formatEs(degrees, 0)}°`;
@@ -486,20 +494,25 @@ export async function mount(container, ctx) {
       series: [{ x: outline.map((t) => long * Math.cos(t)), y: outline.map((t) => short * Math.sin(t)), color: '#8fe3ff', width: 0.8 }],
     });
 
-    // (e) Diagrama polar: |S₁|² y |S₂|² normalizados al valor hacia delante. La esfera usa
-    // Mie; el bastón (cuasiestático) radia como un dipolo: |S₁|² constante, |S₂|² ∝ cos²θ.
+    // (e) Diagrama polar: intensidad dispersada en cada dirección, normalizada a su máximo,
+    // para luz incidente polarizada perpendicular y paralela al plano de dispersión. En la
+    // esfera son |S₁|² y |S₂|² de Mie. En el bastón, el promedio sobre orientaciones de un
+    // dipolo anisótropo (el mismo promedio que el espectro): en polarización paralela NO se
+    // anula a 90°, porque los bastones inclinados giran la polarización.
     /** @type {number[]} */
     let s1;
     /** @type {number[]} */
     let s2;
     let asymmetry = 0;
     if (isRod) {
-      s1 = POLAR_ANGLES.map(() => 1);
-      s2 = POLAR_ANGLES.map((angle) => Math.cos((angle * Math.PI) / 180) ** 2);
+      const rod = gansSpheroid({ shortRadius: short, aspectRatio: particle.aspectRatio, wavelength: lambda, epsilon, mediumIndex: particle.mediumIndex });
+      const pattern = gansScatteringPattern(rod.alphaLong, rod.alphaTrans, POLAR_ANGLES);
+      s1 = pattern.perpendicular;
+      s2 = pattern.parallel;
     } else {
       const result = mieSphere({ radius: short, wavelength: lambda, epsilon, mediumIndex: particle.mediumIndex, anglesDeg: POLAR_ANGLES });
-      s1 = result.s1.map((s) => s.re * s.re + s.im * s.im);
-      s2 = result.s2.map((s) => s.re * s.re + s.im * s.im);
+      s1 = result.s1.map((v) => v.re * v.re + v.im * v.im);
+      s2 = result.s2.map((v) => v.re * v.re + v.im * v.im);
       asymmetry = result.g;
     }
     const top = Math.max(...s1, ...s2);
@@ -515,13 +528,14 @@ export async function mount(container, ctx) {
       }
       return { x: xs, y: ys };
     };
+    const sideways = POLAR_ANGLES.indexOf(90);
     polarPanel.title.textContent = isRod
-      ? 'Dispersión angular · dipolo: igual hacia atrás que hacia delante'
+      ? `Dispersión angular · promedio de orientaciones · a 90°: ∥/⊥ = ${formatEs((100 * s2[sideways]) / s1[sideways], 0)} %`
       : `Dispersión angular · atrás/delante = ${formatEs((100 * s1[s1.length - 1]) / s1[0], 0)} % · g = ${formatEs(asymmetry)}`;
     polarPlot.draw({
       series: [
-        { ...closed(s1), color: 0, label: '|S₁|²: polarización ⊥ al plano' },
-        { ...closed(s2), color: 1, label: '|S₂|²: polarización ∥ al plano' },
+        { ...closed(s1), color: 0, label: isRod ? 'luz polarizada ⊥ al plano' : '|S₁|²: polarización ⊥ al plano' },
+        { ...closed(s2), color: 1, label: isRod ? 'luz polarizada ∥ al plano' : '|S₂|²: polarización ∥ al plano' },
       ],
     });
   }

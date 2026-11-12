@@ -524,6 +524,52 @@ export function gansSpheroid({ shortRadius, aspectRatio, wavelength, epsilon, me
   return { cext: cabs + csca, cabs, csca, alphaLong, alphaTrans, factors, volume };
 }
 
+/**
+ * Diagrama de dispersión de esferoides pequeños orientados al azar (el mismo promedio de
+ * orientaciones que gansSpheroid). Cada partícula es un dipolo anisótropo: se polariza
+ * con α_∥ a lo largo de su eje n̂ y con α_⊥ en perpendicular, es decir, p ∝ α_⊥·E +
+ * Δ·(n̂·E)·n̂ con Δ = α_∥ − α_⊥. La amplitud dispersada con polarización ê_s para luz
+ * incidente con polarización ê_i es ∝ α_⊥·(ê_s·ê_i) + Δ·(ê_s·n̂)(n̂·ê_i). Promediando su
+ * módulo al cuadrado sobre todas las orientaciones de n̂ (con ⟨n_i n_j⟩ = δ_ij/3 y
+ * ⟨n_i n_j n_k n_l⟩ = (δ_ij δ_kl + δ_ik δ_jl + δ_il δ_jk)/15):
+ *
+ *   ⟨|…|²⟩ = (A − B)·(ê_s·ê_i)² + B
+ *   A = |α_⊥|² + (2/3)·Re(α_⊥*·Δ) + |Δ|²/5      (misma polarización)
+ *   B = |Δ|²/15                                   (polarización cruzada: despolarización)
+ *
+ * Sumando las dos polarizaciones de salida, la intensidad dispersada a un ángulo θ es
+ *   luz incidente ⊥ al plano de dispersión:  I_⊥ = A + B               (no depende de θ)
+ *   luz incidente ∥ al plano de dispersión:  I_∥ = (A − B)·cos²θ + 2B
+ * Una esfera (Δ = 0) da el dipolo de siempre, 1 y cos²θ. Un bastón NO se anula a 90° en
+ * polarización paralela: los bastones inclinados giran la polarización.
+ * Se cumple A + 2B = (|α_∥|² + 2|α_⊥|²)/3, que es lo que entra en ⟨C_sca⟩.
+ *
+ * @param {Complex} alphaLong α_∥ (nm³)
+ * @param {Complex} alphaTrans α_⊥ (nm³)
+ * @param {ArrayLike<number>} anglesDeg ángulos de dispersión θ en grados
+ * @returns {{ perpendicular: number[], parallel: number[], A: number, B: number }}
+ *   intensidades en unidades de nm⁶; multiplicadas por k⁴/(16π²) son secciones eficaces
+ *   diferenciales dC/dΩ (nm²/sr)
+ */
+export function gansScatteringPattern(alphaLong, alphaTrans, anglesDeg) {
+  const delta = { re: alphaLong.re - alphaTrans.re, im: alphaLong.im - alphaTrans.im };
+  const delta2 = delta.re * delta.re + delta.im * delta.im;
+  const A =
+    alphaTrans.re * alphaTrans.re +
+    alphaTrans.im * alphaTrans.im +
+    (2 / 3) * (alphaTrans.re * delta.re + alphaTrans.im * delta.im) +
+    delta2 / 5;
+  const B = delta2 / 15;
+  const perpendicular = [];
+  const parallel = [];
+  for (let i = 0; i < anglesDeg.length; i++) {
+    const cos = Math.cos((anglesDeg[i] * Math.PI) / 180);
+    perpendicular.push(A + B);
+    parallel.push((A - B) * cos * cos + 2 * B);
+  }
+  return { perpendicular, parallel, A, B };
+}
+
 // --- Campo cercano (electrostática) --------------------------------------------------------
 
 /**
