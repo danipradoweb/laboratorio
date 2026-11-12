@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
-- Último paso terminado: 9b (prueba de humo propia del módulo y retoques de las vistas)
-- Siguiente paso: 10 (documentar el motor de color y la biblioteca de materiales para reutilizarlos, árbol de `ARQUITECTURA.md` al día, revisión con subagente, cierre)
+- Último paso terminado: 10a (documentación de los servicios, arquitectura y backlog al día)
+- Siguiente paso: 10b (revisión con subagente de contexto limpio, correcciones y cierre)
 
 ### Plan del encargo 01 (pasos y estado)
 
@@ -31,7 +31,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 7–8 | Presets y recorridos | hecho |
 | 9 | Ficha y miniatura | hecho |
 | 9b | Prueba de humo propia del módulo (URL, vistas enlazadas, presets, recorridos, presentación) | hecho |
-| 10 | Revisión con subagente, documentación de servicios, cierre | pendiente |
+| 10a | Documentación para reutilizar los servicios: `src/color/LEEME.md`, `src/materials/LEEME.md`, `data/README.md`; árbol de `ARQUITECTURA.md` y `BACKLOG.md` al día | hecho |
+| 10b | Revisión con subagente (una ronda), correcciones y cierre | pendiente |
 
 ### Evidencia por paso (encargo 01)
 

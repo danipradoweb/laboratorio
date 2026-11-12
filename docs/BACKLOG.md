@@ -79,6 +79,19 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - Duración de la transición por preset (ahora es por módulo, `transitionSeconds`).
 - Oscilador: dibujar la masa y el muelle moviéndose junto a la gráfica de tiempo.
 
+## Ideas surgidas en el encargo 01 (plasmón)
+- Corrección de tamaño de la función dieléctrica para partículas de menos de ~10 nm (amortiguamiento por choques con la superficie, γ = γ_bulk + A·v_F/a): ensancha y baja el pico. Hoy el módulo usa las constantes del metal macizo y lo dice en la ficha.
+- Curva cuasiestática dibujada junto a la de Mie (ahora solo se marca la posición de su pico, «sin retardo»).
+- Campo cercano de Mie completo (con retardo y multipolos) para esferas grandes; ahora el mapa es electrostático y avisa cuando x > 0,3.
+- Bastones más allá de Gans: corrección de retardo (aproximación cuasiestática modificada) o extremos semiesféricos.
+- Esferas con corteza (núcleo-corteza, nanocáscaras) y dímeros acoplados.
+- Distribución de tamaños en el coloide (polidispersidad) y efecto de la agregación.
+- Selector de iluminante en la cubeta (hoy siempre D65) y adaptación cromática.
+- Medio con dispersión tomado de la biblioteca (agua, sílice) en lugar de un índice constante.
+- Unificar las funciones gamma de sRGB: `src/ui/colormaps.js` y `src/color/spectrum.js` tienen cada una la suya (idénticas).
+- El importador de materiales solo entiende tres tipos de datos de refractiveindex.info (`tabulated nk`, `tabulated n`, `formula 1`); faltan las demás fórmulas de dispersión y los archivos con varios bloques.
+- Escala logarítmica opcional en el diagrama polar para esferas muy grandes.
+
 ## Infraestructura
 - Miniaturas de la portada en los dos temas (ahora solo se genera la del tema claro).
 - Escala logarítmica en los ejes del trazador 2D y en los deslizadores (útil para espectros y para parámetros que abarcan varios órdenes de magnitud).
