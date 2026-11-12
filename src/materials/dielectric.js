@@ -36,14 +36,23 @@ export function nkToEpsilon(n, k) {
  * Función dieléctrica → índice complejo: la raíz cuadrada de ε con n ≥ 0 (y k ≥ 0 si el
  * material absorbe, Im ε ≥ 0).
  *   n = √((|ε| + Re ε)/2),   k = √((|ε| − Re ε)/2)
+ * De las dos fórmulas se usa solo la que suma números del mismo signo, y la otra parte
+ * sale de Im ε = 2nk. Así no se pierde precisión por cancelación: en un material casi
+ * transparente (agua en el visible, k ~ 10⁻⁹) |ε| − Re ε = 2k² es mucho menor que el
+ * redondeo de ε, y la fórmula directa de k daría ruido.
  * @param {Complex} epsilon
  * @returns {{ n: number, k: number }}
  */
 export function epsilonToNk(epsilon) {
   const modulus = Math.hypot(epsilon.re, epsilon.im);
-  const n = Math.sqrt(Math.max(0, (modulus + epsilon.re) / 2));
-  const k = Math.sqrt(Math.max(0, (modulus - epsilon.re) / 2));
-  return { n, k: epsilon.im < 0 ? -k : k };
+  if (modulus === 0) return { n: 0, k: 0 };
+  if (epsilon.re >= 0) {
+    const n = Math.sqrt((modulus + epsilon.re) / 2);
+    return { n, k: epsilon.im / (2 * n) };
+  }
+  const k = Math.sqrt((modulus - epsilon.re) / 2);
+  // Con Im ε < 0 (ganancia) el signo va en k, para que n siga siendo ≥ 0.
+  return { n: Math.abs(epsilon.im) / (2 * k), k: epsilon.im < 0 ? -k : k };
 }
 
 /**

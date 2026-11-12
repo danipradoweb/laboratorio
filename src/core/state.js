@@ -28,6 +28,8 @@
  * @property {number} default
  * @property {string} [unit] unidad, se muestra junto al valor
  * @property {string} [help] explicación breve (aparece como ayuda del control)
+ * @property {(state: Readonly<Record<string, number | string | boolean>>) => boolean} [visible] si se da, el control
+ *   solo se muestra cuando devuelve true (el parámetro sigue en el estado y en la URL)
  */
 
 /**
@@ -40,6 +42,8 @@
  * @property {(string | { value: string, label: string })[]} options
  * @property {string} default
  * @property {string} [help]
+ * @property {(state: Readonly<Record<string, number | string | boolean>>) => boolean} [visible] si se da, el control
+ *   solo se muestra cuando devuelve true (el parámetro sigue en el estado y en la URL)
  */
 
 /**
@@ -50,6 +54,8 @@
  * @property {'toggle'} type
  * @property {boolean} default
  * @property {string} [help]
+ * @property {(state: Readonly<Record<string, number | string | boolean>>) => boolean} [visible] si se da, el control
+ *   solo se muestra cuando devuelve true (el parámetro sigue en el estado y en la URL)
  */
 
 /**

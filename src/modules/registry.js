@@ -12,6 +12,7 @@ import galeria from './_galeria/module.js';
 import plantilla from './_plantilla/module.js';
 import oscilador from './oscilador/module.js';
 import plasmon from './plasmon/module.js';
+import luzMateria from './luz-materia/module.js';
 
 /** @type {import('./types.js').ModuleDescriptor[]} */
-export const modules = [oscilador, plasmon, galeria, plantilla];
+export const modules = [oscilador, plasmon, luzMateria, galeria, plantilla];

@@ -90,6 +90,10 @@ for (const m of modules) {
       } else {
         assert.equal(p.type, 'toggle', `"${/** @type {any} */ (p).key}": tipo desconocido`);
       }
+      if (p.visible !== undefined) {
+        assert.equal(typeof p.visible, 'function', `"${p.key}": visible debe ser una función (state) => boolean`);
+        assert.equal(typeof p.visible(defaultState(m.params)), 'boolean', `"${p.key}": visible debe devolver true o false`);
+      }
       const check = validateValue(p, p.default);
       assert.ok(check.ok, `valor por defecto inválido: ${check.ok ? '' : check.reason}`);
     }
@@ -139,20 +143,25 @@ for (const m of modules) {
 
   // Regla de arquitectura: la física no toca el DOM y las constantes salen de units.js.
   test(`[${m.id}] physics.js es puro (sin DOM) y no teclea constantes físicas`, () => {
-    // Se miran solo las líneas de código: los comentarios pueden nombrar lo prohibido.
-    const source = readFileSync(join(dir, 'physics.js'), 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/^\s*\/\/.*$/gm, '')
-      .replace(/\s\/\/ .*$/gm, '');
-    for (const forbidden of ['document', 'window', 'canvas', 'requestAnimationFrame', 'getContext']) {
-      assert.ok(!source.includes(forbidden), `physics.js no puede usar "${forbidden}"`);
-    }
-    // Mantisas de las constantes CODATA más comunes: deben importarse de units.js.
-    for (const digits of ['6.626', '1.054', '1.602', '9.109', '8.854', '1.380', '299792458', '2.998']) {
-      assert.ok(
-        !source.includes(digits),
-        `physics.js contiene "${digits}": importa la constante de src/core/units.js`,
-      );
+    // Un módulo grande puede repartir su física en varios archivos physics-<parte>.js:
+    // todos cumplen la misma regla.
+    const files = readdirSync(dir).filter((name) => /^physics(-[a-z0-9-]+)?\.js$/.test(name));
+    for (const file of files) {
+      // Se miran solo las líneas de código: los comentarios pueden nombrar lo prohibido.
+      const source = readFileSync(join(dir, file), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '')
+        .replace(/\s\/\/ .*$/gm, '');
+      for (const forbidden of ['document', 'window', 'canvas', 'requestAnimationFrame', 'getContext']) {
+        assert.ok(!source.includes(forbidden), `${file} no puede usar "${forbidden}"`);
+      }
+      // Mantisas de las constantes CODATA más comunes: deben importarse de units.js.
+      for (const digits of ['6.626', '1.054', '1.602', '9.109', '8.854', '1.380', '299792458', '2.998']) {
+        assert.ok(
+          !source.includes(digits),
+          `${file} contiene "${digits}": importa la constante de src/core/units.js`,
+        );
+      }
     }
   });
 }

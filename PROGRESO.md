@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
-- Último paso terminado: 0 (plan).
-- Siguiente paso: 1 (andamiaje del módulo y física de la parte A).
+- Último paso terminado: 2 (parte A: física, tests y vista).
+- Siguiente paso: 3 (física de las láminas de dipolos, `physics-sheets.js`, con `tests/luz-materia-laminas.test.js`).
 
 ### Plan del encargo 02 (pasos y estado)
 
@@ -23,14 +23,31 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 
 | # | Paso | Estado |
 |---|---|---|
-| 1 | Andamiaje del módulo (descriptor, registro, controles que se muestran según la vista) y física de la parte A con tests | pendiente |
-| 2 | Vista de la parte A (ε, n y k, R, osciladores) | pendiente |
+| 1 | Andamiaje del módulo (descriptor, registro, controles que se muestran según la vista) y física de la parte A con tests | hecho |
+| 2 | Vista de la parte A (ε, n y k, R, osciladores) | hecho |
 | 3 | Física de la parte B (láminas de dipoles) con tests | pendiente |
 | 4 | Vista de la parte B (ondas animadas, campo total, fasores) | pendiente |
 | 5 | Física de la parte C (Fresnel, polarizadores) con tests | pendiente |
 | 6 | Vistas de la parte C (interfaz y polarizadores) | pendiente |
 | 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | pendiente |
 | 8 | Revisión con subagente (una ronda), correcciones, documentación y cierre | pendiente |
+
+### Evidencia por paso (encargo 02)
+
+- Pasos 1–2: `npm test` 343 en verde (16 tests nuevos en `tests/luz-materia.test.js`, uno en `tests/materials.test.js` y las pruebas de humo generales, que ya cargan el módulo en los dos temas, en pantalla estrecha y con su ficha provisional); `npm run check` limpio. El modelo de Lorentz construido con los coeficientes de Sellmeier de la sílice reproduce la tabla de `data/materials/SiO2.json` a 10⁻¹² y da n_d = 1,4585; Kramers-Kronig reconstruye ε′ a partir de ε″ con error < 2·10⁻⁴ (un oscilador, Drude y vidrio); regla de suma a 10⁻⁶; Drude: R > 0,9 por debajo de ω_p. Captura de la vista revisada a ojo.
+
+### Decisiones del encargo 02
+
+- 2026-11-12. **Un solo módulo con cuatro vistas** (`part`: material, láminas, interfaz, polarizadores) en lugar de tres módulos: el encargo pide que se vea un único mecanismo, y los recorridos cruzan las partes (un paso de recorrido es un preset del mismo módulo). El material y la energía del fotón son comunes a las cuatro vistas.
+- 2026-11-12. **Añadido al núcleo: campo opcional `visible` en los parámetros** (`(state) => boolean`, en `src/core/state.js` y `src/ui/controls.js`): el control solo se muestra cuando devuelve true; el parámetro sigue en el estado y en la URL. Motivo: con cuatro vistas hay unos veinte parámetros y cada vista usa pocos.
+- 2026-11-12. **Física repartida en `physics.js`, `physics-sheets.js` y `physics-fresnel.js`**, con un archivo de tests por parte. `tests/modulos.test.js` aplica la regla de pureza (sin DOM, sin constantes tecleadas) a todos los `physics*.js` de la carpeta.
+- 2026-11-12. **El «vidrio» es la fórmula de Sellmeier de la sílice fundida leída como modelo de Lorentz**: cada término B·λ²/(λ² − C²) es un oscilador con ω₀ = 2πc/C, γ = 0 e intensidad B·ω₀². Los coeficientes se leen de `data/materials/SiO2.json` (no se teclean). La fórmula no trae anchuras: se añade γ = ω₀/40 a cada resonancia, y el código, la interfaz y la ficha dicen que es una elección del modelo. Consecuencia que hay que decir en la ficha: las alas lorentzianas dan k ≈ 2·10⁻³ en el visible, muchísimo más que el vidrio real.
+- 2026-11-12. **Metal de Drude de ejemplo**: ħω_p = 10 eV, ħγ = 0,1 eV, valores redondos declarados como ejemplo (no son los de un metal concreto).
+- 2026-11-12. **Frecuencias como energía del fotón en eV** en todo el módulo; la longitud de onda se deriva con `units.js`. El eje de las gráficas del material se puede poner en nm.
+- 2026-11-12. **`epsilonToNk` reescrita sin cancelación** (`src/materials/dielectric.js`): con la fórmula directa, un k diminuto (agua en el visible, k ~ 10⁻⁹) se perdía entero al pasar por ε. Ahora se calcula la parte grande con la raíz y la pequeña con Im ε = 2nk. Test nuevo en `tests/materials.test.js`. Los tests del plasmón siguen en verde.
+- 2026-11-12. **Dos tests de la parte A fallaron al escribirlos, por el test**: (1) el integrando de la regla de suma se daba por nulo en ω = 0, y en un conductor ω·ε″ → ω_p²/γ; (2) una cota de k por encima de ω_p puesta a ojo: sustituida por la que da la fórmula, k = ω_p²γ/(2nω³). No se cambió ningún valor esperado de la física.
+- 2026-11-12. **Añadido a `plot2d.js`**: `xLabel` en los datos de `draw()` (igual que `yLabel`), para el eje conmutable entre energía y longitud de onda.
+- 2026-11-12. **Amplitud de los osciladores dibujada en escala comprimida** (raíz cúbica de |χ_j| respecto a su máximo en la ventana): entre la resonancia y lejos de ella cambia en órdenes de magnitud. El número |χ_j| se da al lado y la ficha lo dirá.
 
 ### Cómo queda el encargo 01
 
