@@ -5,7 +5,8 @@
  "familia": "metal",
  "mecanismo": "Sus electrones de conducción reflejan el rojo y el infrarrojo, pero las transiciones interbanda (de la banda 5d a la 6sp) absorben el azul y el violeta, por debajo de ≈ 520 nm (≈ 2,4 eV). Por eso el oro macizo es amarillo.",
  "modulos": [
-  "plasmon"
+  "plasmon",
+  "luz-materia"
  ],
  "fuente": {
   "referencia": "P. B. Johnson and R. W. Christy. Optical constants of the noble metals. Phys. Rev. B 6, 4370-4379 (1972)",

@@ -27,7 +27,7 @@ El usuario destaca en razonamiento verbal y tiene dificultad con la visión espa
 
 ## Estructura del repositorio
 
-Los archivos marcados con (01) llegaron con el encargo 01; el resto existe desde el encargo 00.
+Los archivos marcados con (01) llegaron con el encargo 01 y los marcados con (02), con el 02; el resto existe desde el encargo 00.
 
 ```
 index.html                 página única: barra superior, mapa de importación de vendor/
@@ -83,6 +83,11 @@ src/
       view.js              presentación
       ficha.md             ficha del módulo
       miniatura.png        miniatura para la portada (npm run miniaturas <id>)
+      physics-<parte>.js   (02) opcional: un módulo grande reparte su física en varios
+                           archivos puros (misma regla: sin DOM, con tests)
+      view-<parte>.js      (02) opcional: una vista por archivo, montadas desde view.js
+    luz-materia/           (02) cuatro vistas (parámetro `part`): physics.js (Lorentz),
+                           physics-sheets.js (láminas), physics-fresnel.js (Fresnel)
 data/                      (01) fuentes y licencias en data/README.md
   cie/                     CMF y iluminantes (JSON)
   materials/               un JSON por material + index.json (generados)
@@ -128,6 +133,8 @@ export default {
 };
 ```
 
+Un parámetro puede llevar `visible: (state) => boolean`: su control solo se muestra cuando devuelve true (sirve para módulos con varias vistas, donde cada una usa pocos parámetros); el parámetro sigue en el estado y en la URL.
+
 `ctx` da acceso al tema, al modo presentación, a la biblioteca de materiales (`ctx.materials.load(id)`) y al motor de color (`ctx.color.load()`); estos dos descargan datos y devuelven promesas, así que el `mount` que los use es asíncrono. El núcleo genera los controles a partir de `params`, sincroniza el estado con la URL y llama a `update(state)` en cada cambio.
 
 La definición exacta del contrato (campos opcionales `hidden`, `animated` y `thumbnail`, contenido de `ctx`) está en `src/modules/types.js`, y la guía para crear un módulo, en `src/modules/_plantilla/LEEME.md`. Un módulo se da de alta en `src/modules/registry.js` y en ningún otro sitio. `module.js` y `view.js` no pueden usar `document` fuera de sus funciones, porque los tests los importan en Node.
@@ -157,7 +164,7 @@ Cada material es un JSON con `λ` (nm), `n`, `k`, fuente bibliográfica, licenci
 
 ## Tests
 
-- Cada `physics.js` tiene su `tests/<id>.test.js`.
+- Cada `physics.js` tiene su `tests/<id>.test.js` (y cada `physics-<parte>.js`, su `tests/<id>-<parte>.test.js`).
 - Tipos de comprobación, por orden de preferencia: (1) solución analítica exacta; (2) límite conocido (Rayleigh, cuasiestático, clásico); (3) ley de conservación (norma, energía, R + T + A = 1); (4) comparación con una implementación independiente de referencia, generada con `tools/` y guardada en `tests/fixtures/`; (5) valor experimental bien establecido con tolerancia explícita.
 - Cada test explica en un comentario qué principio físico comprueba y de dónde sale el valor esperado.
 - `npm test` debe pasar entero antes de cada commit.

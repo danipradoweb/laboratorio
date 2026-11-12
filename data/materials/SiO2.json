@@ -4,7 +4,9 @@
  "formula": "SiO2",
  "familia": "dieléctrico",
  "mecanismo": "Aislante con una banda prohibida muy ancha (≈ 9 eV): ningún fotón visible puede excitar sus electrones y sus vibraciones absorben solo en el infrarrojo. Transparente e incolora, con dispersión normal (el índice baja suavemente al crecer λ).",
- "modulos": [],
+ "modulos": [
+  "luz-materia"
+ ],
  "fuente": {
   "referencia": "1) I. H. Malitson. Interspecimen comparison of the refractive index of fused silica. J. Opt. Soc. Am. 55, 1205-1208 (1965) 2) C. Z. Tan. Determination of refractive index of silica glass for infrared wavelengths by IR spectroscopy. J. Non-Cryst. Solids 223, 158-163 (1998) * Sellmeier formula is reported in Ref. 1 for the 0.21–3.71 μm wavelength range. Ref. 2 verifies the validity of the formula up to 6.7 μm.",
   "comentarios": "Fused silica, 20 °C",
