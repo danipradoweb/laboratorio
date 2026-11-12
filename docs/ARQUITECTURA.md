@@ -27,7 +27,7 @@ El usuario destaca en razonamiento verbal y tiene dificultad con la visión espa
 
 ## Estructura del repositorio
 
-Los archivos marcados con (01) llegan con el encargo 01; el resto existe desde el encargo 00.
+Los archivos marcados con (01) llegaron con el encargo 01; el resto existe desde el encargo 00.
 
 ```
 index.html                 página única: barra superior, mapa de importación de vendor/
@@ -48,6 +48,7 @@ src/
     presentation.js        modo presentación y atajos de teclado
     theme.js               temas claro y oscuro
     markdown.js            conversor mínimo de Markdown (fichas y recorridos)
+    load-json.js           (01) carga de archivos de data/ en el navegador y en Node
   ui/
     module-page.js         página de un módulo: conecta estado, URL, controles y vistas
     cover.js               portada con las tarjetas de los módulos
@@ -65,12 +66,12 @@ src/
     format.js              números con coma decimal
     dom.js                 ayudante el() para crear elementos
     styles.css             todos los estilos; temas con variables CSS
-  color/                   (01)
+  color/                   (01) motor espectro -> color; guía de uso en LEEME.md
     cie.js                 funciones de igualación CIE 1931 2°, iluminantes
-    spectrum.js            espectro -> XYZ -> sRGB
-  materials/               (01)
-    library.js             biblioteca de materiales: n(λ), k(λ), metadatos
-    dielectric.js          ε = (n + ik)², modelos de Drude y Lorentz
+    spectrum.js            espectro -> XYZ -> sRGB, CIELAB, aviso de fuera de gama
+  materials/               (01) biblioteca de materiales; guía de uso en LEEME.md
+    library.js             carga y validación: n(λ), k(λ), metadatos
+    dielectric.js          ε = (n + ik)², interpolación en λ, modelos de Drude y Lorentz
   modules/
     registry.js            REGISTRO: único sitio donde se da de alta un módulo
     types.js               tipos JSDoc del contrato de módulo
@@ -82,10 +83,12 @@ src/
       view.js              presentación
       ficha.md             ficha del módulo
       miniatura.png        miniatura para la portada (npm run miniaturas <id>)
-data/                      (01)
+data/                      (01) fuentes y licencias en data/README.md
   cie/                     CMF y iluminantes (JSON)
-  materials/               un JSON por material
-  xray/                    factores de forma atómicos (Cromer-Mann)
+  materials/               un JSON por material + index.json (generados)
+    catalogo.json          lista de materiales y metadatos: lo único que se edita a mano
+    originales/            copia exacta de los archivos de refractiveindex.info
+  xray/                    (encargo 04) factores de forma atómicos (Cromer-Mann)
 tests/
   <archivo>.test.js        un archivo de tests por cada archivo de core/ y por cada módulo
   modulos.test.js          contrato de todos los módulos registrados
@@ -97,6 +100,11 @@ tools/                     scripts de generación (no se sirven)
   vendor.mjs               copia three.js y KaTeX a vendor/
   miniaturas.mjs           genera las miniaturas de la portada
   codata.py, linalg_fixture.py, colormaps.py, oklab-fixture.mjs   datos y referencias
+  cie.py                   (01) datos CIE y referencia del motor de color (colour-science)
+  refractiveindex-yaml.mjs (01) importador del formato de refractiveindex.info
+  materials.mjs            (01) genera data/materials/ a partir de catalogo.json
+  materials_fixture.py     (01) referencia del importador (PyYAML)
+  mie_fixture.py           (01) referencia de Mie (miepython y mpmath)
 vendor/                    three.js, KaTeX (copiados; ver vendor/README.md)
 docs/                      arquitectura, encargos, temario, backlog
 ```
@@ -120,7 +128,7 @@ export default {
 };
 ```
 
-`ctx` da acceso al tema, al modo presentación, a la biblioteca de materiales y al motor de color. El núcleo genera los controles a partir de `params`, sincroniza el estado con la URL y llama a `update(state)` en cada cambio.
+`ctx` da acceso al tema, al modo presentación, a la biblioteca de materiales (`ctx.materials.load(id)`) y al motor de color (`ctx.color.load()`); estos dos descargan datos y devuelven promesas, así que el `mount` que los use es asíncrono. El núcleo genera los controles a partir de `params`, sincroniza el estado con la URL y llama a `update(state)` en cada cambio.
 
 La definición exacta del contrato (campos opcionales `hidden`, `animated` y `thumbnail`, contenido de `ctx`) está en `src/modules/types.js`, y la guía para crear un módulo, en `src/modules/_plantilla/LEEME.md`. Un módulo se da de alta en `src/modules/registry.js` y en ningún otro sitio. `module.js` y `view.js` no pueden usar `document` fuera de sus funciones, porque los tests los importan en Node.
 
@@ -145,7 +153,7 @@ Mapa estándar: el tono codifica la fase (arg ψ, rueda de color cíclica y perc
 Dado un espectro (transmitancia, reflectancia o emisión sobre 380–780 nm) y un iluminante (D65 por defecto, también A y E), calcula XYZ con las funciones CIE 1931 2°, convierte a sRGB lineal, aplica la corrección gamma y recorta con aviso si queda fuera de gama. Se usa para el color de coloides, materiales y objetos.
 
 ### Biblioteca de materiales
-Cada material es un JSON con `λ` (nm), `n`, `k`, fuente bibliográfica, licencia y metadatos: `familia` (metal, semiconductor, dieléctrico, ion en red, molécula, líquido…), `mecanismo` (texto breve del origen de su color o transparencia) y `modulos` (dónde se explica). Fuente principal: base de datos de refractiveindex.info (dominio público CC0), por ejemplo Johnson & Christy 1972 para Au, Ag y Cu. Las fuentes se citan en una página de créditos.
+Cada material es un JSON con `λ` (nm), `n`, `k`, fuente bibliográfica, licencia y metadatos: `familia` (metal, semiconductor, dieléctrico, ion en red, molécula, líquido…), `mecanismo` (texto breve del origen de su color o transparencia) y `modulos` (dónde se explica). Fuente principal: base de datos de refractiveindex.info (dominio público CC0), por ejemplo Johnson & Christy 1972 para Au, Ag y Cu. Las fuentes y licencias están en `data/README.md` (la página de créditos de la web está pendiente: `docs/BACKLOG.md`). Los nombres de los metadatos van en español porque son datos; las tablas son `wavelength_nm`, `n` y `k`.
 
 ## Tests
 

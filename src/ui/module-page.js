@@ -22,6 +22,8 @@ import { getTheme, onThemeChange, themeColors } from '../core/theme.js';
 import { refreshPlots } from './plot2d.js';
 import { createTransition, findActivePreset, presetState } from '../core/presets.js';
 import { createTourRunner } from '../core/tours.js';
+import { loadColorEngine } from '../color/spectrum.js';
+import { loadMaterial, loadMaterialIndex } from '../materials/library.js';
 
 /**
  * @typedef {import('../modules/types.js').ModuleDescriptor} ModuleDescriptor
@@ -240,8 +242,9 @@ export async function createModulePage(root, module, query, shell) {
     clock,
     theme: { name: getTheme, colors: themeColors },
     presentation: { isActive: () => shell.presentation.isActive() },
-    materials: null,
-    color: null,
+    // Servicios de datos: no descargan nada hasta que el módulo los pide.
+    materials: { load: loadMaterial, list: loadMaterialIndex },
+    color: { load: loadColorEngine },
   };
   const instance = await module.mount(stage, ctx);
   instance.update(store.get());

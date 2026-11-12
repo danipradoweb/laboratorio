@@ -64,6 +64,9 @@ Comprueba: `npm test` en verde.
 - 3D: `createView3D` de `src/ui/view3d.js`. Es asíncrona: `mount` debe ser `async` y usar `await`. Mira `src/modules/_galeria/view.js`.
 - Funciones complejas: `colorizeComplex` y `createPhaseWheel` de `src/ui/colormaps.js`. La rueda de fase debe estar siempre visible junto a cualquier vista coloreada por fase.
 - Vistas enlazadas: la opción `onPick` de una gráfica llama a `ctx.setState({ … })`; el resto se actualiza solo.
+- Materiales reales (n, k, ε de oro, plata, agua, sílice…): `await ctx.materials.load('Au')`. Lee `src/materials/LEEME.md`.
+- Color de un espectro (qué color tiene una disolución, un filtro, una lámina): `await ctx.color.load()`. Lee `src/color/LEEME.md`.
+- Los dos servicios anteriores descargan datos, así que `mount` debe ser `async`. Ejemplo completo: `src/modules/plasmon/view.js`.
 - Colocación de los paneles: añade al final de `src/ui/styles.css` una regla para tu rejilla, copiando la de `.plantilla-grid`.
 
 Comprueba: `npm run serve`, abre `http://127.0.0.1:8080/laboratorio/#/<id>` y mueve los controles. Mira la consola del navegador: no debe haber errores.

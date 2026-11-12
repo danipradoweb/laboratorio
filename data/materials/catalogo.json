@@ -1,0 +1,99 @@
+{
+  "_descripcion": "Catálogo de la biblioteca de materiales. Es el ÚNICO archivo de esta carpeta que se edita a mano: tools/materials.mjs lee cada entrada, descarga su archivo de la base de datos de refractiveindex.info (queda copiado en originales/) y genera <id>.json e index.json.",
+  "_base_de_datos": "https://github.com/polyanskiy/refractiveindex.info-database",
+  "_commit": "e6d15e364f70de1cad8a96a20f75689f2fba8b21",
+  "_licencia": "CC0 1.0 Universal (dominio público)",
+  "_familias": ["metal", "semiconductor", "dieléctrico", "líquido"],
+  "materiales": [
+    {
+      "id": "Au",
+      "nombre": "Oro",
+      "formula": "Au",
+      "archivo": "main/Au/nk/Johnson.yml",
+      "pagina": "shelf=main&book=Au&page=Johnson",
+      "familia": "metal",
+      "mecanismo": "Sus electrones de conducción reflejan el rojo y el infrarrojo, pero las transiciones interbanda (de la banda 5d a la 6sp) absorben el azul y el violeta, por debajo de ≈ 520 nm (≈ 2,4 eV). Por eso el oro macizo es amarillo.",
+      "modulos": ["plasmon"]
+    },
+    {
+      "id": "Ag",
+      "nombre": "Plata",
+      "formula": "Ag",
+      "archivo": "main/Ag/nk/Johnson.yml",
+      "pagina": "shelf=main&book=Ag&page=Johnson",
+      "familia": "metal",
+      "mecanismo": "Electrones de conducción casi libres en todo el visible: refleja por igual todos los colores (blanco metálico). Sus transiciones interbanda (4d → 5sp) empiezan ya en el ultravioleta, hacia 320 nm (≈ 3,9 eV), y por eso es el metal con menos pérdidas en el visible.",
+      "modulos": ["plasmon"]
+    },
+    {
+      "id": "Cu",
+      "nombre": "Cobre",
+      "formula": "Cu",
+      "archivo": "main/Cu/nk/Johnson.yml",
+      "pagina": "shelf=main&book=Cu&page=Johnson",
+      "familia": "metal",
+      "mecanismo": "Como el oro, pero con el umbral de las transiciones interbanda (3d → 4sp) más hacia el rojo, cerca de 590 nm (≈ 2,1 eV): absorbe el verde y el azul y refleja sobre todo el rojo y el naranja.",
+      "modulos": ["plasmon"]
+    },
+    {
+      "id": "Al",
+      "nombre": "Aluminio",
+      "formula": "Al",
+      "archivo": "main/Al/nk/Rakic.yml",
+      "pagina": "shelf=main&book=Al&page=Rakic",
+      "familia": "metal",
+      "mecanismo": "Metal de electrones casi libres con la frecuencia de plasma en el ultravioleta lejano (≈ 15 eV): refleja todo el visible y también el ultravioleta. Una transición interbanda débil cerca de 800 nm (≈ 1,5 eV) baja un poco su reflectancia en el rojo y el infrarrojo cercano.",
+      "modulos": ["plasmon"]
+    },
+    {
+      "id": "AuAg",
+      "nombre": "Aleación oro-plata (30 % Au, 70 % Ag)",
+      "formula": "Au0.3Ag0.7",
+      "archivo": "other/alloys/Au-Ag/nk/Rioux-Au30Ag70.yml",
+      "pagina": "shelf=other&book=Au-Ag&page=Rioux-Au30Ag70",
+      "familia": "metal",
+      "mecanismo": "Aleación homogénea: el umbral de las transiciones interbanda se desplaza de forma continua entre el de la plata (ultravioleta) y el del oro (azul-verde) según la composición, y con él el color y la resonancia de plasmón. Datos de un modelo analítico ajustado a medidas de elipsometría, no de una medida directa de esta composición.",
+      "modulos": ["plasmon"]
+    },
+    {
+      "id": "H2O",
+      "nombre": "Agua",
+      "formula": "H2O",
+      "archivo": "main/H2O/nk/Hale.yml",
+      "pagina": "shelf=main&book=H2O&page=Hale",
+      "familia": "líquido",
+      "mecanismo": "Transparente en el visible: sus transiciones electrónicas están en el ultravioleta lejano. Los sobretonos de las vibraciones O–H absorben débilmente el rojo, y por eso el agua en gran espesor se ve azulada.",
+      "modulos": []
+    },
+    {
+      "id": "SiO2",
+      "nombre": "Sílice fundida",
+      "formula": "SiO2",
+      "archivo": "main/SiO2/nk/Malitson.yml",
+      "pagina": "shelf=main&book=SiO2&page=Malitson",
+      "familia": "dieléctrico",
+      "mecanismo": "Aislante con una banda prohibida muy ancha (≈ 9 eV): ningún fotón visible puede excitar sus electrones y sus vibraciones absorben solo en el infrarrojo. Transparente e incolora, con dispersión normal (el índice baja suavemente al crecer λ).",
+      "modulos": []
+    },
+    {
+      "id": "TiO2",
+      "nombre": "Dióxido de titanio (película delgada)",
+      "formula": "TiO2",
+      "archivo": "main/TiO2/nk/Siefke.yml",
+      "pagina": "shelf=main&book=TiO2&page=Siefke",
+      "familia": "semiconductor",
+      "mecanismo": "Semiconductor de banda prohibida ancha (≈ 3,0–3,4 eV según la fase): absorbe el ultravioleta y es transparente en el visible, con un índice de refracción muy alto. En polvo dispersa por igual toda la luz visible: es el pigmento blanco más usado.",
+      "modulos": []
+    },
+    {
+      "id": "Si",
+      "nombre": "Silicio cristalino",
+      "formula": "Si",
+      "archivo": "main/Si/nk/Schinke.yml",
+      "pagina": "shelf=main&book=Si&page=Schinke",
+      "familia": "semiconductor",
+      "mecanismo": "Semiconductor de banda prohibida indirecta (≈ 1,12 eV, 1100 nm): absorbe todo el visible, más cuanto más azul, y es transparente en el infrarrojo. Su índice de refracción tan alto (≈ 4) hace que refleje mucho: de ahí su brillo gris metálico.",
+      "modulos": []
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+ "_descripcion": "Resumen de la biblioteca de materiales (generado por tools/materials.mjs; no editar a mano)",
+ "_base_de_datos": "https://github.com/polyanskiy/refractiveindex.info-database",
+ "_commit": "e6d15e364f70de1cad8a96a20f75689f2fba8b21",
+ "_licencia": "CC0 1.0 Universal (dominio público)",
+ "materiales": [
+  {
+   "id": "Au",
+   "nombre": "Oro",
+   "formula": "Au",
+   "familia": "metal",
+   "mecanismo": "Sus electrones de conducción reflejan el rojo y el infrarrojo, pero las transiciones interbanda (de la banda 5d a la 6sp) absorben el azul y el violeta, por debajo de ≈ 520 nm (≈ 2,4 eV). Por eso el oro macizo es amarillo.",
+   "modulos": [
+    "plasmon"
+   ],
+   "intervalo_nm": [187.9, 1937],
+   "puntos": 49,
+   "referencia": "P. B. Johnson and R. W. Christy. Optical constants of the noble metals. Phys. Rev. B 6, 4370-4379 (1972)",
+   "url": "https://refractiveindex.info/?shelf=main&book=Au&page=Johnson",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "Ag",
+   "nombre": "Plata",
+   "formula": "Ag",
+   "familia": "metal",
+   "mecanismo": "Electrones de conducción casi libres en todo el visible: refleja por igual todos los colores (blanco metálico). Sus transiciones interbanda (4d → 5sp) empiezan ya en el ultravioleta, hacia 320 nm (≈ 3,9 eV), y por eso es el metal con menos pérdidas en el visible.",
+   "modulos": [
+    "plasmon"
+   ],
+   "intervalo_nm": [187.9, 1937],
+   "puntos": 49,
+   "referencia": "P. B. Johnson and R. W. Christy. Optical constants of the noble metals. Phys. Rev. B 6, 4370-4379 (1972)",
+   "url": "https://refractiveindex.info/?shelf=main&book=Ag&page=Johnson",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "Cu",
+   "nombre": "Cobre",
+   "formula": "Cu",
+   "familia": "metal",
+   "mecanismo": "Como el oro, pero con el umbral de las transiciones interbanda (3d → 4sp) más hacia el rojo, cerca de 590 nm (≈ 2,1 eV): absorbe el verde y el azul y refleja sobre todo el rojo y el naranja.",
+   "modulos": [
+    "plasmon"
+   ],
+   "intervalo_nm": [187.9, 1937],
+   "puntos": 49,
+   "referencia": "P. B. Johnson and R. W. Christy. Optical constants of the noble metals. Phys. Rev. B 6, 4370-4379 (1972)",
+   "url": "https://refractiveindex.info/?shelf=main&book=Cu&page=Johnson",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "Al",
+   "nombre": "Aluminio",
+   "formula": "Al",
+   "familia": "metal",
+   "mecanismo": "Metal de electrones casi libres con la frecuencia de plasma en el ultravioleta lejano (≈ 15 eV): refleja todo el visible y también el ultravioleta. Una transición interbanda débil cerca de 800 nm (≈ 1,5 eV) baja un poco su reflectancia en el rojo y el infrarrojo cercano.",
+   "modulos": [
+    "plasmon"
+   ],
+   "intervalo_nm": [0.12399, 200000],
+   "puntos": 206,
+   "referencia": "A. D. Rakić. Algorithm for the determination of intrinsic optical constants of metal films: application to aluminum. Appl. Opt. 34, 4755-4767 (1995)",
+   "url": "https://refractiveindex.info/?shelf=main&book=Al&page=Rakic",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "AuAg",
+   "nombre": "Aleación oro-plata (30 % Au, 70 % Ag)",
+   "formula": "Au0.3Ag0.7",
+   "familia": "metal",
+   "mecanismo": "Aleación homogénea: el umbral de las transiciones interbanda se desplaza de forma continua entre el de la plata (ultravioleta) y el del oro (azul-verde) según la composición, y con él el color y la resonancia de plasmón. Datos de un modelo analítico ajustado a medidas de elipsometría, no de una medida directa de esta composición.",
+   "modulos": [
+    "plasmon"
+   ],
+   "intervalo_nm": [270, 1200],
+   "puntos": 931,
+   "referencia": "D. Rioux, S. Vallières, S. Besner, P. Muñoz, E. Mazur, M. Meunier. An analytic model for the dielectric function of Au, Ag, and their alloys. Adv. Opt. Mater. 2, 176-182 (2014) (See Supporting information for MATLAB model)",
+   "url": "https://refractiveindex.info/?shelf=other&book=Au-Ag&page=Rioux-Au30Ag70",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "H2O",
+   "nombre": "Agua",
+   "formula": "H2O",
+   "familia": "líquido",
+   "mecanismo": "Transparente en el visible: sus transiciones electrónicas están en el ultravioleta lejano. Los sobretonos de las vibraciones O–H absorben débilmente el rojo, y por eso el agua en gran espesor se ve azulada.",
+   "modulos": [],
+   "intervalo_nm": [200, 200000],
+   "puntos": 169,
+   "referencia": "G. M. Hale and M. R. Querry. Optical constants of water in the 200-nm to 200-µm wavelength region. Appl. Opt. 12, 555-563 (1973) See also Segelstein 1981 for more recent data from the same group.",
+   "url": "https://refractiveindex.info/?shelf=main&book=H2O&page=Hale",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "SiO2",
+   "nombre": "Sílice fundida",
+   "formula": "SiO2",
+   "familia": "dieléctrico",
+   "mecanismo": "Aislante con una banda prohibida muy ancha (≈ 9 eV): ningún fotón visible puede excitar sus electrones y sus vibraciones absorben solo en el infrarrojo. Transparente e incolora, con dispersión normal (el índice baja suavemente al crecer λ).",
+   "modulos": [],
+   "intervalo_nm": [210, 6700],
+   "puntos": 273,
+   "referencia": "1) I. H. Malitson. Interspecimen comparison of the refractive index of fused silica. J. Opt. Soc. Am. 55, 1205-1208 (1965) 2) C. Z. Tan. Determination of refractive index of silica glass for infrared wavelengths by IR spectroscopy. J. Non-Cryst. Solids 223, 158-163 (1998) * Sellmeier formula is reported in Ref. 1 for the 0.21–3.71 μm wavelength range. Ref. 2 verifies the validity of the formula up to 6.7 μm.",
+   "url": "https://refractiveindex.info/?shelf=main&book=SiO2&page=Malitson",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "TiO2",
+   "nombre": "Dióxido de titanio (película delgada)",
+   "formula": "TiO2",
+   "familia": "semiconductor",
+   "mecanismo": "Semiconductor de banda prohibida ancha (≈ 3,0–3,4 eV según la fase): absorbe el ultravioleta y es transparente en el visible, con un índice de refracción muy alto. En polvo dispersa por igual toda la luz visible: es el pigmento blanco más usado.",
+   "modulos": [],
+   "intervalo_nm": [120.181141, 125122.7623],
+   "puntos": 1208,
+   "referencia": "T. Siefke, S. Kroker, K. Pfeiffer, O. Puffky, K. Dietrich, D. Franta, I. Ohlídal, A. Szeghalmi, E.-B. Kley, A. Tünnermann. Materials pushing the application limits of wire grid polarizers further into the deep ultraviolet spectral range. Adv. Opt. Mater. 4, 1780–1786 (2016) (Numerical data kindly provided by Thomas Siefke)",
+   "url": "https://refractiveindex.info/?shelf=main&book=TiO2&page=Siefke",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  },
+  {
+   "id": "Si",
+   "nombre": "Silicio cristalino",
+   "formula": "Si",
+   "familia": "semiconductor",
+   "mecanismo": "Semiconductor de banda prohibida indirecta (≈ 1,12 eV, 1100 nm): absorbe todo el visible, más cuanto más azul, y es transparente en el infrarrojo. Su índice de refracción tan alto (≈ 4) hace que refleje mucho: de ahí su brillo gris metálico.",
+   "modulos": [],
+   "intervalo_nm": [250, 1450],
+   "puntos": 121,
+   "referencia": "1) C. Schinke, P. C. Peest, J. Schmidt, R. Brendel, K. Bothe, M. R. Vogt, I. Kröger, S. Winter, A. Schirmacher, S. Lim, H. T. Nguyen, D. MacDonald. Uncertainty analysis for the coefficient of band-to-band absorption of crystalline silicon. AIP Advances 5, 67168 (2015) 2) M. R. Vogt. Development of physical models for the simulation of optical properties of solar cell modules. PhD. Thesis (2015)",
+   "url": "https://refractiveindex.info/?shelf=main&book=Si&page=Schinke",
+   "licencia": "CC0 1.0 Universal (dominio público)"
+  }
+ ]
+}

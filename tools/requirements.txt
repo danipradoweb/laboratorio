@@ -3,3 +3,8 @@
 #   python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt
 scipy==1.18.1
 matplotlib
+numpy
+colour-science==0.4.7
+miepython==3.3.1
+PyYAML==6.0.3
+mpmath

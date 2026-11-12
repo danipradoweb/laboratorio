@@ -402,6 +402,152 @@ test('oscilador: recorrido «Qué significa resonancia» en modo presentación',
   assert.deepEqual(errors, []);
 });
 
+// Plasmón: criterio de terminado del encargo 01 (cinco vistas enlazadas, presets,
+// recorridos y modo presentación). Guarda una captura de cada preset.
+test('plasmón: URL, cinco vistas enlazadas, colores y presets', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/plasmon?material=Ag&diameter=20&lambda=387', { width: 1440, height: 900 });
+  const titles = page.locator('.plasmon-grid .panel-title');
+  const title = async (/** @type {number} */ i) => String(await titles.nth(i).textContent());
+  // Cinco paneles; cuatro lienzos (tres gráficas del trazador y la nube electrónica).
+  assert.equal(await titles.count(), 5);
+  assert.equal(await page.locator('.plasmon-grid canvas').count(), 4);
+  // La URL reproduce el estado: plata de 20 nm, con el pico de extinción cerca de 387 nm
+  // y la nube electrónica casi en cuadratura con la fuerza.
+  assert.match(await title(0), /pico de extinción en 38[5-9] nm/);
+  const delta = Number((await title(2)).match(/δ = (\d+)°/)?.[1]);
+  assert.ok(delta > 75 && delta < 100, `δ = ${delta}° en la resonancia de la plata`);
+  assert.match(String(await page.locator('.plasmon-model').textContent()), /Esfera de plata de 20 nm · teoría de Mie/);
+
+  // Vistas enlazadas: un clic en el espectro cambia λ en el control, en la URL y en las
+  // demás vistas (lejos de la resonancia, la nube sigue a la fuerza casi en fase).
+  const spectrum = page.locator('.plasmon-grid .panel').nth(0).locator('canvas');
+  const box = await spectrum.boundingBox();
+  await page.mouse.click(box.x + box.width * 0.85, box.y + box.height * 0.5);
+  await page.waitForFunction(() => !location.hash.includes('lambda=387&'));
+  const lambda = Number(new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('lambda'));
+  assert.ok(lambda > 800 && lambda <= 1000, `λ = ${lambda}`);
+  assert.equal(Number(await page.locator('[data-key="lambda"] input[type="range"]').inputValue()), lambda);
+  await page.waitForFunction(() => /δ = [0-5]°/.test(document.querySelectorAll('.plasmon-grid .panel-title')[2].textContent ?? ''));
+  assert.match(await title(0), new RegExp(`en λ = ${lambda} nm`));
+
+  /** Color de fondo de un elemento como [r, g, b]. @param {string} selector */
+  const rgbOf = async (selector) => {
+    const text = await page.locator(selector).evaluate((/** @type {HTMLElement} */ e) => e.style.background);
+    const match = text.match(/rgb\((\d+), (\d+), (\d+)\)/);
+    assert.ok(match, `sin color en ${selector}: "${text}"`);
+    return match.slice(1, 4).map(Number);
+  };
+
+  // Cada preset, con su captura y lo que debe verse en él.
+  for (const [id, expected] of [
+    ['oro-20', 'material=Au&shape=sphere&diameter=20&aspect=3&medium=1.33&lambda=521'],
+    ['oro-80', 'material=Au&shape=sphere&diameter=80&aspect=3&medium=1.33&lambda=549'],
+    ['oro-150', 'material=Au&shape=sphere&diameter=150&aspect=3&medium=1.33&lambda=640'],
+    ['plata-20', 'material=Ag&shape=sphere&diameter=20&aspect=3&medium=1.33&lambda=387'],
+    ['oro-20-vidrio', 'material=Au&shape=sphere&diameter=20&aspect=3&medium=1.5&lambda=535'],
+    ['baston-3', 'material=Au&shape=rod&diameter=10&aspect=3&medium=1.33&lambda=672&conc=1'],
+    ['licurgo', 'material=AuAg&shape=sphere&diameter=70&aspect=3&medium=1.5&lambda=503'],
+    ['oro-20-lejos', 'material=Au&shape=sphere&diameter=20&aspect=3&medium=1.33&lambda=800'],
+  ]) {
+    await page.locator(`.preset[data-preset="${id}"]`).click();
+    await page.waitForFunction((/** @type {string} */ e) => location.hash.includes(e), expected);
+    assert.equal(await page.locator(`.preset[data-preset="${id}"]`).getAttribute('aria-pressed'), 'true');
+    await page.waitForTimeout(150);
+    await page.screenshot({ path: join(shots, `plasmon-preset-${id}.png`) });
+    if (id === 'oro-20') {
+      // Oro coloidal: pico en el verde y cubeta rojiza a contraluz.
+      assert.match(await title(0), /pico de extinción en 52[0-3] nm/);
+      const [r, g, b] = await rgbOf('.plasmon-cuvette');
+      assert.ok(r > g && r > b, `cubeta de oro de 20 nm: rgb(${r}, ${g}, ${b})`);
+    } else if (id === 'oro-150') {
+      // El pico se ha ido al rojo y casi toda la extinción es dispersión.
+      assert.match(await title(0), /pico de extinción en 6[34]\d nm/);
+      assert.match(await title(0), /9\d % dispersión/);
+      assert.match(String(await page.locator('.plasmon-model').textContent()), /solo orientativo/);
+    } else if (id === 'baston-3') {
+      assert.match(String(await page.locator('.plasmon-model').textContent()), /teoría de Gans \(aproximación cuasiestática/);
+      assert.match(await title(0), /pico de extinción en 67\d nm/);
+      // El diagrama del bastón es un promedio de orientaciones: a 90° la polarización
+      // paralela no se anula (en el pico longitudinal vale la mitad que la perpendicular).
+      assert.match(await title(4), /promedio de orientaciones · a 90°: ∥\/⊥ = (4[89]|5[0-2]) %/);
+    } else if (id === 'licurgo') {
+      // Roja a contraluz, verde por dispersión.
+      const cuvette = await rgbOf('.plasmon-cuvette');
+      assert.ok(cuvette[0] > cuvette[1] && cuvette[0] > cuvette[2], `Licurgo a contraluz: rgb(${cuvette})`);
+      const glow = await rgbOf('.plasmon-glow');
+      assert.ok(glow[1] > glow[0], `Licurgo dispersada: rgb(${glow})`);
+    }
+  }
+
+  // En una ventana más estrecha (1100 px, con los controles abiertos) tres columnas no
+  // caben: la rejilla pasa a dos columnas, y vuelve a tres al ensanchar la ventana.
+  assert.equal(await page.locator('.plasmon-grid').getAttribute('data-layout'), 'full');
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await page.waitForSelector('.plasmon-grid[data-layout="compact"]');
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: join(shots, 'plasmon-compacto.png') });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.waitForSelector('.plasmon-grid[data-layout="full"]');
+
+  // Concentración y camino óptico solo cambian el color de la cubeta: más camino, más oscura.
+  await page.locator('.preset[data-preset="oro-20"]').click();
+  await page.waitForFunction(() => location.hash.includes('diameter=20&aspect=3&medium=1.33&lambda=521'));
+  const before = await rgbOf('.plasmon-cuvette');
+  await page.locator('[data-key="path"] .control-number').fill('50');
+  await page.locator('[data-key="path"] .control-number').press('Enter');
+  await page.waitForFunction(() => location.hash.includes('path=50'));
+  await page.waitForTimeout(100);
+  const after = await rgbOf('.plasmon-cuvette');
+  assert.ok(after[1] < before[1] && after[2] < before[2], `con 50 mm debe pasar menos verde y azul: ${before} → ${after}`);
+
+  // La nube electrónica está animada y la pausa la detiene.
+  const cloud = page.locator('.plasmon-canvas');
+  const frame = () => cloud.evaluate((/** @type {HTMLCanvasElement} */ c) => c.toDataURL());
+  const a = await frame();
+  await page.waitForTimeout(300);
+  assert.notEqual(await frame(), a, 'la nube electrónica no se mueve');
+  await page.locator('.clock-play').click();
+  const b = await frame();
+  await page.waitForTimeout(300);
+  assert.equal(await frame(), b, 'en pausa la nube no debe moverse');
+
+  // Modo presentación: la tecla 7 salta a la copa de Licurgo.
+  await page.keyboard.press('p');
+  await page.keyboard.press('7');
+  await page.waitForFunction(() => location.hash.includes('material=AuAg'));
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(shots, 'plasmon-presentacion.png') });
+  await close();
+  assert.deepEqual(errors, []);
+});
+
+// Los dos recorridos del plasmón, en modo presentación: cada paso lleva a su preset y
+// pinta su texto con fórmulas sin errores de KaTeX.
+for (const [tourId, steps] of /** @type {const} */ ([
+  ['oro-rojo', ['lambda=800', 'lambda=521', 'lambda=521', 'material=Ag', 'material=AuAg']],
+  ['tamano', ['diameter=20&aspect=3&medium=1.33', 'medium=1.5', 'diameter=80', 'diameter=150', 'shape=rod']],
+])) {
+  test(`plasmón: recorrido «${tourId}» en modo presentación`, { skip }, async () => {
+    const { page, errors, close } = await openPage('#/plasmon', { width: 1920, height: 1080 });
+    await page.locator(`.tour-start[data-tour="${tourId}"]`).click();
+    await page.keyboard.press('p');
+    for (let step = 0; step < steps.length; step++) {
+      assert.match(await page.locator('.tour-counter').textContent(), new RegExp(`Paso ${step + 1} de ${steps.length}`));
+      await page.waitForFunction((/** @type {string} */ e) => location.hash.includes(e), steps[step]);
+      // Los pasos cuyo texto lleva fórmulas deben pintarlas con KaTeX, sin errores.
+      const text = modules.find((m) => m.id === 'plasmon')?.tours.find((t) => t.id === tourId)?.steps[step].text ?? '';
+      if (text.includes('$')) await page.waitForSelector('.tour-text .katex');
+      assert.ok(String(await page.locator('.tour-text').textContent()).trim().length > 40, 'el paso no tiene texto');
+      assert.equal(await page.locator('.tour-text .katex-error').count(), 0);
+      await page.waitForTimeout(1700); // fin de la transición entre presets
+      await page.screenshot({ path: join(shots, `plasmon-recorrido-${tourId}-${step + 1}.png`) });
+      await page.keyboard.press('ArrowRight');
+    }
+    await close();
+    assert.deepEqual(errors, []);
+  });
+}
+
 // Navegación: de la portada a un módulo por su tarjeta, vuelta a la portada, y de un
 // módulo a otro. Cada cambio destruye el módulo anterior (gráficas, WebGL, reloj): no
 // debe quedar ningún error ni ningún resto en pantalla.
@@ -414,7 +560,7 @@ test('navegación entre portada y módulos sin errores ni restos', { skip }, asy
   await page.waitForSelector('.cover');
   assert.equal(await page.locator('canvas').count(), 0);
   assert.equal(await page.locator('.page-actions button').count(), 0);
-  for (const id of ['_galeria', '_plantilla', 'oscilador', '_galeria']) {
+  for (const id of ['_galeria', '_plantilla', 'plasmon', 'oscilador', '_galeria']) {
     await page.evaluate((/** @type {string} */ hash) => (location.hash = hash), `#/${id}`);
     await page.waitForSelector(`html[data-ready="true"][data-route="${id}"]`);
     assert.equal(await page.locator('.module-page').count(), 1);
