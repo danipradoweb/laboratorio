@@ -7,15 +7,30 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | Encargo | Estado |
 |---|---|
 | 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
-| 01 Plasmón, Mie y color | **terminado** (2026-11-12), revisado. Rama `claude/bold-goldberg-s51hqd`, sin fusionar en `main` |
-| 02 Luz y materia | pendiente |
+| 01 Plasmón, Mie y color | **terminado** (2026-11-12), revisado y fusionado en `main` (pull request #2) |
+| 02 Luz y materia | **en curso** (rama `claude/elegant-cori-tlnjou`) |
 | 03 Ondas clásicas y función de onda | pendiente |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 01 Plasmón, Mie y color (terminado). El siguiente es `docs/encargos/02-luz-materia.md`.
-- Último paso terminado: 10b (revisión independiente, correcciones y cierre). Encargo 01 terminado
-- Siguiente paso: encargo 02 (`docs/encargos/02-luz-materia.md`), en una sesión nueva
+- Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
+- Último paso terminado: 0 (plan).
+- Siguiente paso: 1 (andamiaje del módulo y física de la parte A).
+
+### Plan del encargo 02 (pasos y estado)
+
+Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se eligen con el parámetro `part` y comparten material y frecuencia: `material` (parte A), `laminas` (parte B), `interfaz` (parte C, Fresnel) y `polarizadores` (parte C, Malus y gafas). La física va en tres archivos puros: `physics.js` (A), `physics-sheets.js` (B) y `physics-fresnel.js` (C), cada uno con su archivo de tests.
+
+| # | Paso | Estado |
+|---|---|---|
+| 1 | Andamiaje del módulo (descriptor, registro, controles que se muestran según la vista) y física de la parte A con tests | pendiente |
+| 2 | Vista de la parte A (ε, n y k, R, osciladores) | pendiente |
+| 3 | Física de la parte B (láminas de dipoles) con tests | pendiente |
+| 4 | Vista de la parte B (ondas animadas, campo total, fasores) | pendiente |
+| 5 | Física de la parte C (Fresnel, polarizadores) con tests | pendiente |
+| 6 | Vistas de la parte C (interfaz y polarizadores) | pendiente |
+| 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | pendiente |
+| 8 | Revisión con subagente (una ronda), correcciones, documentación y cierre | pendiente |
 
 ### Cómo queda el encargo 01
 
