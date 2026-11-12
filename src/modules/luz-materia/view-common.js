@@ -166,7 +166,7 @@ export function resolveMaterial(state, data) {
     'vidrio',
     sellmeierToLorentz(data.silicaSellmeier, GLASS_RELATIVE_DAMPING),
     ['ultravioleta lejano', 'ultravioleta', 'infrarrojo'],
-    'resonancias de la fórmula de Sellmeier de la sílice fundida (Malitson, 1965), con una anchura añadida γ = ω₀/40',
+    `resonancias de la fórmula de Sellmeier de la sílice fundida (Malitson, 1965), con una anchura añadida γ = ω₀/${Math.round(1 / GLASS_RELATIVE_DAMPING)}`,
   );
 }
 

@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
-- Último paso terminado: 3 (física de las láminas de dipolos, con tests).
-- Siguiente paso: 4 (vista de las láminas: `view-sheets.js`, darla de alta en `PARTS` de `view.js` y añadir sus parámetros a `module.js`).
+- Último paso terminado: 4 (vista de las láminas).
+- Siguiente paso: 5 (física de la parte C: `physics-fresnel.js` con `tests/luz-materia-fresnel.test.js`: Fresnel con n complejo, Brewster, ángulo crítico, onda evanescente, Malus y cadena de polarizadores, reflejo en agua con gafas).
 
 ### Plan del encargo 02 (pasos y estado)
 
@@ -26,7 +26,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 | 1 | Andamiaje del módulo (descriptor, registro, controles que se muestran según la vista) y física de la parte A con tests | hecho |
 | 2 | Vista de la parte A (ε, n y k, R, osciladores) | hecho |
 | 3 | Física de la parte B (láminas de dipolos) con tests | hecho |
-| 4 | Vista de la parte B (ondas animadas, campo total, fasores) | pendiente |
+| 4 | Vista de la parte B (ondas animadas, campo total, fasores) | hecho |
 | 5 | Física de la parte C (Fresnel, polarizadores) con tests | pendiente |
 | 6 | Vistas de la parte C (interfaz y polarizadores) | pendiente |
 | 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | pendiente |
@@ -36,13 +36,14 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 
 - Pasos 1–2: `npm test` 343 en verde (16 tests nuevos en `tests/luz-materia.test.js`, uno en `tests/materials.test.js` y las pruebas de humo generales, que ya cargan el módulo en los dos temas, en pantalla estrecha y con su ficha provisional); `npm run check` limpio. El modelo de Lorentz construido con los coeficientes de Sellmeier de la sílice reproduce la tabla de `data/materials/SiO2.json` a 10⁻¹² y da n_d = 1,4585; Kramers-Kronig reconstruye ε′ a partir de ε″ con error < 2·10⁻⁴ (un oscilador, Drude y vidrio); regla de suma a 10⁻⁶; Drude: R > 0,9 por debajo de ω_p. Captura de la vista revisada a ojo.
 - Paso 3: `tests/luz-materia-laminas.test.js`, 15 tests en verde. Una lámina sola analítica (10⁻¹⁴); el campo total cumple la ecuación de ondas con las láminas como fuente (salto de E′ = −2kκE_j); sistema N × N frente a un segundo método independiente (10⁻¹¹); R + T = 1 sin pérdidas y R + T + A = 1 con pérdidas (10⁻¹¹); lámina continua por matriz de transferencia = condiciones de contorno = Airy (10⁻¹²); convergencia al continuo con error ∝ d² (razón 4 al dividir d por 2, cuatro materiales); índice de Bloch n² = ε + (kd)²χ²/12; λ dentro del vidrio en el verde = λ₀/n (ajuste = Bloch a 10⁻⁹); lámina gruesa absorbente → Fresnel con error ∝ d²; teorema de extinción (las radiadas suman −incidente al fondo).
+- Paso 4: `npm test` 358 en verde, `npm run check` limpio. Capturas revisadas a ojo: vidrio en el verde (40 láminas; λ dentro = λ₀/1,464 medida en el campo frente a n = 1,460; el fasor de la transmitida da casi una vuelta), metal de Drude en tema oscuro (R = 98 %, el campo decae dentro en 0,04 λ₀) y encendido automático en modo presentación a 1920 × 1080.
 
 ### Decisiones del encargo 02
 
 - 2026-11-12. **Un solo módulo con cuatro vistas** (`part`: material, láminas, interfaz, polarizadores) en lugar de tres módulos: el encargo pide que se vea un único mecanismo, y los recorridos cruzan las partes (un paso de recorrido es un preset del mismo módulo). El material y la energía del fotón son comunes a las cuatro vistas.
 - 2026-11-12. **Añadido al núcleo: campo opcional `visible` en los parámetros** (`(state) => boolean`, en `src/core/state.js` y `src/ui/controls.js`): el control solo se muestra cuando devuelve true; el parámetro sigue en el estado y en la URL. Motivo: con cuatro vistas hay unos veinte parámetros y cada vista usa pocos.
 - 2026-11-12. **Física repartida en `physics.js`, `physics-sheets.js` y `physics-fresnel.js`**, con un archivo de tests por parte. `tests/modulos.test.js` aplica la regla de pureza (sin DOM, sin constantes tecleadas) a todos los `physics*.js` de la carpeta.
-- 2026-11-12. **El «vidrio» es la fórmula de Sellmeier de la sílice fundida leída como modelo de Lorentz**: cada término B·λ²/(λ² − C²) es un oscilador con ω₀ = 2πc/C, γ = 0 e intensidad B·ω₀². Los coeficientes se leen de `data/materials/SiO2.json` (no se teclean). La fórmula no trae anchuras: se añade γ = ω₀/40 a cada resonancia, y el código, la interfaz y la ficha dicen que es una elección del modelo. Consecuencia que hay que decir en la ficha: las alas lorentzianas dan k ≈ 2·10⁻³ en el visible, muchísimo más que el vidrio real.
+- 2026-11-12. **El «vidrio» es la fórmula de Sellmeier de la sílice fundida leída como modelo de Lorentz**: cada término B·λ²/(λ² − C²) es un oscilador con ω₀ = 2πc/C, γ = 0 e intensidad B·ω₀². Los coeficientes se leen de `data/materials/SiO2.json` (no se teclean). La fórmula no trae anchuras: se añade γ = ω₀/100 a cada resonancia (primero se probó ω₀/40, pero dejaba un 4 % de absorción en 2 λ₀ de «vidrio»), y el código, la interfaz y la ficha dicen que es una elección del modelo. Consecuencia que hay que decir en la ficha: las alas lorentzianas dan k ≈ 6·10⁻⁴ en el visible, muchísimo más que el vidrio real.
 - 2026-11-12. **Metal de Drude de ejemplo**: ħω_p = 10 eV, ħγ = 0,1 eV, valores redondos declarados como ejemplo (no son los de un metal concreto).
 - 2026-11-12. **Frecuencias como energía del fotón en eV** en todo el módulo; la longitud de onda se deriva con `units.js`. El eje de las gráficas del material se puede poner en nm.
 - 2026-11-12. **`epsilonToNk` reescrita sin cancelación** (`src/materials/dielectric.js`): con la fórmula directa, un k diminuto (agua en el visible, k ~ 10⁻⁹) se perdía entero al pasar por ε. Ahora se calcula la parte grande con la raíz y la pequeña con Im ε = 2nk. Test nuevo en `tests/materials.test.js`. Los tests del plasmón siguen en verde.
@@ -53,6 +54,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - 2026-11-12. **«Medir λ dentro»**: el campo en láminas equiespaciadas cumple E_{j+1} + E_{j−1} = 2·cos(qd)·E_j aunque haya onda de vuelta; `fitIndex` ajusta cos(qd) por mínimos cuadrados. Es exacto para el montón discreto.
 - 2026-11-12. **Dos métodos de solución**: `solveSheets` (sistema N × N con `solveComplexDense`, el que pide el encargo y el que usa la vista) y `solveSheetsMarching` (recorrido de atrás hacia delante, coste N), que sirve de comprobación independiente y para los tests con miles de láminas.
 - 2026-11-12. **Cuatro cotas de los tests de las láminas estaban puestas a ojo y fallaron** (|t| tras 14 λ₀, R − R_Fresnel con d finito, diferencia entre 3 y 12 λ₀ de espesor): se sustituyeron por las que se deducen (e^{−2πkL}, (k·d)²|χ|²/12, e^{−4πkL}). La física no se tocó; las razones de convergencia salieron 4,0 a la primera.
+- 2026-11-12. **Vista de las láminas**: dos gráficas animadas con el mismo eje z (las ondas por separado y el campo total, con una regla de λ₀ fuera y otra de λ₀/n dentro, medida con `fitIndex`) y dos diagramas de fasores (no los pedía el encargo, pero son el argumento de Feynman I-31: la transmitida es la incidente más un fasor pequeño en cuadratura por lámina, y la reflejada es una suma que casi se cancela). El retraso de fase de la transmitida se acumula a lo largo de la cadena para no perder vueltas completas. El encendido automático (`auto`) enciende una lámina cada 0,45 s y repite.
 - 2026-11-12. **Añadido a `plot2d.js`**: `xLabel` en los datos de `draw()` (igual que `yLabel`), para el eje conmutable entre energía y longitud de onda.
 - 2026-11-12. **Amplitud de los osciladores dibujada en escala comprimida** (raíz cúbica de |χ_j| respecto a su máximo en la ventana): entre la resonancia y lejos de ella cambia en órdenes de magnitud. El número |χ_j| se da al lado y la ficha lo dirá.
 

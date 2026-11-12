@@ -114,16 +114,17 @@ test('Sellmeier → Lorentz: intensidades que suman 1 y resonancias en el UV y e
 // Principio (lo que pide el encargo): con las resonancias en el UV y en el IR, en el
 // visible los osciladores del UV responden en fase (ω < ω₀) y suman a Re ε, así que
 // n > 1; n crece con ω (dispersión normal: nos acercamos a la resonancia UV) y k ≈ 0.
-// La cota de k es la del modelo con γ = ω₀/40 (k ~ 2·10⁻³): es mucho mayor que la de un
-// vidrio real porque las alas de una lorentziana caen despacio (ver la ficha), pero es
-// 1000 veces menor que n.
+// La cota de k es la del modelo con γ = ω₀/100 (k ~ 6·10⁻⁴; en general k ≈ ε″/2n con
+// ε″ ≈ Σ f·ω_p²·γω/(ω₀² − ω²)², que con estas resonancias da k ≈ 0,06·γ/ω₀): es mucho
+// mayor que la de un vidrio real porque las alas de una lorentziana caen despacio (ver
+// la ficha), pero es más de 1000 veces menor que n.
 test('vidrio en el visible: n > 1, dispersión normal y k ≈ 0', () => {
   let previous = 0;
   for (let energy = VISIBLE_EV[0]; energy <= VISIBLE_EV[1]; energy += 0.05) {
     const { n, k } = epsilonToNk(modelEpsilon(glass, energy));
     assert.ok(n > 1.4 && n < 1.5, `n = ${n} en ${energy} eV`);
     assert.ok(n > previous, `n debe crecer con ω (dispersión normal) en ${energy} eV`);
-    assert.ok(k > 0 && k < 3e-3, `k = ${k} en ${energy} eV`);
+    assert.ok(k > 0 && k < 0.1 * GLASS_RELATIVE_DAMPING, `k = ${k} en ${energy} eV`);
     previous = n;
   }
   // El amortiguamiento añadido apenas cambia n en el visible respecto a Sellmeier puro
@@ -211,12 +212,12 @@ test('Kramers-Kronig: ε′ reconstruida a partir de ε″ (un oscilador y metal
 });
 
 // Mismo principio con el «vidrio» (tres resonancias, una de ellas muy estrecha en el
-// infrarrojo: γ = 0,003 eV, que obliga a una malla de 0,0002 eV). Aquí se ve lo que
+// infrarrojo: γ = 0,0013 eV, que obliga a una malla de 0,0001 eV). Aquí se ve lo que
 // dice Kramers-Kronig: el índice en el visible (donde ε″ ≈ 0) sale de integrar la
 // absorción del ultravioleta y del infrarrojo.
 test('Kramers-Kronig: el índice del vidrio en el visible sale de su absorción en el UV y el IR', () => {
-  const step = 0.0002;
-  const count = 3000001; // hasta 600 eV
+  const step = 0.0001;
+  const count = 6000001; // hasta 600 eV
   const epsIm = new Float64Array(count);
   for (let m = 1; m < count; m++) epsIm[m] = modelEpsilon(glass, m * step).im;
   for (const energy of [0.05, 0.5, 1.8, 2.25, 3.1, 8, 10.6, 14, 25]) {

@@ -47,11 +47,12 @@ export const VISIBLE_EV = /** @type {const} */ ([wavelengthNmToEV(780), waveleng
 
 /**
  * Anchura que se da a cada resonancia del «vidrio», como fracción de su frecuencia propia
- * (γ_j = ω₀j/40). ES UNA ELECCIÓN DEL MODELO, no un dato: la fórmula de Sellmeier de la que
- * salen las resonancias no tiene amortiguamiento. Sirve para que la absorción en cada
- * resonancia sea finita y se pueda dibujar.
+ * (γ_j = ω₀j/100). ES UNA ELECCIÓN DEL MODELO, no un dato: la fórmula de Sellmeier de la
+ * que salen las resonancias no tiene amortiguamiento. Sirve para que la absorción en cada
+ * resonancia sea finita y se pueda dibujar. Efecto secundario: las alas de una lorentziana
+ * caen despacio y dejan en el visible k ≈ 6·10⁻⁴, muchísimo más que un vidrio real.
  */
-export const GLASS_RELATIVE_DAMPING = 1 / 40;
+export const GLASS_RELATIVE_DAMPING = 1 / 100;
 
 /**
  * Metal de Drude de ejemplo: ħω_p = 10 eV y ħγ = 0,1 eV. Son valores redondos elegidos

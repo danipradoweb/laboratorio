@@ -16,6 +16,7 @@
 import { el } from '../../ui/dom.js';
 import { formatEs } from '../../ui/format.js';
 import { mountMaterial } from './view-material.js';
+import { mountSheets } from './view-sheets.js';
 import { formatSig, formatWavelength, loadMaterialData, opticsAt, resolveMaterial, spectralRegion } from './view-common.js';
 
 export { ENERGY_RANGE, MATERIAL_OPTIONS } from './view-common.js';
@@ -26,6 +27,7 @@ export { ENERGY_RANGE, MATERIAL_OPTIONS } from './view-common.js';
  */
 const PARTS = {
   material: mountMaterial,
+  laminas: mountSheets,
 };
 
 /**
