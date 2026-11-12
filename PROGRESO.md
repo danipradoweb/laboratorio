@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
-- Último paso terminado: 3 (biblioteca de materiales)
-- Siguiente paso: 4a (Mie, BHMIE, y comparación con `miepython`)
+- Último paso terminado: 9 (primera versión completa: física, vistas, presets, recorridos, ficha, miniatura)
+- Siguiente paso: 9b (prueba de humo propia del módulo: URL, vistas enlazadas, presets, recorridos) y después 10 (revisión con subagente, documentación de servicios, cierre)
 
 ### Plan del encargo 01 (pasos y estado)
 
@@ -24,12 +24,13 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 1 | Datos CIE: `tools/cie.py` → `data/cie/` | hecho |
 | 2 | Motor de color: `src/color/cie.js`, `src/color/spectrum.js`, `tests/color.test.js` | hecho |
 | 3 | Biblioteca de materiales: importador YAML, `data/materials/`, `src/materials/` y tests | hecho |
-| 4a | Mie (BHMIE) en `src/modules/plasmon/physics.js` + comparación con `miepython` | pendiente |
-| 4b | Cuasiestática, Gans, campo cercano y tests con datos reales | pendiente |
-| 5 | Color del coloide (transmitido y dispersado) | pendiente |
-| 6 | Vistas enlazadas (a)–(e) y controles | pendiente |
-| 7–8 | Presets y recorridos | pendiente |
-| 9 | Ficha, miniatura, prueba de humo del módulo | pendiente |
+| 4a | Mie (BHMIE) en `src/modules/plasmon/physics.js` + comparación con `miepython` | hecho |
+| 4b | Cuasiestática, Gans, campo cercano y tests con datos reales | hecho |
+| 5 | Color del coloide (transmitido y dispersado) | hecho |
+| 6 | Vistas enlazadas (a)–(e) y controles | hecho |
+| 7–8 | Presets y recorridos | hecho |
+| 9 | Ficha y miniatura | hecho |
+| 9b | Prueba de humo propia del módulo (URL, vistas enlazadas, presets, recorridos, presentación) | pendiente |
 | 10 | Revisión con subagente, documentación de servicios, cierre | pendiente |
 
 ### Evidencia por paso (encargo 01)
@@ -103,6 +104,7 @@ Un subagente con contexto limpio revisó solo la física y el cumplimiento del e
 | colour-science (pip) | 0.4.7 | solo `tools/cie.py` (datos CIE y referencia del motor de color) |
 | miepython (pip) | 3.3.1 | solo `tools/` (referencia de Mie) |
 | PyYAML (pip) | 6.0.3 | solo `tools/` (referencia del importador de materiales) |
+| mpmath (pip) | 1.4.x | solo `tools/mie_fixture.py` (Mie de alta precisión para esferas pequeñas) |
 
 Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponibles.
 
@@ -156,6 +158,10 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 
 - Paso 3: `tests/materials.test.js`, 37 tests en verde. Los 9 JSON coinciden fila a fila con los originales leídos con PyYAML; n, k ↔ ε en todas las filas; sílice n_d = 1,4585; agua n(589 nm) = 1,333; Drude y Lorentz contra límites analíticos y contra `complexResponse` del oscilador.
 
+- Pasos 4–5: `tests/plasmon.test.js`, 36 tests en verde. Mie frente a `miepython`/`mpmath` en 196 casos (m reales y absorbentes, x de 0,01 a 100): peor error relativo 5·10⁻¹¹ en Q_ext, 2·10⁻¹⁰ en Q_back y 6·10⁻⁸ en g (tolerancia 10⁻⁶); amplitudes S₁, S₂ a 10⁻¹⁰ de |S(0°)|. Rayleigh, Q_abs = 0 con m real, teorema óptico e integral angular, Q_ext → 2. Cuasiestática frente a Mie en Au de radio 5 nm: desviación máxima 1,93 % (400–800 nm). Drude: pico en ω_p/√(1 + 2ε_m). Gans: factores que suman 1 y coinciden con su integral, esfera recuperada, corrimiento monótono. Campo cercano: condiciones de contorno, divergencia y rotacional nulos.
+- **Valores con datos reales (Johnson & Christy), sin ajustar nada**: Au de 20 nm en agua, pico en **521,1 nm** (intervalo pedido 515–528); Ag de 20 nm en agua, **386,9 nm** (385–410); Au de 40 → 150 nm: 524 → 536 → 549 → 570 → 591 → 640 nm; Au de 20 nm con n_m de 1 a 2: 506 → 588 nm; bastón de Au con relación de aspecto 1 → 5: 521 → 868 nm (672 nm con 3). Color: Au de 20 nm a contraluz, L*a*b* = (70, +49, +21); copa de Licurgo (Au-Ag 30:70 de 70 nm en n = 1,5): a contraluz a* = +53 (roja), dispersada a* = −61 (verde).
+- Pasos 6–9: `npm test` 311 en verde (la prueba de humo general ya carga el módulo en los dos temas, en pantalla estrecha y con su ficha, sin errores de consola). Capturas revisadas a ojo: tema claro, tema oscuro con el bastón, y modo presentación a 1920 × 1080 con oro de 150 nm.
+
 ### Decisiones del encargo 01
 
 - 2026-11-11. **Base de datos de materiales**: `polyanskiy/refractiveindex.info-database`, commit `e6d15e3` (fijado en `data/materials/catalogo.json`). **Licencia comprobada: CC0 1.0 Universal** (archivo `LICENSE` del repositorio y cabecera de cada archivo de datos). Los archivos originales se copian sin tocar en `data/materials/originales/`, de modo que los JSON se pueden regenerar sin red.
@@ -171,6 +177,19 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Sin adaptación cromática**: el color se muestra como lo vería un ojo adaptado a D65 (el blanco de la pantalla). Un blanco bajo el iluminante A sale anaranjado. Está dicho en la cabecera de `spectrum.js`.
 - 2026-11-11. **Fuera de gama**: recorte canal a canal y `inGamut = false`, con un margen de 10⁻³ (el D65 integrado difiere 2·10⁻⁴ del blanco nominal de sRGB; sin margen, el propio blanco saldría «fuera de gama»).
 - 2026-11-11. **Dos tests de color fallaron al escribirlos, por el test y no por el código**: (1) pedía 10⁻¹² al sRGB del blanco, cuando el encargo dice «≈ (1, 1, 1)» y la diferencia real es 2·10⁻⁴ por el redondeo del blanco nominal; (2) pedía continuidad a 10⁻⁹ en el empalme de la curva gamma, pero las constantes redondeadas de la norma dejan un salto de 3·10⁻⁸. Un tercero destapó un fallo real: `resampleSpectrum` aceptaba longitudes de onda repetidas; ahora las rechaza.
+
+- 2026-11-12. **Mie: el margen fijo de BHMIE para arrancar la recurrencia descendente no basta.** El programa original arranca D_n en máx(n_max, |mx|) + 15. Con |mx| grande y sin absorción eso da errores serios (6·10⁻⁴ en Q_ext con m = 4, x = 100; más del 50 % en Q_back con |mx| ≈ 600). Se detectó al comparar con `miepython` y se confirmó aumentando el margen. Ahora el arranque es máx(n_max, |mx|) + 8·|mx|^(1/3) + 15 (`downwardStartOrder`), porque la zona de transición tiene anchura ∝ |mx|^(1/3). El número de términos de la serie sigue siendo n_max = x + 4x^(1/3) + 2, como pide el encargo.
+- 2026-11-12. **Dos referencias para Mie.** `miepython` no suma la serie cuando |m|·x < 0,1: usa un desarrollo truncado con error de hasta 2·10⁻⁶ en Q_back y g (mayor que la tolerancia). En esos 33 casos la referencia es `mpmath` a 40 cifras (`tools/mie_fixture.py`), que da la razón a la implementación propia a 10⁻¹⁰. El script comprueba además que las dos referencias coinciden entre sí donde ambas suman la serie. `miepython` usa el convenio e^{+iωt}: el fixture guarda m y S ya conjugados al convenio del laboratorio (e^{−iωt}).
+- 2026-11-12. **Tests de plasmón que fallaron al escribirlos, todos por el test**: (1) tolerancia de 10⁻¹⁸ en una resta con redondeo de 10⁻¹⁷; (2) cota arbitraria para «Mie tiende a la cuasiestática»: la diferencia es exactamente la corrección (3/5)x²(m² − 2)/(m² + 2) de Bohren & Huffman (ec. 5.4), y ahora el test comprueba esa fórmula y que el resto es O(x⁴); (3) la cuadratura de Simpson del test de los factores de despolarización tenía una singularidad de raíz en el extremo (se cambió el cambio de variable); (4) el desfase de la plata en resonancia se evaluaba con la α cuasiestática en el pico de Mie: el retardo separa ambos 4 nm y la resonancia de la plata es tan estrecha que eso cambia δ de 88° a 41°. No se cambió ningún valor esperado de la física.
+- 2026-11-12. **Nube electrónica de la esfera con la polarizabilidad dipolar de Mie**, α = 6πi·a₁/k³ (tiende a la cuasiestática para x → 0 e incluye retardo y amortiguamiento por radiación), para que la amplitud y el desfase sean coherentes con el espectro también en esferas grandes. En el bastón se usa la α longitudinal de Gans.
+- 2026-11-12. **El desfase del oro en su pico es ≈ 60°, no 90°**: en la condición de Fröhlich α = 4πa³(1 + 3iε_m/Im ε), un fondo en fase más el término resonante; con las pérdidas del oro (interbanda) el fondo pesa. La plata sí da ≈ 90°. Los recorridos y la ficha lo dicen así (la primera redacción decía «un cuarto de periodo» para el oro: era falso).
+- 2026-11-12. **En el pico dipolar de una esfera grande el diagrama sigue siendo casi dipolar** (oro de 150 nm en 640 nm: atrás/delante = 92 %). La dispersión hacia delante aparece donde interfiere el cuadrupolo (530 nm: g = 0,25). El recorrido pide mover λ para verlo.
+- 2026-11-12. **Campo cercano del bastón: solución electrostática exacta del esferoide** con el campo a lo largo del eje largo (potencial en coordenadas elipsoidales, B&H §5.3), no un dipolo puntual, que cerca de un bastón sería falso. Con a = b es la esfera y coincide con la fórmula dipolar del encargo. La escala de color del mapa es fija para cada partícula (hasta el máximo de todo el espectro), para que al mover λ se vea crecer el campo.
+- 2026-11-12. **Concentración como fracción de volumen de metal (ppm)** en lugar de número de partículas: con el mismo valor del control, coloides de 20 y de 150 nm tienen absorbancias comparables, y no hacen falta densidades de los metales. N (partículas/mL) se muestra calculado. El bastón se define por su ancho (el control «diámetro») y su relación de aspecto.
+- 2026-11-12. **Color de la luz dispersada: solo el tono**, llevado al mayor brillo que cabe en pantalla (`colorOfScattered`). La cantidad se da aparte, como porcentaje de la extinción en el máximo. Normalizar al máximo de C_sca daba un negro engañoso cuando el pico cae fuera del visible (plata).
+- 2026-11-12. **Añadido a `plot2d.js`**: `yLabel` en los datos de `draw()` (sustituye al de las opciones en ese dibujo). El espectro pasa a «miles de nm²» cuando las secciones eficaces superan 2·10⁴ nm², para que el eje no mezcle 80000 con 1,0·10⁵.
+- 2026-11-12. **Línea de modelo** encima de las vistas: dice qué teoría se usa (Mie o Gans), el parámetro de tamaño x y avisa cuando el bastón deja de ser pequeño frente a λ o cuando el mapa de campo (cuasiestático) es solo orientativo (x > 0,3).
+- 2026-11-12. **Ocho presets**: los siete del encargo más «oro 20 nm, lejos de la resonancia» (λ = 800 nm), que necesita el primer paso del recorrido «por qué el oro coloidal es rojo».
 
 ## Problemas abiertos
 

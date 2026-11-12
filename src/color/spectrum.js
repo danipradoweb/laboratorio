@@ -190,6 +190,19 @@ export function normalizeLuminance([X, Y0, Z], Y = 1) {
   return [X * s, Y, Z * s];
 }
 
+/**
+ * Lleva un color al mayor brillo que la pantalla puede dar sin cambiar su cromaticidad:
+ * escala XYZ para que el canal más alto de sRGB lineal valga 1. Sirve para enseñar «de
+ * qué color es» una luz cuya intensidad absoluta no importa (luz dispersada, emisión).
+ * @param {Triplet} XYZ
+ * @returns {Triplet}
+ */
+export function brightestDisplayable(XYZ) {
+  const peak = Math.max(...xyzToLinearSrgb(XYZ));
+  if (!(peak > 0)) return [0, 0, 0];
+  return [XYZ[0] / peak, XYZ[1] / peak, XYZ[2] / peak];
+}
+
 // --- 2. XYZ ↔ sRGB lineal ------------------------------------------------------------------
 
 /** Cromaticidades (x, y) de los primarios rojo, verde y azul de sRGB (IEC 61966-2-1). */
@@ -391,6 +404,22 @@ export function createColorEngine(cie) {
       const XYZ = normalizeLuminance(spectrumToXYZ(cie, spectrum, { kind: 'emission' }), Y);
       const screen = xyzToSrgb(XYZ);
       return { XYZ, xy: xyzToXy(XYZ), ...screen, css: srgbToCss(screen.rgb) };
+    },
+    /**
+     * Color de la luz que devuelve un objeto que dispersa o refleja con eficacia relativa
+     * `spectrum` (en unidades arbitrarias) al iluminarlo, mostrado con el mayor brillo
+     * que cabe en pantalla. Solo informa del tono: la intensidad se pierde a propósito.
+     * @param {Spectrum} spectrum
+     * @param {{ illuminant?: IlluminantName }} [options]
+     * @returns {SpectrumColor}
+     */
+    colorOfScattered(spectrum, { illuminant = 'D65' } = {}) {
+      const XYZ = brightestDisplayable(spectrumToXYZ(cie, spectrum, { illuminant }));
+      const first = Math.ceil(spectrum.wavelengths[0]);
+      const last = Math.floor(spectrum.wavelengths[spectrum.wavelengths.length - 1]);
+      const white = illuminantWhite(cie, illuminant, [first, last]);
+      const screen = xyzToSrgb(XYZ);
+      return { XYZ, xy: xyzToXy(XYZ), ...screen, lab: xyzToLab(XYZ, white), css: srgbToCss(screen.rgb) };
     },
     /**
      * Color aproximado de una luz monocromática (para pintar el espectro visible). Casi

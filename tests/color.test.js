@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CIE_COUNT, CIE_END_NM, CIE_START_NM, buildCieData, loadCie, resampleToCieGrid } from '../src/color/cie.js';
 import {
+  brightestDisplayable,
   createColorEngine,
   decodeSrgb,
   deltaE,
@@ -304,6 +305,23 @@ test('color de una luz: cromaticidad independiente del brillo', () => {
   assertClose(dim.xy, bright.xy, 1e-14);
   assertClose(dim.xy, xyzToXy(illuminantWhite(cie, 'E')), 1e-14);
   assert.ok(Math.abs(dim.XYZ[1] - 0.2) < 1e-15);
+});
+
+// Brillo máximo en pantalla: el canal más alto queda en 1 exacto y la cromaticidad no
+// cambia. Un espectro dispersado plano (dispersa igual todos los colores) se ve blanco, y
+// multiplicar el espectro por una constante no cambia el color mostrado.
+test('colorOfScattered: mayor brillo que cabe en pantalla, misma cromaticidad', () => {
+  const XYZ = linearSrgbToXyz([0.1, 0.25, 0.05]);
+  const bright = brightestDisplayable(XYZ);
+  assertClose(xyzToLinearSrgb(bright), [0.4, 1, 0.2], 1e-13);
+  assertClose(xyzToXy(bright), xyzToXy(XYZ), 1e-14);
+  assert.deepEqual(brightestDisplayable([0, 0, 0]), [0, 0, 0]);
+  const white = engine.colorOfScattered(FLAT);
+  assert.ok(Math.abs(Math.max(...white.linear) - 1) < 1e-12 && Math.min(...white.linear) > 0.999);
+  const wavelengths = [380, 500, 600, 780];
+  const a = engine.colorOfScattered({ wavelengths, values: [1, 5, 2, 1] });
+  const b = engine.colorOfScattered({ wavelengths, values: [1e-9, 5e-9, 2e-9, 1e-9] });
+  assertClose(a.rgb, b.rgb, 1e-12);
 });
 
 // Colores espectrales para pintar la banda del visible: siempre dentro de [0, 1], con el

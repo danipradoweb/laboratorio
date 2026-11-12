@@ -119,6 +119,8 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {RgbaImage} [image]
  * @property {[number, number]} [xRange] sustituye al de las opciones en este dibujo
  * @property {[number, number]} [yRange]
+ * @property {string} [yLabel] sustituye al título del eje y de las opciones en este dibujo
+ *   (por ejemplo, cuando la unidad cambia con los datos)
  */
 
 /**
@@ -231,6 +233,7 @@ export function createPlot(container, options = {}) {
     const series = data.series ?? [];
     const areas = data.areas ?? [];
     const raster = data.heatmap ?? data.image;
+    const yLabel = data.yLabel ?? options.yLabel;
 
     // Intervalos de los ejes: los fijados, o la extensión de los datos.
     let xRange = data.xRange ?? options.xRange;
@@ -264,14 +267,14 @@ export function createPlot(container, options = {}) {
       return { ...result, texts, width: Math.max(0, ...texts.map((t) => g.measureText(t).width)) };
     };
     let yTicks = computeYTicks(height - fs * 0.7 - bottom);
-    let left = yTicks.width + fs * 0.9 + (options.yLabel ? fs * 1.5 : 0);
+    let left = yTicks.width + fs * 0.9 + (yLabel ? fs * 1.5 : 0);
     let right = fs * 0.9 + (colorbar ? fs * (colorbar.label ? 5.6 : 4.2) : 0);
     const legend = options.legend !== false ? layoutLegend(fs, resolve, width - left - right) : null;
     const top = fs * 0.7 + (legend ? legend.height : 0);
     if (legend && legend.rows > 0) {
       // Con la leyenda la gráfica es más baja: se recalculan las marcas del eje y.
       yTicks = computeYTicks(height - top - bottom);
-      left = yTicks.width + fs * 0.9 + (options.yLabel ? fs * 1.5 : 0);
+      left = yTicks.width + fs * 0.9 + (yLabel ? fs * 1.5 : 0);
     }
     const yTickTexts = yTicks.texts;
     const yTickWidth = yTicks.width;
@@ -496,13 +499,13 @@ export function createPlot(container, options = {}) {
       g.textBaseline = 'top';
       g.fillText(options.xLabel, (plotLeft + plotRight) / 2, plotBottom + fs * 1.6);
     }
-    if (options.yLabel) {
+    if (yLabel) {
       g.save();
       g.translate(plotLeft - yTickWidth - fs * 1.1, (plotTop + plotBottom) / 2);
       g.rotate(-Math.PI / 2);
       g.textAlign = 'center';
       g.textBaseline = 'bottom';
-      g.fillText(options.yLabel, 0, 0);
+      g.fillText(yLabel, 0, 0);
       g.restore();
     }
 
