@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
-- Último paso terminado: 2 (motor de color)
-- Siguiente paso: 3 (biblioteca de materiales)
+- Último paso terminado: 3 (biblioteca de materiales)
+- Siguiente paso: 4a (Mie, BHMIE, y comparación con `miepython`)
 
 ### Plan del encargo 01 (pasos y estado)
 
@@ -23,7 +23,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 |---|---|---|
 | 1 | Datos CIE: `tools/cie.py` → `data/cie/` | hecho |
 | 2 | Motor de color: `src/color/cie.js`, `src/color/spectrum.js`, `tests/color.test.js` | hecho |
-| 3 | Biblioteca de materiales: importador YAML, `data/materials/`, `src/materials/` y tests | pendiente |
+| 3 | Biblioteca de materiales: importador YAML, `data/materials/`, `src/materials/` y tests | hecho |
 | 4a | Mie (BHMIE) en `src/modules/plasmon/physics.js` + comparación con `miepython` | pendiente |
 | 4b | Cuasiestática, Gans, campo cercano y tests con datos reales | pendiente |
 | 5 | Color del coloide (transmitido y dispersado) | pendiente |
@@ -154,7 +154,16 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-11. **Prueba de humo completa** (`tests/smoke.test.js`, dentro de `npm test`; se omite sola si no hay Playwright o con `SKIP_SMOKE=1`): portada y tarjetas; cada módulo en los dos temas, en pantalla estrecha y con su ficha; URL ↔ controles; clic en gráficas; PNG; presets con transición y cancelación; recorridos; reloj; modo presentación a 1920 × 1080 y en 4:3; navegación entre páginas. Cualquier error de consola, excepción o petición fallida hace fallar el test. Capturas en `capturas/` (no versionadas).
 - 2026-11-11. **La prueba de pantalla estrecha encontró un fallo real**: la barra superior no cabía en 390 px y desbordaba la página; ahora salta de línea y omite el título del módulo.
 
+- Paso 3: `tests/materials.test.js`, 37 tests en verde. Los 9 JSON coinciden fila a fila con los originales leídos con PyYAML; n, k ↔ ε en todas las filas; sílice n_d = 1,4585; agua n(589 nm) = 1,333; Drude y Lorentz contra límites analíticos y contra `complexResponse` del oscilador.
+
 ### Decisiones del encargo 01
+
+- 2026-11-11. **Base de datos de materiales**: `polyanskiy/refractiveindex.info-database`, commit `e6d15e3` (fijado en `data/materials/catalogo.json`). **Licencia comprobada: CC0 1.0 Universal** (archivo `LICENSE` del repositorio y cabecera de cada archivo de datos). Los archivos originales se copian sin tocar en `data/materials/originales/`, de modo que los JSON se pueden regenerar sin red.
+- 2026-11-11. **Materiales y fuentes elegidas** (9): Au, Ag y Cu de Johnson & Christy 1972; Al de Rakić 1995; agua de Hale & Querry 1973 (trae n y k, y cubre de 200 nm a 200 µm); sílice fundida de Malitson 1965 (fórmula de Sellmeier, tabulada cada 5 nm hasta 1000 nm y cada 50 nm hasta 6700 nm); TiO₂ de Siefke et al. 2016 (película delgada, n y k desde 120 nm: incluye el borde de absorción ultravioleta); Si de Schinke et al. 2015 (250–1450 nm: incluye el borde de la banda prohibida en 1100 nm, que Aspnes & Studna no alcanza). **Añadido: aleación Au-Ag 30:70** (Rioux et al. 2014, modelo analítico ajustado a elipsometría), necesaria para el preset de la copa de Licurgo.
+- 2026-11-11. **Importador en `tools/refractiveindex-yaml.mjs`** (funciones puras, probadas en `tests/materials.test.js`) y generador en `tools/materials.mjs`. El importador no es un lector general de YAML: entiende la forma de esos archivos y tres tipos de datos (`tabulated nk`, `tabulated n`, `formula 1`); con cualquier otro falla con un mensaje que dice qué ampliar. Referencia independiente: los mismos originales leídos con PyYAML (`tools/materials_fixture.py`).
+- 2026-11-11. **Metadatos en español en los JSON** (`nombre`, `familia`, `mecanismo`, `modulos`, `fuente`, `licencia`), como los nombra `docs/ARQUITECTURA.md`: son datos, no identificadores de código. Las tablas son `wavelength_nm`, `n`, `k`.
+- 2026-11-11. **Interpolación lineal de n y k por defecto** (spline opcional): con tablas experimentales poco densas (Johnson & Christy: un punto cada 15–40 nm en el visible) una spline puede inventar oscilaciones. Fuera del intervalo tabulado, `RangeError` (o `outOfRange: 'clamp'` si se pide).
+- 2026-11-11. **`ctx.materials` y `ctx.color`** dejan de ser `null`: son servicios perezosos (`ctx.materials.load(id)`, `ctx.materials.list()`, `ctx.color.load()`) que devuelven promesas; no se descarga nada hasta que un módulo lo pide.
 
 - 2026-11-11. **Datos CIE sin transformar**: `data/cie/` guarda las tablas tal como las distribuye `colour-science` (funciones de igualación cada 1 nm de 360 a 830 nm; D65 y A cada 5 nm de 300 a 780 nm; E constante). `src/color/cie.js` pasa los iluminantes a 1 nm por interpolación lineal y **no extrapola**: D65 y A acaban en 780 nm y el motor integra solo donde hay datos (lo que queda fuera aporta menos de 10⁻⁵).
 - 2026-11-11. **`src/core/load-json.js`**: carga de archivos de `data/` que funciona igual en el navegador (`fetch`) y en Node (`fs`), siempre con rutas relativas al archivo que las pide (`new URL(ruta, import.meta.url)`). Una sola descarga por archivo.

@@ -50,8 +50,27 @@
  * @property {{ name: () => 'light' | 'dark', colors: () => import('../core/theme.js').ThemeColors }} theme
  *   tema actual y sus colores (para dibujar en canvas con los colores del tema)
  * @property {{ isActive: () => boolean }} presentation modo presentación
- * @property {null} materials biblioteca de materiales (llegará con el encargo 01)
- * @property {null} color motor espectro → color (llegará con el encargo 01)
+ * @property {MaterialsService} materials biblioteca de materiales (src/materials/)
+ * @property {ColorService} color motor espectro → color (src/color/)
+ */
+
+/**
+ * Biblioteca de materiales. Los datos se descargan la primera vez que se piden, así que
+ * las dos funciones devuelven promesas: úsalas con `await` dentro de un `mount` asíncrono.
+ *   const oro = await ctx.materials.load('Au');
+ * Para evaluar n, k o ε en una longitud de onda: createOpticalConstants(oro), de
+ * src/materials/dielectric.js.
+ * @typedef {object} MaterialsService
+ * @property {(id: string) => Promise<import('../materials/library.js').Material>} load
+ * @property {() => Promise<import('../materials/library.js').MaterialSummary[]>} list
+ */
+
+/**
+ * Motor espectro → color. Carga las tablas CIE la primera vez:
+ *   const color = await ctx.color.load();
+ *   color.colorOf({ wavelengths, values }).css;   // color de una transmitancia bajo D65
+ * @typedef {object} ColorService
+ * @property {() => Promise<import('../color/spectrum.js').ColorEngine>} load
  */
 
 /**

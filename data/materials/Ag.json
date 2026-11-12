@@ -1,0 +1,25 @@
+{
+ "id": "Ag",
+ "nombre": "Plata",
+ "formula": "Ag",
+ "familia": "metal",
+ "mecanismo": "Electrones de conducción casi libres en todo el visible: refleja por igual todos los colores (blanco metálico). Sus transiciones interbanda (4d → 5sp) empiezan ya en el ultravioleta, hacia 320 nm (≈ 3,9 eV), y por eso es el metal con menos pérdidas en el visible.",
+ "modulos": [
+  "plasmon"
+ ],
+ "fuente": {
+  "referencia": "P. B. Johnson and R. W. Christy. Optical constants of the noble metals. Phys. Rev. B 6, 4370-4379 (1972)",
+  "comentarios": "Room temperature",
+  "base_de_datos": "refractiveindex.info",
+  "archivo": "database/data/main/Ag/nk/Johnson.yml",
+  "commit": "e6d15e364f70de1cad8a96a20f75689f2fba8b21",
+  "url": "https://refractiveindex.info/?shelf=main&book=Ag&page=Johnson"
+ },
+ "licencia": "CC0 1.0 Universal (dominio público)",
+ "tipo_de_datos": "tabulated nk",
+ "_generado_por": "tools/materials.mjs (no editar a mano)",
+ "intervalo_nm": [187.9, 1937],
+ "wavelength_nm": [187.9, 191.6, 195.3, 199.3, 203.3, 207.3, 211.9, 216.4, 221.4, 226.2, 231.3, 237.1, 242.6, 249, 255.1, 261.6, 268.9, 276.1, 284.4, 292.4, 300.9, 310.7, 320.4, 331.5, 342.5, 354.2, 367.9, 381.5, 397.4, 413.3, 430.5, 450.9, 471.4, 495.9, 520.9, 548.6, 582.1, 616.8, 659.5, 704.5, 756, 821.1, 892, 984, 1088, 1216, 1393, 1610, 1937],
+ "n": [1.07, 1.1, 1.12, 1.14, 1.15, 1.18, 1.2, 1.22, 1.25, 1.26, 1.28, 1.28, 1.3, 1.31, 1.33, 1.35, 1.38, 1.41, 1.41, 1.39, 1.34, 1.13, 0.81, 0.17, 0.14, 0.1, 0.07, 0.05, 0.05, 0.05, 0.04, 0.04, 0.05, 0.05, 0.05, 0.06, 0.05, 0.06, 0.05, 0.04, 0.03, 0.04, 0.04, 0.04, 0.04, 0.09, 0.13, 0.15, 0.24],
+ "k": [1.212, 1.232, 1.255, 1.277, 1.296, 1.312, 1.325, 1.336, 1.342, 1.344, 1.357, 1.367, 1.378, 1.389, 1.393, 1.387, 1.372, 1.331, 1.264, 1.161, 0.964, 0.616, 0.392, 0.829, 1.142, 1.419, 1.657, 1.864, 2.07, 2.275, 2.462, 2.657, 2.869, 3.093, 3.324, 3.586, 3.858, 4.152, 4.483, 4.838, 5.242, 5.727, 6.312, 6.992, 7.795, 8.828, 10.1, 11.85, 14.08]
+}
