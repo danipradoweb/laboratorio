@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
-- Último paso terminado: 9 (primera versión completa: física, vistas, presets, recorridos, ficha, miniatura)
-- Siguiente paso: 9b (prueba de humo propia del módulo: URL, vistas enlazadas, presets, recorridos) y después 10 (revisión con subagente, documentación de servicios, cierre)
+- Último paso terminado: 9b (prueba de humo propia del módulo y retoques de las vistas)
+- Siguiente paso: 10 (documentar el motor de color y la biblioteca de materiales para reutilizarlos, árbol de `ARQUITECTURA.md` al día, revisión con subagente, cierre)
 
 ### Plan del encargo 01 (pasos y estado)
 
@@ -30,7 +30,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 6 | Vistas enlazadas (a)–(e) y controles | hecho |
 | 7–8 | Presets y recorridos | hecho |
 | 9 | Ficha y miniatura | hecho |
-| 9b | Prueba de humo propia del módulo (URL, vistas enlazadas, presets, recorridos, presentación) | pendiente |
+| 9b | Prueba de humo propia del módulo (URL, vistas enlazadas, presets, recorridos, presentación) | hecho |
 | 10 | Revisión con subagente, documentación de servicios, cierre | pendiente |
 
 ### Evidencia por paso (encargo 01)
@@ -162,6 +162,8 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - **Valores con datos reales (Johnson & Christy), sin ajustar nada**: Au de 20 nm en agua, pico en **521,1 nm** (intervalo pedido 515–528); Ag de 20 nm en agua, **386,9 nm** (385–410); Au de 40 → 150 nm: 524 → 536 → 549 → 570 → 591 → 640 nm; Au de 20 nm con n_m de 1 a 2: 506 → 588 nm; bastón de Au con relación de aspecto 1 → 5: 521 → 868 nm (672 nm con 3). Color: Au de 20 nm a contraluz, L*a*b* = (70, +49, +21); copa de Licurgo (Au-Ag 30:70 de 70 nm en n = 1,5): a contraluz a* = +53 (roja), dispersada a* = −61 (verde).
 - Pasos 6–9: `npm test` 311 en verde (la prueba de humo general ya carga el módulo en los dos temas, en pantalla estrecha y con su ficha, sin errores de consola). Capturas revisadas a ojo: tema claro, tema oscuro con el bastón, y modo presentación a 1920 × 1080 con oro de 150 nm.
 
+- Paso 9b: `npm test` 314 en verde. `tests/smoke.test.js` añade tres pruebas del módulo: estado desde la URL (plata de 20 nm: pico en 385–389 nm y δ cerca de 90°), clic en el espectro que cambia λ en control, URL y vistas, los ocho presets con sus capturas (`capturas/plasmon-preset-*.png`) y lo que debe verse en cada uno (cubeta de oro rojiza; Licurgo roja a contraluz y verde dispersada; bastón con aviso de Gans), disposición compacta, camino óptico que oscurece la cubeta, animación y pausa, tecla 7 en modo presentación y los dos recorridos paso a paso.
+
 ### Decisiones del encargo 01
 
 - 2026-11-11. **Base de datos de materiales**: `polyanskiy/refractiveindex.info-database`, commit `e6d15e3` (fijado en `data/materials/catalogo.json`). **Licencia comprobada: CC0 1.0 Universal** (archivo `LICENSE` del repositorio y cabecera de cada archivo de datos). Los archivos originales se copian sin tocar en `data/materials/originales/`, de modo que los JSON se pueden regenerar sin red.
@@ -190,6 +192,8 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 - 2026-11-12. **Añadido a `plot2d.js`**: `yLabel` en los datos de `draw()` (sustituye al de las opciones en ese dibujo). El espectro pasa a «miles de nm²» cuando las secciones eficaces superan 2·10⁴ nm², para que el eje no mezcle 80000 con 1,0·10⁵.
 - 2026-11-12. **Línea de modelo** encima de las vistas: dice qué teoría se usa (Mie o Gans), el parámetro de tamaño x y avisa cuando el bastón deja de ser pequeño frente a λ o cuando el mapa de campo (cuasiestático) es solo orientativo (x > 0,3).
 - 2026-11-12. **Ocho presets**: los siete del encargo más «oro 20 nm, lejos de la resonancia» (λ = 800 nm), que necesita el primer paso del recorrido «por qué el oro coloidal es rojo».
+
+- 2026-11-12. **Disposición compacta del plasmón**: cuando el hueco de las vistas mide menos de 64 tamaños de letra (ventana pequeña, o ficha abierta en un portátil), la rejilla pasa de tres columnas a dos con desplazamiento vertical. Lo decide `view.js` con un `ResizeObserver` y lo aplica una regla de `styles.css`; el modo presentación nunca la activa.
 
 ## Problemas abiertos
 

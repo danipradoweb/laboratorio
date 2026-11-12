@@ -1048,7 +1048,7 @@ h3 {
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.6rem;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .plasmon-swatches {
@@ -1084,7 +1084,7 @@ h3 {
    es la luz que la ilumina). */
 .plasmon-lightbox,
 .plasmon-darkbox {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 3.5rem;
   display: flex;
   align-items: stretch;
@@ -1121,8 +1121,23 @@ h3 {
   color: var(--text-soft);
 }
 
+/* Disposición compacta (la activa view.js cuando el hueco es estrecho): dos columnas y
+   desplazamiento vertical dentro del área de vistas. */
+.plasmon-grid[data-layout='compact'] {
+  overflow-y: auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto 21em 19em 19em;
+  grid-template-areas:
+    'modelo modelo'
+    'espectro espectro'
+    'color nube'
+    'campo polar';
+}
+
 @media (max-width: 760px) {
-  .plasmon-grid {
+  .plasmon-grid,
+  .plasmon-grid[data-layout='compact'] {
+    overflow-y: visible;
     grid-template-areas: none;
     grid-template-rows: none;
   }

@@ -61,6 +61,10 @@ const POLAR_ANGLES = Array.from({ length: 91 }, (_, i) => 2 * i);
 /** Por encima de este parámetro de tamaño el mapa de campo (cuasiestático) es solo orientativo. */
 const QUASISTATIC_LIMIT = 0.3;
 
+/** Anchura de la rejilla, en tamaños de letra, por debajo de la cual se usa la disposición
+ *  compacta de dos columnas. */
+const COMPACT_BELOW_EM = 64;
+
 /** Color con el que se pinta el metal en la vista de la nube electrónica. */
 const METAL_TINT = /** @type {Record<string, string>} */ ({
   Au: '#d9a738',
@@ -175,6 +179,15 @@ export async function mount(container, ctx) {
   });
 
   const grid = createPanelGrid(container, 'plasmon-grid');
+  // Si el hueco es estrecho (ventana pequeña, o ficha y controles abiertos a la vez), tres
+  // columnas no caben: la rejilla pasa a dos columnas con desplazamiento vertical (regla
+  // [data-layout='compact'] de styles.css). El umbral va en tamaños de letra, de modo que
+  // el modo presentación (letra proporcional al ancho) nunca lo activa.
+  const layoutObserver = new ResizeObserver(() => {
+    const fontSize = parseFloat(getComputedStyle(grid).fontSize) || 14;
+    grid.dataset.layout = grid.clientWidth < COMPACT_BELOW_EM * fontSize ? 'compact' : 'full';
+  });
+  layoutObserver.observe(grid);
 
   // Línea de modelo: dice qué teoría se está usando y avisa cuando sale de su validez.
   const modelLine = el('p', { class: 'plasmon-model', role: 'status' });
@@ -209,13 +222,13 @@ export async function mount(container, ctx) {
         'figure',
         { class: 'plasmon-swatch' },
         el('div', { class: 'plasmon-lightbox', title: 'Cubeta vista a contraluz, sobre una pantalla blanca' }, cuvette),
-        el('figcaption', {}, el('strong', { text: 'A contraluz' }), el('span', { text: 'lo que queda tras la extinción' }), transmittedCaption),
+        el('figcaption', {}, el('strong', { text: 'A contraluz' }), transmittedCaption),
       ),
       el(
         'figure',
         { class: 'plasmon-swatch' },
         el('div', { class: 'plasmon-darkbox', title: 'Luz dispersada, vista de lado sobre fondo negro (solo el tono: brillo normalizado)' }, glow),
-        el('figcaption', {}, el('strong', { text: 'De lado' }), el('span', { text: 'luz dispersada (solo el tono)' }), scatteredCaption),
+        el('figcaption', {}, el('strong', { text: 'De lado (solo el tono)' }), scatteredCaption),
       ),
     ),
     colorNote,
@@ -234,7 +247,7 @@ export async function mount(container, ctx) {
   // (d) Campo cercano.
   const fieldPanel = addPanel(grid, 'Campo cercano', { area: 'campo' });
   const fieldPlot = createPlot(fieldPanel.body, {
-    xLabel: 'nm   (campo incidente E₀ en horizontal ↔)',
+    xLabel: 'nm  (E₀ en horizontal ↔)',
     yLabel: 'nm',
     equalAspect: true,
     legend: false,
@@ -244,7 +257,7 @@ export async function mount(container, ctx) {
   // (e) Diagrama polar de dispersión.
   const polarPanel = addPanel(grid, 'Diagrama de dispersión', { area: 'polar' });
   const polarPlot = createPlot(polarPanel.body, {
-    xLabel: 'luz incidente →  (hacia delante, a la derecha)',
+    xLabel: 'la luz llega por la izquierda →',
     xRange: [-1.12, 1.12],
     yRange: [-1.12, 1.12],
     xTicks: [-1, -0.5, 0, 0.5, 1],
@@ -347,21 +360,23 @@ export async function mount(container, ctx) {
     const now = particleResponse(particle, lambda);
     const epsilon = particle.epsilon(lambda);
     const x = sizeParameter(long, lambda, particle.mediumIndex);
-    const name = materialNames[String(state.material)];
+    // Nombre del material con la inicial en minúscula, para ir en mitad de una frase.
+    const fullName = materialNames[String(state.material)];
+    const name = fullName.charAt(0).toLowerCase() + fullName.slice(1);
 
     // Línea de modelo y validez.
     if (isRod) {
       const length = 2 * long;
       const tooBig = x > QUASISTATIC_LIMIT;
       modelLine.textContent =
-        `Bastón de ${name.toLowerCase()} de ${formatEs(length, 0)} × ${formatEs(particle.diameter, 0)} nm · teoría de Gans (aproximación cuasiestática, promedio de orientaciones): ` +
+        `Bastón de ${name} de ${formatEs(length, 0)} × ${formatEs(particle.diameter, 0)} nm · teoría de Gans (aproximación cuasiestática, promedio de orientaciones): ` +
         (tooBig
           ? `⚠ el bastón ya no es mucho menor que la longitud de onda (x = ${formatEs(x)}); el resultado es solo orientativo.`
           : `vale porque el bastón es mucho menor que la longitud de onda (x = ${formatEs(x)}).`);
       modelLine.dataset.warning = String(tooBig);
     } else {
       modelLine.textContent =
-        `Esfera de ${name.toLowerCase()} de ${formatEs(particle.diameter, 0)} nm · teoría de Mie (exacta para una esfera) · parámetro de tamaño x = 2π·n·a/λ = ${formatEs(x)}` +
+        `Esfera de ${name} de ${formatEs(particle.diameter, 0)} nm · teoría de Mie (exacta para una esfera) · parámetro de tamaño x = 2π·n·a/λ = ${formatEs(x)}` +
         (x > QUASISTATIC_LIMIT ? ' · el mapa de campo cercano usa la aproximación dipolar cuasiestática: aquí es solo orientativo.' : '');
       modelLine.dataset.warning = 'false';
     }
@@ -419,12 +434,12 @@ export async function mount(container, ctx) {
     const scattered = engine.colorOfScattered({ ...visibleSpectrum, values: sample.scattered });
     cuvette.style.background = transmitted.css;
     glow.style.background = `radial-gradient(closest-side, ${scattered.css} 35%, transparent 100%)`;
-    transmittedCaption.textContent = `transmite el ${formatEs(100 * transmitted.XYZ[1], 0)} % de la luz`;
+    transmittedCaption.textContent = `pasa el ${formatEs(100 * transmitted.XYZ[1], 0)} % de la luz`;
     const albedo = peak.y > 0 ? spectrum.csca[peak.index] / spectrum.cext[peak.index] : 0;
-    scatteredCaption.textContent = `${formatEs(100 * albedo, albedo < 0.1 ? 1 : 0)} % de la extinción en el máximo`;
+    scatteredCaption.textContent = `dispersión: ${formatEs(100 * albedo, albedo < 0.1 ? 1 : 0)} % de la extinción`;
     colorNote.textContent =
       `Absorbancia máxima ${formatEs(sample.peakAbsorbance)} · ${formatScientific(sample.numberDensity * 1e21)} partículas/mL` +
-      (transmitted.inGamut && scattered.inGamut ? '' : ' · color más saturado de lo que la pantalla puede mostrar (recortado)');
+      (transmitted.inGamut && scattered.inGamut ? '' : ' · color recortado a la gama de la pantalla');
 
     // (c) Nube electrónica: amplitud y desfase de la oscilación forzada, de α(ω).
     const oscillation = drivenOscillation(now.alpha);
@@ -545,7 +560,7 @@ export async function mount(container, ctx) {
     const cx = particleBox.x + particleBox.w / 2;
     const cy = particleBox.y + particleBox.h / 2;
     // Semiejes en píxeles: caben las flechas y sus rótulos por encima y por debajo.
-    const rx = Math.min(particleBox.w * 0.3, Math.max(8, particleBox.h * 0.5 - fs * 4.2) * 0.8 * cloud.aspect);
+    const rx = Math.min(particleBox.w * 0.3, Math.max(8, particleBox.h * 0.5 - fs * 3.3) * 0.9 * cloud.aspect);
     const ry = rx / cloud.aspect;
     const reach = 0.3 * Math.min(rx, 2 * ry); // desplazamiento máximo dibujado (MUY exagerado)
     const dx = displacement * reach;
@@ -594,12 +609,12 @@ export async function mount(container, ctx) {
     g.lineWidth = Math.max(2, fs * 0.2);
     g.font = `${fs * 0.85}px ${family}`;
     g.textBaseline = 'alphabetic';
-    const forceY = Math.max(particleBox.y + fs * 2, cy - ry - fs * 1.5);
+    const forceY = Math.max(particleBox.y + fs * 1.9, cy - ry - fs * 1.1);
     g.strokeStyle = forceColor;
     g.fillStyle = forceColor;
     drawArrow(g, cx, forceY, cx + force * arrowLength, forceY, head);
     g.fillText('fuerza sobre los electrones', cx, forceY - fs * 0.8);
-    const cloudY = Math.min(particleBox.y + particleBox.h - fs * 2, cy + ry + fs * 1.5);
+    const cloudY = Math.min(particleBox.y + particleBox.h - fs * 1.9, cy + ry + fs * 1.1);
     g.strokeStyle = cloudColor;
     g.fillStyle = cloudColor;
     drawArrow(g, cx, cloudY, cx + displacement * arrowLength, cloudY, head);
@@ -651,6 +666,7 @@ export async function mount(container, ctx) {
     },
     destroy() {
       offTick();
+      layoutObserver.disconnect();
       spectrumPlot.destroy();
       fieldPlot.destroy();
       polarPlot.destroy();

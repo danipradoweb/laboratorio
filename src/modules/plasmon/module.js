@@ -154,7 +154,7 @@ const descriptor = {
         },
         {
           preset: 'oro-150',
-          text: 'A 150 nm el pico dipolar está en el rojo y casi todo es dispersión. A menor $\\lambda$ asoma un segundo máximo: el modo **cuadrupolar**. Lleva $\\lambda$ a 530 nm y mira el diagrama polar: dipolo y cuadrupolo interfieren y la luz se dispersa sobre todo **hacia delante**. Todo esto solo lo da la teoría de Mie completa.',
+          text: 'A 150 nm el pico dipolar está en el rojo y casi todo es dispersión. A menor $\\lambda$ asoma un hombro: el modo **cuadrupolar**. Lleva $\\lambda$ a 530 nm y mira el diagrama polar: dipolo y cuadrupolo interfieren y la luz se dispersa sobre todo **hacia delante**. Todo esto solo lo da la teoría de Mie completa.',
         },
         {
           preset: 'baston-3',
