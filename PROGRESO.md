@@ -15,7 +15,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 ## Sesión en curso
 - Encargo: 01 Plasmón, Mie y color (`docs/encargos/01-plasmon-mie.md`). Rama `claude/bold-goldberg-s51hqd`.
 - Último paso terminado: 10a (documentación de los servicios, arquitectura y backlog al día)
-- Siguiente paso: 10b (revisión con subagente de contexto limpio, correcciones y cierre)
+- Siguiente paso: 10b (revisión con subagente de contexto limpio, correcciones y cierre). **Estado: revisión lanzada el 2026-11-12 y todavía sin resultado.** Un primer intento se cortó por el límite de uso sin entregar nada. Si esta sesión se corta antes de anotar aquí el resultado, hay que relanzar la revisión (una sola ronda): solo física y cumplimiento del encargo, con scripts propios y sin modificar el repositorio.
 
 ### Plan del encargo 01 (pasos y estado)
 
@@ -203,5 +203,7 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
 
-- **Cotejar las referencias bibliográficas** de `src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md` con los libros (capítulos y secciones citados de memoria).
-- Opcional: probar el modo presentación en el equipo de grabación (tecla P, después F para pantalla completa) y decir si el tamaño de letra a 1080p es el que quieres.
+- **Fusionar la rama `claude/bold-goldberg-s51hqd` en `main`** (pull request o directamente) para que GitHub Pages publique el módulo de plasmón.
+- **Cotejar las referencias bibliográficas con los libros delante** (citadas de memoria, sin verificar): en `src/modules/plasmon/ficha.md`, Bohren & Huffman cap. 4, 5 y 12 y apéndice A; Gaponenko, capítulo de nanoplasmónica; Kreibig & Vollmer cap. 2; Gans 1912. Siguen pendientes las del encargo 00 (`src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md`).
+- **Leer los textos de `mecanismo`** de `data/materials/catalogo.json` (por qué cada material tiene su color): son frases de física escritas para la biblioteca, con umbrales de transiciones interbanda y bandas prohibidas dados como valores aproximados de manual.
+- Opcional: probar el modo presentación del plasmón en el equipo de grabación (tecla P; teclas 1–8 para los presets) y decir si el tamaño de letra y la velocidad de la animación de la nube son los que quieres.
