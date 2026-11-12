@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
-- Último paso terminado: 2 (parte A: física, tests y vista).
-- Siguiente paso: 3 (física de las láminas de dipolos, `physics-sheets.js`, con `tests/luz-materia-laminas.test.js`).
+- Último paso terminado: 3 (física de las láminas de dipolos, con tests).
+- Siguiente paso: 4 (vista de las láminas: `view-sheets.js`, darla de alta en `PARTS` de `view.js` y añadir sus parámetros a `module.js`).
 
 ### Plan del encargo 02 (pasos y estado)
 
@@ -25,7 +25,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 |---|---|---|
 | 1 | Andamiaje del módulo (descriptor, registro, controles que se muestran según la vista) y física de la parte A con tests | hecho |
 | 2 | Vista de la parte A (ε, n y k, R, osciladores) | hecho |
-| 3 | Física de la parte B (láminas de dipoles) con tests | pendiente |
+| 3 | Física de la parte B (láminas de dipolos) con tests | hecho |
 | 4 | Vista de la parte B (ondas animadas, campo total, fasores) | pendiente |
 | 5 | Física de la parte C (Fresnel, polarizadores) con tests | pendiente |
 | 6 | Vistas de la parte C (interfaz y polarizadores) | pendiente |
@@ -35,6 +35,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 ### Evidencia por paso (encargo 02)
 
 - Pasos 1–2: `npm test` 343 en verde (16 tests nuevos en `tests/luz-materia.test.js`, uno en `tests/materials.test.js` y las pruebas de humo generales, que ya cargan el módulo en los dos temas, en pantalla estrecha y con su ficha provisional); `npm run check` limpio. El modelo de Lorentz construido con los coeficientes de Sellmeier de la sílice reproduce la tabla de `data/materials/SiO2.json` a 10⁻¹² y da n_d = 1,4585; Kramers-Kronig reconstruye ε′ a partir de ε″ con error < 2·10⁻⁴ (un oscilador, Drude y vidrio); regla de suma a 10⁻⁶; Drude: R > 0,9 por debajo de ω_p. Captura de la vista revisada a ojo.
+- Paso 3: `tests/luz-materia-laminas.test.js`, 15 tests en verde. Una lámina sola analítica (10⁻¹⁴); el campo total cumple la ecuación de ondas con las láminas como fuente (salto de E′ = −2kκE_j); sistema N × N frente a un segundo método independiente (10⁻¹¹); R + T = 1 sin pérdidas y R + T + A = 1 con pérdidas (10⁻¹¹); lámina continua por matriz de transferencia = condiciones de contorno = Airy (10⁻¹²); convergencia al continuo con error ∝ d² (razón 4 al dividir d por 2, cuatro materiales); índice de Bloch n² = ε + (kd)²χ²/12; λ dentro del vidrio en el verde = λ₀/n (ajuste = Bloch a 10⁻⁹); lámina gruesa absorbente → Fresnel con error ∝ d²; teorema de extinción (las radiadas suman −incidente al fondo).
 
 ### Decisiones del encargo 02
 
@@ -46,6 +47,12 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - 2026-11-12. **Frecuencias como energía del fotón en eV** en todo el módulo; la longitud de onda se deriva con `units.js`. El eje de las gráficas del material se puede poner en nm.
 - 2026-11-12. **`epsilonToNk` reescrita sin cancelación** (`src/materials/dielectric.js`): con la fórmula directa, un k diminuto (agua en el visible, k ~ 10⁻⁹) se perdía entero al pasar por ε. Ahora se calcula la parte grande con la raíz y la pequeña con Im ε = 2nk. Test nuevo en `tests/materials.test.js`. Los tests del plasmón siguen en verde.
 - 2026-11-12. **Dos tests de la parte A fallaron al escribirlos, por el test**: (1) el integrando de la regla de suma se daba por nulo en ω = 0, y en un conductor ω·ε″ → ω_p²/γ; (2) una cota de k por encima de ω_p puesta a ojo: sustituida por la que da la fórmula, k = ω_p²γ/(2nω³). No se cambió ningún valor esperado de la física.
+- 2026-11-12. **Láminas de dipolos sin dimensiones**: todo depende de la fuerza de la lámina κ = π·(d/λ₀)·χ(ω), con χ = ε − 1 la susceptibilidad del material elegido, y de las posiciones en longitudes de onda. La onda que radia la lámina j es iκ·E_j·e^{ik|z − z_j|}.
+- 2026-11-12. **El sistema incluye el término diagonal** (el campo que la lámina radia sobre sí misma, iκ·E_i). El encargo dice «el incidente más el radiado por todas las demás»; sin el término propio no se conserva la energía (una lámina sin pérdidas daría R + T = 1 + 2κ²). Es el frenado por radiación del conjunto de dipolos de la lámina, y es equivalente a decir que cada lámina responde con κ/(1 − iκ) al campo de las demás. Explicado en la cabecera de `physics-sheets.js`; irá a la ficha.
+- 2026-11-12. **Campo local: no aparece la corrección de Lorentz** (P/3ε₀, Clausius-Mossotti), porque las láminas son continuas y están polarizadas en su plano (factor de despolarización nulo). El límite d → 0 es ε = 1 + χ exacto. Lo que aparece es una corrección por discretización, n² = ε + (k·d)²χ²/12 (condición de Bloch cos qd = cos kd − κ·sen kd, desarrollo hecho a mano y comprobado numéricamente). Hay un test que mide la distancia a ε y a Clausius-Mossotti.
+- 2026-11-12. **«Medir λ dentro»**: el campo en láminas equiespaciadas cumple E_{j+1} + E_{j−1} = 2·cos(qd)·E_j aunque haya onda de vuelta; `fitIndex` ajusta cos(qd) por mínimos cuadrados. Es exacto para el montón discreto.
+- 2026-11-12. **Dos métodos de solución**: `solveSheets` (sistema N × N con `solveComplexDense`, el que pide el encargo y el que usa la vista) y `solveSheetsMarching` (recorrido de atrás hacia delante, coste N), que sirve de comprobación independiente y para los tests con miles de láminas.
+- 2026-11-12. **Cuatro cotas de los tests de las láminas estaban puestas a ojo y fallaron** (|t| tras 14 λ₀, R − R_Fresnel con d finito, diferencia entre 3 y 12 λ₀ de espesor): se sustituyeron por las que se deducen (e^{−2πkL}, (k·d)²|χ|²/12, e^{−4πkL}). La física no se tocó; las razones de convergencia salieron 4,0 a la primera.
 - 2026-11-12. **Añadido a `plot2d.js`**: `xLabel` en los datos de `draw()` (igual que `yLabel`), para el eje conmutable entre energía y longitud de onda.
 - 2026-11-12. **Amplitud de los osciladores dibujada en escala comprimida** (raíz cúbica de |χ_j| respecto a su máximo en la ventana): entre la resonancia y lejos de ella cambia en órdenes de magnitud. El número |χ_j| se da al lado y la ficha lo dirá.
 
