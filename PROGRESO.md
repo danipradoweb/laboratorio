@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
-- Último paso terminado: 5 (física de la parte C, con tests).
-- Siguiente paso: 6 (vistas de la parte C: `view-interface.js` y `view-polarizers.js`, darlas de alta en `PARTS` de `view.js`, añadir sus parámetros `angle`, `pol`, `side`, `analyzer`, `third`, `middle` a `module.js` y sus rejillas a `styles.css`).
+- Último paso terminado: 6 (vistas de la parte C: superficie y polarizadores).
+- Siguiente paso: 7 (presets y recorridos en `module.js`, `ficha.md` definitiva, miniatura con `npm run miniaturas luz-materia`, y pruebas de humo propias del módulo en `tests/smoke.test.js`).
 
 ### Plan del encargo 02 (pasos y estado)
 
@@ -28,7 +28,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 | 3 | Física de la parte B (láminas de dipolos) con tests | hecho |
 | 4 | Vista de la parte B (ondas animadas, campo total, fasores) | hecho |
 | 5 | Física de la parte C (Fresnel, polarizadores) con tests | hecho |
-| 6 | Vistas de la parte C (interfaz y polarizadores) | pendiente |
+| 6 | Vistas de la parte C (interfaz y polarizadores) | hecho |
 | 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | pendiente |
 | 8 | Revisión con subagente (una ronda), correcciones, documentación y cierre | pendiente |
 
@@ -38,6 +38,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - Paso 3: `tests/luz-materia-laminas.test.js`, 15 tests en verde. Una lámina sola analítica (10⁻¹⁴); el campo total cumple la ecuación de ondas con las láminas como fuente (salto de E′ = −2kκE_j); sistema N × N frente a un segundo método independiente (10⁻¹¹); R + T = 1 sin pérdidas y R + T + A = 1 con pérdidas (10⁻¹¹); lámina continua por matriz de transferencia = condiciones de contorno = Airy (10⁻¹²); convergencia al continuo con error ∝ d² (razón 4 al dividir d por 2, cuatro materiales); índice de Bloch n² = ε + (kd)²χ²/12; λ dentro del vidrio en el verde = λ₀/n (ajuste = Bloch a 10⁻⁹); lámina gruesa absorbente → Fresnel con error ∝ d²; teorema de extinción (las radiadas suman −incidente al fondo).
 - Paso 4: `npm test` 358 en verde, `npm run check` limpio. Capturas revisadas a ojo: vidrio en el verde (40 láminas; λ dentro = λ₀/1,464 medida en el campo frente a n = 1,460; el fasor de la transmitida da casi una vuelta), metal de Drude en tema oscuro (R = 98 %, el campo decae dentro en 0,04 λ₀) y encendido automático en modo presentación a 1920 × 1080.
 - Paso 5: `tests/luz-materia-fresnel.test.js`, 14 tests en verde. Las condiciones de contorno de Maxwell (E y H tangenciales, D y B normales) se cumplen a 10⁻¹² con los vectores de las tres ondas, para s y p, medios transparentes, absorbentes y en reflexión total (9 pares de medios × 8 ángulos); R_p(θ_B) < 10⁻²⁸; incidencia normal exacta; R + T = 1 con el factor de cosenos e índices y, en medios absorbentes, con el flujo de Poynting calculado aparte; ángulos críticos 41,81°, 48,75° y 24,41°; onda evanescente e^{−z/δ}; desfase s–p en reflexión total (fórmula de Born & Wolf); Stokes; Malus; tres polarizadores (I₀/8 a 45°); reflejo en agua: polarización total en 53,06°.
+- Paso 6: `npm test` 372 en verde, `npm run check` limpio. Capturas revisadas a ojo: Brewster en vidrio (R_p = 0,0 %, reflejado a 1° del eje de los dipolos), reflexión total interna en tema oscuro (onda evanescente, δ = 0,318 λ₀), oro a 70° en modo presentación (sin Brewster: mínimo de R_p del 68,7 % en 66°) y polarizadores con agua en 53° (tres polarizadores: 12,5 %; reflejo polarizado al 100 %, el polarizador vertical deja pasar el 0 %).
 
 ### Decisiones del encargo 02
 
@@ -60,6 +61,9 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - 2026-11-12. **Mapa de campo de la superficie**: se dibuja la componente transversal (E_y en s, H_y en p), que es la continua en la superficie: incidente + reflejada arriba, (1 + r)·e^{ik_t·r} abajo.
 - 2026-11-12. **Gafas**: el polarizador de eje vertical se compara con unas gafas grises de τ = 0,5, que oscurecen la escena no polarizada lo mismo que un polarizador ideal.
 - 2026-11-12. **Cinco tests de la parte C fallaron al escribirlos, todos por el test**: tolerancias de 10⁻²⁸ y 10⁻¹⁴ en incidencia casi rasante, donde k_z2 pierde cifras por cancelación (r con error ~10⁻¹¹); «el campo evanescente en la superficie es > 0,1», falso a 89° (vale 1 + r_s = t_s → 0 en incidencia rasante); cos 90° ≠ 0 en coma flotante; y un +π de convenio que supuse en la fórmula del desfase de Born & Wolf y que no hacía falta. No se cambió ningún valor esperado.
+- 2026-11-12. **Vista de la superficie**: el índice sale del material y la energía comunes. «Desde dentro» usa solo la parte real del índice del medio de incidencia y avisa si el material absorbe. Si el segundo medio absorbe (k/n > 0,02) no se marca Brewster sino el mínimo de R_p, calculado; y si la onda se apaga en menos de λ₀ (metal) no se dibuja rayo refractado, sino una franja que dice cuánto entra y en qué profundidad se absorbe.
+- 2026-11-12. **Diagrama de radiación del dipolo solo al entrar en un material transparente**: al salir al aire, del otro lado no hay dipolos, y la vista lo dice en vez de dibujar una imagen falsa. La condición geométrica (reflejado ⊥ refractado) se muestra en los dos sentidos.
+- 2026-11-12. **Vista de polarizadores**: banco con dos o tres polarizadores ideales (ángulos medidos desde la vertical), curva de Malus con y sin el intermedio, reflejo de luz no polarizada en el material elegido y comparación de gafas (muestras de brillo relativas al reflejo sin gafas, con la curva de sRGB).
 - 2026-11-12. **Añadido a `plot2d.js`**: `xLabel` en los datos de `draw()` (igual que `yLabel`), para el eje conmutable entre energía y longitud de onda.
 - 2026-11-12. **Amplitud de los osciladores dibujada en escala comprimida** (raíz cúbica de |χ_j| respecto a su máximo en la ventana): entre la resonancia y lejos de ella cambia en órdenes de magnitud. El número |χ_j| se da al lado y la ficha lo dirá.
 

@@ -1203,6 +1203,82 @@ h3 {
     'total reflejada';
 }
 
+/* Vista «interfaz»: a la izquierda, las curvas de Fresnel y el mapa de las ondas; a la
+   derecha, a toda la altura, los rayos y los dipolos. */
+.lm-grid-interface {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    'curvas rayos'
+    'mapa rayos';
+}
+
+/* Vista «polarizadores»: 2 × 2. */
+.lm-grid-polarizers {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+/* Comparación de gafas: una fila por tipo, con una muestra del brillo del reflejo. */
+.lm-glasses {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.6rem;
+  overflow-y: auto;
+}
+
+.lm-glasses-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* El reflejo visto a través de las gafas, sobre negro (blanco = reflejo sin gafas). */
+.lm-glasses-swatch {
+  flex: none;
+  width: 3.2rem;
+  height: 3.2rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #000000;
+}
+
+.lm-glasses-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.lm-glasses-text strong {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.lm-glasses-track {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--grid);
+  overflow: hidden;
+}
+
+.lm-glasses-bar {
+  height: 100%;
+  background: var(--accent);
+}
+
+.lm-note {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--text-soft);
+}
+
 /* Lienzos propios del módulo. */
 .lm-canvas-wrap {
   position: relative;
