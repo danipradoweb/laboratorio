@@ -14,8 +14,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
-- Último paso terminado: 6 (vistas de la parte C: superficie y polarizadores).
-- Siguiente paso: 7 (presets y recorridos en `module.js`, `ficha.md` definitiva, miniatura con `npm run miniaturas luz-materia`, y pruebas de humo propias del módulo en `tests/smoke.test.js`).
+- Último paso terminado: 7 (presets, recorridos, ficha, miniatura, pruebas de humo y documentación).
+- Siguiente paso: 8 (revisión independiente: **lanzada**, pendiente de su informe; después, corregir lo que afecte a la física o a requisitos explícitos, anotar el resto en `docs/BACKLOG.md` y cerrar). Si la sesión se corta aquí: relanzar un subagente revisor con contexto limpio (solo física y cumplimiento del encargo, sin modificar el repositorio, una ronda).
 
 ### Plan del encargo 02 (pasos y estado)
 
@@ -29,7 +29,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 | 4 | Vista de la parte B (ondas animadas, campo total, fasores) | hecho |
 | 5 | Física de la parte C (Fresnel, polarizadores) con tests | hecho |
 | 6 | Vistas de la parte C (interfaz y polarizadores) | hecho |
-| 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | pendiente |
+| 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | hecho |
 | 8 | Revisión con subagente (una ronda), correcciones, documentación y cierre | pendiente |
 
 ### Evidencia por paso (encargo 02)
@@ -39,6 +39,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - Paso 4: `npm test` 358 en verde, `npm run check` limpio. Capturas revisadas a ojo: vidrio en el verde (40 láminas; λ dentro = λ₀/1,464 medida en el campo frente a n = 1,460; el fasor de la transmitida da casi una vuelta), metal de Drude en tema oscuro (R = 98 %, el campo decae dentro en 0,04 λ₀) y encendido automático en modo presentación a 1920 × 1080.
 - Paso 5: `tests/luz-materia-fresnel.test.js`, 14 tests en verde. Las condiciones de contorno de Maxwell (E y H tangenciales, D y B normales) se cumplen a 10⁻¹² con los vectores de las tres ondas, para s y p, medios transparentes, absorbentes y en reflexión total (9 pares de medios × 8 ángulos); R_p(θ_B) < 10⁻²⁸; incidencia normal exacta; R + T = 1 con el factor de cosenos e índices y, en medios absorbentes, con el flujo de Poynting calculado aparte; ángulos críticos 41,81°, 48,75° y 24,41°; onda evanescente e^{−z/δ}; desfase s–p en reflexión total (fórmula de Born & Wolf); Stokes; Malus; tres polarizadores (I₀/8 a 45°); reflejo en agua: polarización total en 53,06°.
 - Paso 6: `npm test` 372 en verde, `npm run check` limpio. Capturas revisadas a ojo: Brewster en vidrio (R_p = 0,0 %, reflejado a 1° del eje de los dipolos), reflexión total interna en tema oscuro (onda evanescente, δ = 0,318 λ₀), oro a 70° en modo presentación (sin Brewster: mínimo de R_p del 68,7 % en 66°) y polarizadores con agua en 53° (tres polarizadores: 12,5 %; reflejo polarizado al 100 %, el polarizador vertical deja pasar el 0 %).
+- Paso 7: `npm test` 376 en verde (61 tests nuevos en total: 16 de la parte A, 15 de las láminas, 14 de Fresnel, uno de materiales, 4 pruebas de humo propias y las generales que recorren todos los módulos; 3 más de contrato por el campo `visible` no: van dentro de los existentes); `npm run check` limpio. `tests/smoke.test.js` comprueba en el navegador: estado desde la URL, controles visibles según la vista, clic en la gráfica de ε que cambia la energía en control, URL y paneles, eje en longitud de onda, los nueve presets con su captura (`capturas/luz-materia-preset-*.png`) y lo que debe verse en cada uno (vidrio n = 1,46 y R = 3,5 %; metal R = 98,0 % y 2,1 %; láminas encendiéndose solas; espejo con R + T + A = 100 %; Brewster con R_p = 0,0 % y reflejado ⊥ refractado; reflexión total con δ = 0,318 λ₀; agua con reflejo polarizado al 100 %), tres polarizadores (12,5 %), animación y pausa, tecla 7 en modo presentación y los tres recorridos paso a paso. Capturas revisadas a ojo: ficha con KaTeX, recorrido en modo presentación a 1920 × 1080.
 
 ### Decisiones del encargo 02
 
@@ -64,6 +65,9 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - 2026-11-12. **Vista de la superficie**: el índice sale del material y la energía comunes. «Desde dentro» usa solo la parte real del índice del medio de incidencia y avisa si el material absorbe. Si el segundo medio absorbe (k/n > 0,02) no se marca Brewster sino el mínimo de R_p, calculado; y si la onda se apaga en menos de λ₀ (metal) no se dibuja rayo refractado, sino una franja que dice cuánto entra y en qué profundidad se absorbe.
 - 2026-11-12. **Diagrama de radiación del dipolo solo al entrar en un material transparente**: al salir al aire, del otro lado no hay dipolos, y la vista lo dice en vez de dibujar una imagen falsa. La condición geométrica (reflejado ⊥ refractado) se muestra en los dos sentidos.
 - 2026-11-12. **Vista de polarizadores**: banco con dos o tres polarizadores ideales (ángulos medidos desde la vertical), curva de Malus con y sin el intermedio, reflejo de luz no polarizada en el material elegido y comparación de gafas (muestras de brillo relativas al reflejo sin gafas, con la curva de sRGB).
+- 2026-11-12. **Nueve presets**: los ocho del encargo más «Un espejo: láminas de metal», que necesita el recorrido «por qué la luz no rebota» (el metal visto como láminas de electrones libres: 98 % radiado hacia atrás). La paradoja de los tres polarizadores no tiene preset propio (el máximo es 9): se llega con el conmutador «Polarizador intermedio», y el último paso del recorrido de las gafas lo pide.
+- 2026-11-12. **Tres recorridos**: «Por qué la luz no rebota» (6 pasos: oscilación forzada → láminas que radian → la reflejada es lo radiado hacia atrás → extinción de Ewald-Oseen → espejo → resonancia y absorción), «De dónde sale el índice de refracción» (7 pasos) y «Por qué funcionan las gafas polarizadas» (6 pasos). Los números citados en los textos salen de cálculos hechos con la física del módulo, no de memoria.
+- 2026-11-12. **Materiales marcados**: `modulos` de SiO2, H2O y Au incluye ahora `luz-materia` (`data/materials/catalogo.json`; JSON regenerados con `node tools/materials.mjs`, sin red).
 - 2026-11-12. **Añadido a `plot2d.js`**: `xLabel` en los datos de `draw()` (igual que `yLabel`), para el eje conmutable entre energía y longitud de onda.
 - 2026-11-12. **Amplitud de los osciladores dibujada en escala comprimida** (raíz cúbica de |χ_j| respecto a su máximo en la ventana): entre la resonancia y lejos de ella cambia en órdenes de magnitud. El número |χ_j| se da al lado y la ficha lo dirá.
 
