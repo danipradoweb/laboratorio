@@ -548,6 +548,185 @@ for (const [tourId, steps] of /** @type {const} */ ([
   });
 }
 
+// Luz y materia: criterio de terminado del encargo 02 (las tres partes funcionando con
+// vistas enlazadas, presets, recorridos y modo presentación). Guarda una captura de cada
+// preset y comprueba en cada uno lo que debe verse.
+test('luz y materia: cuatro vistas enlazadas, controles por vista y presets', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/luz-materia?material=metal&energy=5', { width: 1440, height: 900 });
+  const status = async () => String(await page.locator('.lm-status').textContent());
+  const title = async (/** @type {number} */ i) => String(await page.locator('.lm-part .panel-title').nth(i).textContent());
+  /** Espera a que la URL contenga todos los trozos. @param {string[]} parts */
+  const hashHas = (parts) => page.waitForFunction((/** @type {string[]} */ ps) => ps.every((x) => location.hash.includes(x)), parts);
+
+  // La URL reproduce el estado: metal de Drude por debajo de ω_p (10 eV): Re ε < 0.
+  assert.match(await status(), /^Metal de Drude · ħω = 5,00 eV/);
+  assert.equal(await page.locator('.lm-part .panel-title').count(), 4);
+  assert.equal(await page.locator('.lm-part canvas').count(), 4);
+  assert.match(await title(0), /Re ε < 0: la onda no se propaga/);
+
+  // Los controles que no son de esta vista están ocultos; los del material editable solo
+  // aparecen al elegirlo.
+  assert.equal(await page.locator('[data-key="axis"]').isVisible(), true);
+  for (const key of ['spacing', 'count', 'angle', 'pol', 'analyzer', 'w0']) {
+    assert.equal(await page.locator(`[data-key="${key}"]`).isVisible(), false, `el control ${key} debería estar oculto`);
+  }
+  await page.locator('[data-key="material"] select').selectOption('editable');
+  await page.waitForFunction(() => location.hash.includes('material=editable'));
+  assert.equal(await page.locator('[data-key="w0"]').isVisible(), true);
+  await page.locator('[data-key="material"] select').selectOption('metal');
+  await page.waitForFunction(() => location.hash.includes('material=metal'));
+
+  // Vistas enlazadas: un clic en la gráfica de ε lleva la energía por encima de ω_p, y el
+  // metal deja de reflejar (cambian el control, la URL, la línea de estado y los paneles).
+  const epsilon = page.locator('.lm-part .panel').nth(0).locator('canvas');
+  const box = await epsilon.boundingBox();
+  await page.mouse.click(box.x + box.width * 0.85, box.y + box.height * 0.5);
+  await page.waitForFunction(() => !location.hash.includes('energy=5&'));
+  const energy = Number(new URLSearchParams(new URL(page.url()).hash.split('?')[1]).get('energy'));
+  assert.ok(energy > 14 && energy <= 20, `ħω = ${energy} eV`);
+  assert.equal(Number(await page.locator('[data-key="energy"] input[type="range"]').inputValue()), energy);
+  await page.waitForFunction(() => !/Re ε < 0/.test(document.querySelector('.lm-part .panel-title')?.textContent ?? ''));
+  const reflectance = Number((await title(2)).match(/R = (\d+),/)?.[1]);
+  assert.ok(reflectance < 10, `por encima de ω_p el metal casi no refleja: R = ${reflectance} %`);
+
+  // El eje se puede poner en longitud de onda.
+  await page.locator('[data-key="axis"] select').selectOption('lambda');
+  await page.waitForFunction(() => location.hash.includes('axis=lambda'));
+  await page.waitForTimeout(100);
+  await page.screenshot({ path: join(shots, 'luz-materia-eje-lambda.png') });
+
+  // Cada preset, con su captura y lo que debe verse en él.
+  for (const [id, expected] of /** @type {[string, string[]][]} */ ([
+    ['vidrio-visible', ['part=material&material=vidrio&energy=2.25&axis=energia']],
+    ['vidrio-uv', ['part=material&material=vidrio&energy=10.67']],
+    ['metal-debajo', ['part=material&material=metal&energy=2.25']],
+    ['metal-encima', ['part=material&material=metal&energy=15&']],
+    ['laminas', ['part=laminas&material=vidrio&energy=2.25', 'count=24&active=80&auto=1&radiated=todas']],
+    ['espejo', ['part=laminas&material=metal&energy=2.25', 'spacing=0.02&count=30', 'auto=0&radiated=ninguna']],
+    ['brewster', ['part=interfaz&material=vidrio', 'angle=55.6&pol=p&side=fuera']],
+    ['reflexion-total', ['part=interfaz&material=vidrio', 'angle=50&pol=s&side=dentro']],
+    ['gafas', ['part=polarizadores&material=agua', 'angle=53.1', 'analyzer=90']],
+  ])) {
+    await page.locator(`.preset[data-preset="${id}"]`).click();
+    await hashHas(expected);
+    assert.equal(await page.locator(`.preset[data-preset="${id}"]`).getAttribute('aria-pressed'), 'true');
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: join(shots, `luz-materia-preset-${id}.png`) });
+    if (id === 'vidrio-visible') {
+      // El vidrio en el verde: n = 1,46 (sílice), casi sin absorción, R = 3,5 %.
+      assert.match(await status(), /^Vidrio · ħω = 2,25 eV \(λ = 551 nm en el vacío, verde\) · n = 1,46 · /);
+      assert.match(await title(2), /R = 3,5 %/);
+    } else if (id === 'vidrio-uv') {
+      assert.match(await status(), /ultravioleta/);
+      assert.match(await title(1), /k = 4,5\d/);
+    } else if (id === 'metal-debajo') {
+      assert.match(await title(0), /Re ε < 0/);
+      assert.match(await title(2), /R = 98,0 %/);
+    } else if (id === 'metal-encima') {
+      assert.match(await title(2), /R = 2,1 %/);
+    } else if (id === 'laminas') {
+      assert.equal(await page.locator('.lm-grid-sheets canvas').count(), 4);
+      assert.match(await title(0), /de 24 láminas encendidas \(encendido automático\)/);
+      // Encendido automático: el número de láminas encendidas cambia solo.
+      const before = await title(0);
+      await page.waitForFunction((/** @type {string} */ t) => document.querySelector('.lm-part .panel-title')?.textContent !== t, before);
+      for (const key of ['spacing', 'count', 'auto', 'radiated']) assert.equal(await page.locator(`[data-key="${key}"]`).isVisible(), true);
+      assert.equal(await page.locator('[data-key="active"]').isVisible(), false, 'en automático no se elige el número a mano');
+      assert.equal(await page.locator('[data-key="axis"]').isVisible(), false);
+    } else if (id === 'espejo') {
+      // Láminas de metal: casi todo reflejado y sin onda dentro. La conservación de la
+      // energía se ve en pantalla: R + T + absorbido = 100 %.
+      const text = await title(1);
+      const [r, t, a] = [/R = ([\d,]+) %/, /T = ([\d,]+) %/, /absorbido ([\d,]+) %/].map((re) => Number(text.match(re)?.[1].replace(',', '.')));
+      assert.ok(r > 97 && r < 99, `R = ${r} %`);
+      assert.ok(Math.abs(r + t + a - 100) <= 0.15, `R + T + A = ${r + t + a}`);
+      assert.match(text, /dentro no viaja una onda/);
+      assert.match(await title(2), /extinción/);
+    } else if (id === 'brewster') {
+      assert.equal(await page.locator('.lm-grid-interface canvas').count(), 3);
+      assert.match(await title(0), /R_p = 0,0 % · ángulo de Brewster 55,6°/);
+      assert.match(await title(2), /reflejado y refractado forman 90,0°/);
+      assert.match(await title(2), /a 0,0° del eje de los dipolos/);
+    } else if (id === 'reflexion-total') {
+      assert.match(await title(0), /R_s = 100,0 %, R_p = 100,0 %/);
+      assert.match(await title(0), /ángulo crítico 43,2°/);
+      assert.match(await title(1), /onda evanescente cuya amplitud cae a 1\/e en 0,318 λ₀/);
+      assert.match(await title(2), /reflexión total: no hay rayo refractado/);
+    } else if (id === 'gafas') {
+      // Agua en su ángulo de Brewster: reflejo polarizado del todo, que el polarizador
+      // vertical elimina; y polarizadores cruzados en el banco.
+      assert.match(await status(), /^Agua · .* n = 1,33 /);
+      assert.match(await title(0), /polarizadores cruzados: no pasa nada/);
+      assert.match(await title(2), /sale polarizado al 100 %/);
+      assert.match(await title(3), /deja pasar el 0 % del reflejo; las gafas grises, el 50 %/);
+    }
+  }
+
+  // La paradoja de los tres polarizadores: con el intermedio a 45° entre dos cruzados pasa 1/8.
+  await page.locator('[data-key="third"] input').check();
+  await page.waitForFunction(() => /sale el 12,5 %/.test(document.querySelector('.lm-part .panel-title')?.textContent ?? ''));
+  assert.equal(await page.locator('[data-key="middle"]').isVisible(), true);
+  // Un clic en la curva del reflejo cambia el ángulo de incidencia: lejos de Brewster el
+  // polarizador ya deja pasar parte del reflejo.
+  const glare = page.locator('.lm-part .panel').nth(2).locator('canvas');
+  const glareBox = await glare.boundingBox();
+  await page.mouse.click(glareBox.x + glareBox.width * 0.3, glareBox.y + glareBox.height * 0.6);
+  await page.waitForFunction(() => !location.hash.includes('angle=53.1'));
+  const passed = Number((await title(3)).match(/deja pasar el (\d+) % del reflejo/)?.[1]);
+  assert.ok(passed > 5 && passed < 50, `lejos de Brewster pasa parte del reflejo: ${passed} %`);
+  await page.screenshot({ path: join(shots, 'luz-materia-tres-polarizadores.png') });
+
+  // Las ondas de las láminas están animadas y la pausa las detiene.
+  await page.locator('.preset[data-preset="espejo"]').click();
+  await hashHas(['part=laminas&material=metal', 'count=30']);
+  const waves = page.locator('.lm-grid-sheets canvas').first();
+  const frame = () => waves.evaluate((/** @type {HTMLCanvasElement} */ c) => c.toDataURL());
+  const a = await frame();
+  await page.waitForTimeout(300);
+  assert.notEqual(await frame(), a, 'las ondas no se mueven');
+  await page.locator('.clock-play').click();
+  const b = await frame();
+  await page.waitForTimeout(300);
+  assert.equal(await frame(), b, 'en pausa las ondas no deben moverse');
+  await page.locator('.clock-play').click();
+
+  // Modo presentación: la tecla 7 salta a Brewster.
+  await page.keyboard.press('p');
+  await page.keyboard.press('7');
+  await hashHas(['part=interfaz', 'angle=55.6']);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(shots, 'luz-materia-presentacion.png') });
+  await close();
+  assert.deepEqual(errors, []);
+});
+
+// Los tres recorridos de luz y materia, en modo presentación: cada paso lleva a su preset
+// (cambiando de vista cuando toca) y pinta su texto con fórmulas sin errores de KaTeX.
+for (const [tourId, steps] of /** @type {const} */ ([
+  ['no-rebota', ['part=material&material=vidrio&energy=2.25', 'part=laminas&material=vidrio', 'part=laminas&material=vidrio', 'part=laminas&material=vidrio', 'part=laminas&material=metal', 'part=material&material=vidrio&energy=10.67']],
+  ['indice', ['part=material&material=vidrio&energy=2.25', 'part=laminas', 'part=laminas', 'part=material&material=vidrio&energy=2.25', 'energy=10.67', 'part=material&material=metal&energy=2.25', 'part=material&material=metal&energy=15&']],
+  ['gafas', ['part=interfaz', 'part=interfaz', 'part=interfaz', 'part=polarizadores&material=agua', 'part=polarizadores', 'part=polarizadores']],
+])) {
+  test(`luz y materia: recorrido «${tourId}» en modo presentación`, { skip }, async () => {
+    const { page, errors, close } = await openPage('#/luz-materia', { width: 1920, height: 1080 });
+    await page.locator(`.tour-start[data-tour="${tourId}"]`).click();
+    await page.keyboard.press('p');
+    for (let step = 0; step < steps.length; step++) {
+      assert.match(await page.locator('.tour-counter').textContent(), new RegExp(`Paso ${step + 1} de ${steps.length}`));
+      await page.waitForFunction((/** @type {string} */ e) => location.hash.includes(e), steps[step]);
+      const text = modules.find((m) => m.id === 'luz-materia')?.tours.find((t) => t.id === tourId)?.steps[step].text ?? '';
+      if (text.includes('$')) await page.waitForSelector('.tour-text .katex');
+      assert.ok(String(await page.locator('.tour-text').textContent()).trim().length > 40, 'el paso no tiene texto');
+      assert.equal(await page.locator('.tour-text .katex-error').count(), 0);
+      await page.waitForTimeout(1700); // fin de la transición entre presets
+      await page.screenshot({ path: join(shots, `luz-materia-recorrido-${tourId}-${step + 1}.png`) });
+      await page.keyboard.press('ArrowRight');
+    }
+    await close();
+    assert.deepEqual(errors, []);
+  });
+}
+
 // Navegación: de la portada a un módulo por su tarjeta, vuelta a la portada, y de un
 // módulo a otro. Cada cambio destruye el módulo anterior (gráficas, WebGL, reloj): no
 // debe quedar ningún error ni ningún resto en pantalla.
@@ -560,7 +739,7 @@ test('navegación entre portada y módulos sin errores ni restos', { skip }, asy
   await page.waitForSelector('.cover');
   assert.equal(await page.locator('canvas').count(), 0);
   assert.equal(await page.locator('.page-actions button').count(), 0);
-  for (const id of ['_galeria', '_plantilla', 'plasmon', 'oscilador', '_galeria']) {
+  for (const id of ['_galeria', '_plantilla', 'plasmon', 'luz-materia', 'oscilador', '_galeria']) {
     await page.evaluate((/** @type {string} */ hash) => (location.hash = hash), `#/${id}`);
     await page.waitForSelector(`html[data-ready="true"][data-route="${id}"]`);
     assert.equal(await page.locator('.module-page').count(), 1);

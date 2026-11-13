@@ -119,6 +119,8 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {RgbaImage} [image]
  * @property {[number, number]} [xRange] sustituye al de las opciones en este dibujo
  * @property {[number, number]} [yRange]
+ * @property {string} [xLabel] sustituye al título del eje x de las opciones en este dibujo
+ *   (por ejemplo, cuando el eje se puede cambiar de energía a longitud de onda)
  * @property {string} [yLabel] sustituye al título del eje y de las opciones en este dibujo
  *   (por ejemplo, cuando la unidad cambia con los datos)
  */
@@ -234,6 +236,7 @@ export function createPlot(container, options = {}) {
     const areas = data.areas ?? [];
     const raster = data.heatmap ?? data.image;
     const yLabel = data.yLabel ?? options.yLabel;
+    const xLabel = data.xLabel ?? options.xLabel;
 
     // Intervalos de los ejes: los fijados, o la extensión de los datos.
     let xRange = data.xRange ?? options.xRange;
@@ -256,7 +259,7 @@ export function createPlot(container, options = {}) {
 
     // Márgenes: dependen del ancho de los números del eje y y de las filas de la leyenda.
     const colorbar = data.heatmap && data.heatmap.colorbar !== false ? data.heatmap : null;
-    const bottom = fs * 1.55 + (options.xLabel ? fs * 1.45 : 0);
+    const bottom = fs * 1.55 + (xLabel ? fs * 1.45 : 0);
     g.font = tickFont;
     /** @param {number} plotHeight */
     const computeYTicks = (plotHeight) => {
@@ -492,12 +495,12 @@ export function createPlot(container, options = {}) {
     // Títulos de los ejes.
     g.fillStyle = colors.text;
     g.font = labelFont;
-    if (options.xLabel) {
+    if (xLabel) {
       // Justo debajo de las marcas (y no pegado al borde inferior), para que siga junto
       // a la gráfica cuando equalAspect la hace más baja que su contenedor.
       g.textAlign = 'center';
       g.textBaseline = 'top';
-      g.fillText(options.xLabel, (plotLeft + plotRight) / 2, plotBottom + fs * 1.6);
+      g.fillText(xLabel, (plotLeft + plotRight) / 2, plotBottom + fs * 1.6);
     }
     if (yLabel) {
       g.save();

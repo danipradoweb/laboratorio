@@ -11,7 +11,8 @@
    "familia": "metal",
    "mecanismo": "Sus electrones de conducción reflejan el rojo y el infrarrojo, pero las transiciones interbanda (de la banda 5d a la 6sp) absorben el azul y el violeta, por debajo de ≈ 520 nm (≈ 2,4 eV). Por eso el oro macizo es amarillo.",
    "modulos": [
-    "plasmon"
+    "plasmon",
+    "luz-materia"
    ],
    "intervalo_nm": [187.9, 1937],
    "puntos": 49,
@@ -85,7 +86,9 @@
    "formula": "H2O",
    "familia": "líquido",
    "mecanismo": "Transparente en el visible: sus transiciones electrónicas están en el ultravioleta lejano. Los sobretonos de las vibraciones O–H absorben débilmente el rojo, y por eso el agua en gran espesor se ve azulada.",
-   "modulos": [],
+   "modulos": [
+    "luz-materia"
+   ],
    "intervalo_nm": [200, 200000],
    "puntos": 169,
    "referencia": "G. M. Hale and M. R. Querry. Optical constants of water in the 200-nm to 200-µm wavelength region. Appl. Opt. 12, 555-563 (1973) See also Segelstein 1981 for more recent data from the same group.",
@@ -98,7 +101,9 @@
    "formula": "SiO2",
    "familia": "dieléctrico",
    "mecanismo": "Aislante con una banda prohibida muy ancha (≈ 9 eV): ningún fotón visible puede excitar sus electrones y sus vibraciones absorben solo en el infrarrojo. Transparente e incolora, con dispersión normal (el índice baja suavemente al crecer λ).",
-   "modulos": [],
+   "modulos": [
+    "luz-materia"
+   ],
    "intervalo_nm": [210, 6700],
    "puntos": 273,
    "referencia": "1) I. H. Malitson. Interspecimen comparison of the refractive index of fused silica. J. Opt. Soc. Am. 55, 1205-1208 (1965) 2) C. Z. Tan. Determination of refractive index of silica glass for infrared wavelengths by IR spectroscopy. J. Non-Cryst. Solids 223, 158-163 (1998) * Sellmeier formula is reported in Ref. 1 for the 0.21–3.71 μm wavelength range. Ref. 2 verifies the validity of the formula up to 6.7 μm.",

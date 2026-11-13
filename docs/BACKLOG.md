@@ -92,6 +92,28 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - El importador de materiales solo entiende tres tipos de datos de refractiveindex.info (`tabulated nk`, `tabulated n`, `formula 1`); faltan las demás fórmulas de dispersión y los archivos con varios bloques.
 - Escala logarítmica opcional en el diagrama polar para esferas muy grandes.
 
+## Ideas surgidas en el encargo 02 (luz y materia)
+- ★ Color de un metal a partir de su reflectancia: R(λ) → motor de color (`ctx.color`), para ver al lado el «plata» del metal de Drude y el amarillo del oro medido. El objetivo del encargo habla del color de los metales; hoy se ve en las curvas, no como color.
+- ★ Láminas de dipolos con incidencia oblicua y polarización p: el ángulo de Brewster saldría directamente de la suma de las ondas radiadas, sin fórmulas de Fresnel (ahora las láminas son solo de incidencia normal y Brewster se explica con el diagrama de un dipolo).
+- Curva de ε′ reconstruida con Kramers-Kronig dibujada sobre la de la fórmula (`kramersKronigReal` ya existe y está probada; hoy solo se usa en los tests).
+- Más materiales medidos en el selector (plata, silicio, cobre) y modelo de Drude-Lorentz ajustado al oro (Drude + transiciones interbanda).
+- Pulso en el dominio del tiempo atravesando las láminas: el frente viaja a c (precursores), la envolvente a la velocidad de grupo.
+- Dipolos puntuales en una red 3D, donde sí aparece la corrección de campo local de Lorentz (Clausius-Mossotti); en las láminas continuas no existe.
+- Capas finas y multicapas con `layerMatrix` (antirreflejantes, espejos de Bragg): enlaza con el bloque de Fotónica.
+- Reflexión total frustrada (una segunda superficie cerca recoge la onda evanescente) y desplazamiento de Goos-Hänchen.
+- Gafas polarizadas con la cabeza inclinada (eje del polarizador girado un ángulo: mezcla R_s y R_p con Malus), y polarización del cielo por dispersión de Rayleigh (el mismo dipolo que no radia a lo largo de su eje).
+- Polarización circular y elíptica, láminas de cuarto y media onda (vectores de Jones completos; hoy solo polarización lineal).
+- Escala logarítmica para el coeficiente de absorción y para ε″ (depende de la escala logarítmica del trazador, en Infraestructura).
+- Anchuras realistas para el «vidrio» (borde de Urbach en lugar de alas lorentzianas): hoy k ≈ 6·10⁻⁴ en el visible, muy por encima del vidrio real.
+- La vista «desde dentro» ignora la absorción del medio de incidencia; con un medio absorbente habría que definir la onda incidente inhomogénea.
+- Test unitario de `controls.js` para el campo `visible` (hoy lo cubre solo la prueba de humo).
+
+## Pendientes de la revisión del encargo 02
+Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
+- Tests con cotas de orden de magnitud en lugar de deducciones exactas: el siguiente término del desarrollo del índice de Bloch (tolerancia 17–30 veces más holgada que el error real, aunque fija el coeficiente 1/12 al 1 %), `(kd)²|χ|²/12` y `4·e^{−4πkL}` en la lámina gruesa, y las cotas anchas del mínimo de R_p del oro en 650 nm. Se podrían afinar con el término O((kd)⁴) y con el valor de R_p calculado aparte.
+- El «material editable» tiene un solo oscilador y ε∞ = 1: es la lectura mínima de «material arbitrario». Varios osciladores editables pedirían una lista de parámetros de longitud variable, que el estado en la URL no admite hoy.
+- Los títulos de los paneles de luz y materia llevan mucha información y ocupan dos o tres líneas en ventanas estrechas; valorar una línea de datos aparte bajo cada gráfica.
+
 ## Pendientes de la revisión del encargo 01
 Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
 - Interpolación de Johnson & Christy: con interpolación lineal de n y k el pico del oro queda anclado al punto de 520,9 nm de la tabla (de 5 a 30 nm no se mueve nada); con spline se movería de 522,3 a 524,7 nm. La ficha lo avisa. Valorar una spline monótona o los ajustes analíticos de la función dieléctrica (Etchegoin, Rioux) para tener picos suaves.

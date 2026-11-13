@@ -39,6 +39,7 @@ El orden de la lista es el orden de las tarjetas en la portada. No quites ningú
 - Deja `animated: true` solo si el módulo tiene animación.
 - `transitionSeconds` es opcional: duración de la transición entre presets (por defecto 1,5 s).
 - Escribe `params`: un parámetro por cada cosa que el usuario pueda cambiar. De aquí salen los controles y la URL; no se crean controles a mano en ningún otro sitio.
+- Si un control solo tiene sentido en algunos estados (por ejemplo, en una de varias vistas del módulo), añade al parámetro `visible: (state) => state.vista === 'a'`: el control se oculta cuando la función devuelve false. Ejemplo: `src/modules/luz-materia/module.js`.
 - Deja `presets: []` y `tours: []` vacíos por ahora.
 
 Comprueba: `npm test` (el test `tests/modulos.test.js` valida el descriptor y te dice qué falta).
@@ -52,6 +53,7 @@ Primero la física, antes que cualquier dibujo.
 - Matemáticas ya disponibles en `src/core/`: `complex.js`, `fft.js`, `linalg.js` (tridiagonal, autovalores), `interp.js`.
 - En el archivo de tests, cambia el `import` para que apunte a tu módulo y escribe un test por función. Cada test lleva un comentario con el principio físico que comprueba y de dónde sale el valor esperado. Orden de preferencia: solución analítica exacta, límite conocido, ley de conservación, referencia independiente generada con `tools/`, valor experimental.
 - Si un test falla, investiga el código o la referencia. No cambies el valor esperado para que pase.
+- Si la física crece mucho, repártela en `physics.js` y `physics-<parte>.js` (cada uno con su `tests/<id>-<parte>.test.js`). Ejemplo: `src/modules/luz-materia/`.
 
 Comprueba: `npm test` en verde.
 

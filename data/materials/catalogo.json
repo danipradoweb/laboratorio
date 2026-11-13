@@ -13,7 +13,7 @@
       "pagina": "shelf=main&book=Au&page=Johnson",
       "familia": "metal",
       "mecanismo": "Sus electrones de conducción reflejan el rojo y el infrarrojo, pero las transiciones interbanda (de la banda 5d a la 6sp) absorben el azul y el violeta, por debajo de ≈ 520 nm (≈ 2,4 eV). Por eso el oro macizo es amarillo.",
-      "modulos": ["plasmon"]
+      "modulos": ["plasmon", "luz-materia"]
     },
     {
       "id": "Ag",
@@ -63,7 +63,7 @@
       "pagina": "shelf=main&book=H2O&page=Hale",
       "familia": "líquido",
       "mecanismo": "Transparente en el visible: sus transiciones electrónicas están en el ultravioleta lejano. Los sobretonos de las vibraciones O–H absorben débilmente el rojo, y por eso el agua en gran espesor se ve azulada.",
-      "modulos": []
+      "modulos": ["luz-materia"]
     },
     {
       "id": "SiO2",
@@ -73,7 +73,7 @@
       "pagina": "shelf=main&book=SiO2&page=Malitson",
       "familia": "dieléctrico",
       "mecanismo": "Aislante con una banda prohibida muy ancha (≈ 9 eV): ningún fotón visible puede excitar sus electrones y sus vibraciones absorben solo en el infrarrojo. Transparente e incolora, con dispersión normal (el índice baja suavemente al crecer λ).",
-      "modulos": []
+      "modulos": ["luz-materia"]
     },
     {
       "id": "TiO2",

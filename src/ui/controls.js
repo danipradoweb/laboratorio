@@ -6,6 +6,9 @@
 //   range   deslizador + casilla numérica (para teclear un valor exacto)
 //   select  lista desplegable
 //   toggle  conmutador
+// Un parámetro con `visible: (state) => boolean` solo enseña su control cuando la función
+// devuelve true (por ejemplo, controles que solo tienen sentido en una de las vistas del
+// módulo). El parámetro sigue existiendo en el estado y en la URL.
 // Los controles escriben en el almacén de estado (store.set) y se actualizan solos
 // cuando el estado cambia por otra vía (URL, preset, clic en una gráfica).
 
@@ -35,6 +38,8 @@ export function buildControls(container, params, store) {
     const id = `control-${param.key}-${nextId++}`;
     const row = el('div', { class: `control control-${param.type}`, dataset: { key: param.key } });
     if (param.help) row.title = param.help;
+    const { visible } = param;
+    if (visible) syncs.push(() => (row.hidden = !visible(store.get())));
 
     if (param.type === 'range') {
       const slider = el('input', {

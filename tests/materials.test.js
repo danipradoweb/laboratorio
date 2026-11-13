@@ -274,6 +274,19 @@ test('nkToEpsilon y epsilonToNk: casos exactos y convenio de signos', () => {
   assert.ok(epsilonToNk({ re: 0, im: -2 }).k < 0);
 });
 
+// Principio: (n, k) → ε → (n, k) es la identidad también cuando k es diminuto (materiales
+// casi transparentes: el agua tiene k ~ 10⁻⁹ en el visible) o cuando n es diminuto (metal
+// casi ideal). Con la fórmula directa k = √((|ε| − Re ε)/2) se restan dos números casi
+// iguales y k saldría con un error del 100 %. Tolerancia: 10⁻¹² relativa.
+test('epsilonToNk no pierde un k (o un n) diminuto por cancelación', () => {
+  for (const [n, k] of [[1.333, 1e-9], [1.5, 3e-13], [2.4, 1e-5], [1e-9, 3], [3e-7, 0.8], [0.05, 4]]) {
+    const back = epsilonToNk(nkToEpsilon(n, k));
+    assert.ok(Math.abs(back.n - n) <= 1e-12 * n, `n = ${n}, k = ${k}: n recuperado ${back.n}`);
+    assert.ok(Math.abs(back.k - k) <= 1e-12 * k, `n = ${n}, k = ${k}: k recuperado ${back.k}`);
+  }
+  assert.deepEqual(epsilonToNk({ re: 0, im: 0 }), { n: 0, k: 0 });
+});
+
 // --- Interpolación ---------------------------------------------------------------------------------
 
 // En los nodos se devuelve el dato; entre dos nodos, un valor entre los dos vecinos

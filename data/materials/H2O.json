@@ -4,7 +4,9 @@
  "formula": "H2O",
  "familia": "líquido",
  "mecanismo": "Transparente en el visible: sus transiciones electrónicas están en el ultravioleta lejano. Los sobretonos de las vibraciones O–H absorben débilmente el rojo, y por eso el agua en gran espesor se ve azulada.",
- "modulos": [],
+ "modulos": [
+  "luz-materia"
+ ],
  "fuente": {
   "referencia": "G. M. Hale and M. R. Querry. Optical constants of water in the 200-nm to 200-µm wavelength region. Appl. Opt. 12, 555-563 (1973) See also Segelstein 1981 for more recent data from the same group.",
   "comentarios": "Liquid water (H2O) at 25 °C",
