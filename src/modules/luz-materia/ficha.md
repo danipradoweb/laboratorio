@@ -39,6 +39,8 @@ El módulo tiene cuatro vistas (control **Vista**) que comparten el **material**
 - **Físico**: $\varepsilon$, $n$, $k$ y $R$; el retraso $\delta$ de cada oscilador; las ondas de las láminas con sus amplitudes y fases; $R$, $T$ y la absorción; la longitud de onda dentro del material; los coeficientes de Fresnel, los ángulos de Brewster y crítico, la onda evanescente y su profundidad; la ley de Malus.
 - **Representación**: el desplazamiento de las cargas está enormemente exagerado, y su amplitud se dibuja en escala comprimida (raíz cúbica), porque entre la resonancia y lejos de ella cambia en órdenes de magnitud. El número $|\chi|$ que hay al lado es el dato.
 - La animación va muchísimo más despacio que la luz, y un periodo dura lo mismo en pantalla a cualquier frecuencia.
+- **Dos maneras de dibujar una fase.** En el panel de los osciladores las flechas giran con el tiempo y la de la carga va *por detrás* de la de la fuerza un ángulo $\delta$. En los diagramas de las láminas no gira nada: cada flecha es una amplitud compleja, y un retraso de fase se ve como un giro en sentido antihorario. Son dos dibujos del mismo convenio $e^{-i\omega t}$.
+- **Dos profundidades «a $1/e$».** En la vista del material se da la de la *intensidad*, $1/\alpha$; en las láminas y en la superficie, la de la *amplitud* del campo, que es el doble.
 - **Las láminas son un modelo en una dimensión**: cada una es una capa continua de carga, no átomos sueltos. Un material real no está hecho de láminas, pero el resultado (ondas radiadas que se suman a la incidente) es el mismo.
 - **El «vidrio» es un modelo**: tres osciladores de Lorentz cuyas frecuencias e intensidades salen de la fórmula de Sellmeier de la sílice fundida (Malitson, 1965). La anchura de cada resonancia, $\gamma = \omega_0/100$, es una elección del módulo: la fórmula no la da. El **metal de Drude** usa valores redondos de ejemplo ($\hbar\omega_p = 10$ eV, $\hbar\gamma = 0{,}1$ eV), no los de un metal concreto. El **agua** y el **oro** son constantes ópticas medidas.
 - **El diagrama de radiación del dipolo** es el de un dipolo aislado. Sirve para ver por qué se anula $R_p$ en el ángulo de Brewster; el cálculo exacto son las condiciones de contorno de Maxwell en la superficie (los coeficientes de Fresnel). Al salir del material al aire no se dibuja, porque en el aire no hay dipolos.
@@ -68,9 +70,9 @@ $$\varepsilon'(\omega) - 1 = \frac{2}{\pi}\,\mathrm{P}\!\!\int_0^\infty \frac{\o
 
 $$E_{\mathrm{rad},j}(z) = \frac{ik}{2\varepsilon_0}\,P_{s,j}\,e^{ik|z - z_j|}$$
 
-El factor $i$ dice que la onda radiada va un cuarto de periodo desfasada respecto a las cargas. La lámina responde al campo total que hay en ella, $P_{s,j} = \eta\,\alpha(\omega)\,E(z_j)$, con $\eta$ osciladores por unidad de área de polarizabilidad $\alpha$. Si las láminas reparten un material de $N$ osciladores por unidad de volumen en capas separadas $d$, entonces $\eta = Nd$ y $N\alpha/\varepsilon_0 = \chi$, y todo depende de un número:
+El factor $i$ dice que la onda radiada va un cuarto de periodo desfasada respecto al desplazamiento de las cargas. La lámina responde al campo total que hay en ella, $P_{s,j} = \eta\,a(\omega)\,E(z_j)$, con $\eta$ osciladores por unidad de área, cada uno de polarizabilidad $a$. Si las láminas reparten un material de $N$ osciladores por unidad de volumen en capas separadas $d$, entonces $\eta = Nd$ y $Na/\varepsilon_0 = \chi$, y todo depende de un número:
 
-$$\kappa = \frac{k\,\eta\,\alpha}{2\varepsilon_0} = \pi\,\frac{d}{\lambda_0}\,\chi(\omega), \qquad E_{\mathrm{rad},j}(z) = i\kappa\,E_j\,e^{ik|z - z_j|}$$
+$$\kappa = \frac{k\,\eta\,a}{2\varepsilon_0} = \pi\,\frac{d}{\lambda_0}\,\chi(\omega), \qquad E_{\mathrm{rad},j}(z) = i\kappa\,E_j\,e^{ik|z - z_j|}$$
 
 El campo en cada lámina es el incidente más el radiado por todas, lo que da un sistema lineal de $N$ ecuaciones complejas:
 
@@ -94,13 +96,17 @@ $$r_s = \frac{n_1\cos\theta - n_2\cos\theta_t}{n_1\cos\theta + n_2\cos\theta_t},
 
 $$t_s = \frac{2n_1\cos\theta}{n_1\cos\theta + n_2\cos\theta_t}, \qquad t_p = \frac{2n_1\cos\theta}{n_2\cos\theta + n_1\cos\theta_t}$$
 
-$$R = |r|^2, \qquad T = \frac{n_2\cos\theta_t}{n_1\cos\theta}\,|t|^2, \qquad R + T = 1$$
+$$R = |r|^2, \qquad T = \frac{n_2\cos\theta_t}{n_1\cos\theta}\,|t|^2 \ \ (n_2\ \text{real}), \qquad R + T = 1$$
 
-Convenio de signos de $r_p$: el de Born & Wolf y Hecht (en incidencia normal $r_p = -r_s$; con el de Griffiths, $r_p = r_s$). Las intensidades no dependen del convenio. Con $n_2$ complejo, $n_2\cos\theta_t = \sqrt{n_2^2 - n_1^2\sin^2\theta}$, con parte imaginaria positiva.
+Convenio de signos de $r_p$: el de Born & Wolf y Hecht (en incidencia normal $r_p = -r_s$; con el de Griffiths, $r_p = r_s$). Las intensidades no dependen del convenio.
 
-$$\tan\theta_B = \frac{n_2}{n_1}, \qquad \sin\theta_c = \frac{n_2}{n_1}\ (n_2 < n_1), \qquad \delta = \frac{\lambda_0}{2\pi\sqrt{n_1^2\sin^2\theta - n_2^2}}$$
+Si el segundo medio absorbe ($n_2$ complejo), en las fórmulas de $r$ y $t$ se usa $n_2\cos\theta_t = k_{z2} = \sqrt{n_2^2 - n_1^2\sin^2\theta}$, con parte imaginaria positiva, y la potencia que cruza la superficie es el flujo de energía perpendicular a ella, distinto para cada polarización:
 
-$\delta$ es la profundidad a la que la amplitud de la onda evanescente cae a $1/e$. La imagen de los dipolos, en números: $r_p/r_s = -\cos(\theta + \theta_t)/\cos(\theta - \theta_t)$, que se anula cuando $\theta + \theta_t = 90°$.
+$$T_s = \frac{\mathrm{Re}\,k_{z2}}{n_1\cos\theta}\,|t_s|^2, \qquad T_p = \frac{\mathrm{Re}\!\left(k_{z2}/n_2^2\right)|n_2|^2}{n_1\cos\theta}\,|t_p|^2$$
+
+$$\tan\theta_B = \frac{n_2}{n_1}, \qquad \sin\theta_c = \frac{n_2}{n_1}\ (n_2 < n_1), \qquad \ell = \frac{\lambda_0}{2\pi\sqrt{n_1^2\sin^2\theta - n_2^2}}$$
+
+$\ell$ es la profundidad a la que la amplitud de la onda evanescente cae a $1/e$. La imagen de los dipolos, en números: $r_p/r_s = -\cos(\theta + \theta_t)/\cos(\theta - \theta_t)$, que se anula cuando $\theta + \theta_t = 90°$.
 
 **Polarizadores.** Ley de Malus, $I = I_0\cos^2\theta$. Tres polarizadores, el intermedio a un ángulo $\theta$ entre dos cruzados: $I = \tfrac{1}{8}I_0\sin^2 2\theta$. Reflejo de luz no polarizada: se refleja $(R_s + R_p)/2$, con grado de polarización $(R_s - R_p)/(R_s + R_p)$; un polarizador de eje vertical deja pasar $R_p/2$.
 

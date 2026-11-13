@@ -650,7 +650,7 @@ test('luz y materia: cuatro vistas enlazadas, controles por vista y presets', { 
     } else if (id === 'reflexion-total') {
       assert.match(await title(0), /R_s = 100,0 %, R_p = 100,0 %/);
       assert.match(await title(0), /ángulo crítico 43,2°/);
-      assert.match(await title(1), /onda evanescente que cae a 1\/e en 0,318 λ₀/);
+      assert.match(await title(1), /onda evanescente cuya amplitud cae a 1\/e en 0,318 λ₀/);
       assert.match(await title(2), /reflexión total: no hay rayo refractado/);
     } else if (id === 'gafas') {
       // Agua en su ángulo de Brewster: reflejo polarizado del todo, que el polarizador

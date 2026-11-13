@@ -220,6 +220,20 @@ export function mountSheets(container, ctx) {
       { x: s.zs, y: envelope.map((v) => -v), color: colors.textSoft, dash: [2, 3], width: 0.7 },
       { x: s.zs, y: now(profile.total), color: 0, width: 1.4, label: 'campo total = incidente + radiadas' },
     );
+    if (active > 0) {
+      // Detrás del material el campo total ES la onda transmitida: se resalta ese tramo.
+      const from = s.zs.findIndex((z) => z >= thickness);
+      if (from >= 0) {
+        totalSeries.push({
+          x: s.zs.subarray(from),
+          y: now(profile.total).subarray(from),
+          color: 4,
+          dash: [7, 4],
+          width: 1.4,
+          label: 'transmitida → (incidente + lo radiado hacia delante)',
+        });
+      }
+    }
     // Regla de una longitud de onda fuera y, si dentro hay una onda que viaja, otra dentro.
     totalSeries.push({ x: [-1.25, -0.25], y: [2, 2], color: colors.text, points: true, label: 'fuera: λ₀' });
     const inside = active >= 3 ? fitIndex(solution.fields, s.spacing) : null;
@@ -252,7 +266,7 @@ export function mountSheets(container, ctx) {
     else if (inside.re > 2 * inside.im) {
       insideText = `dentro, λ = λ₀/${formatEs(inside.re, 3)} (medido en el campo); medio continuo: n = ${formatEs(s.index.re, 3)}`;
     } else {
-      insideText = `dentro no viaja una onda: el campo decae en ${formatSig(1 / (2 * Math.PI * Math.max(inside.im, 1e-9)))} λ₀ (Re ε < 0 o absorción fuerte)`;
+      insideText = `dentro no viaja una onda: la amplitud del campo cae a 1/e en ${formatSig(1 / (2 * Math.PI * Math.max(inside.im, 1e-9)))} λ₀ (Re ε < 0 o absorción fuerte)`;
     }
     totalPanel.title.textContent =
       `El campo total · R = ${formatEs(100 * solution.R, 1)} % · T = ${formatEs(100 * solution.T, 1)} % · absorbido ${formatEs(100 * Math.max(0, solution.A), 1)} % · ${insideText}` +

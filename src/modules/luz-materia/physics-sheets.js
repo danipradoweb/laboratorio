@@ -17,7 +17,7 @@
 //   E_rad,j(z) = (i·k / 2ε₀) · P_s,j · e^{ik|z − z_j|}
 //
 // El factor i es toda la historia: la onda radiada va un cuarto de periodo DESFASADA
-// respecto al movimiento de las cargas.
+// respecto al desplazamiento de las cargas (y en oposición a su velocidad: E = −μ₀cK/2).
 //
 // RESPUESTA DE LA LÁMINA. P_s,j = η·α(ω)·E(z_j): densidad superficial de osciladores η,
 // polarizabilidad de cada uno α(ω) (la del oscilador de Lorentz) y E(z_j) el campo TOTAL

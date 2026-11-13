@@ -263,7 +263,7 @@ const descriptor = {
       steps: [
         {
           preset: 'vidrio-visible',
-          text: 'La luz es un campo eléctrico que oscila y **empuja** a los electrones del material. Cada electrón, sujeto a su átomo como por un muelle, oscila **a la frecuencia de la luz**, no a la suya: es una oscilación forzada. En el vidrio las frecuencias propias están en el ultravioleta ($\\hbar\\omega_0 \\approx 11$ y $18$ eV), muy por encima del visible: los electrones siguen al campo casi en fase ($\\delta \\approx 0°$) y no le quitan energía.',
+          text: 'La luz es un campo eléctrico que oscila y **empuja** a los electrones del material. Cada electrón, sujeto a su átomo como por un muelle, oscila **a la frecuencia de la luz**, no a la suya: es una oscilación forzada. En el vidrio las frecuencias propias de los electrones están en el ultravioleta ($\\hbar\\omega_0 \\approx 11$ y $18$ eV), muy por encima del visible: siguen al campo casi en fase ($\\delta \\approx 0°$) y no le quitan energía. (El tercer oscilador, en el infrarrojo, son los iones de la red: demasiado lentos para la luz visible, van en oposición y apenas cuentan.)',
         },
         {
           preset: 'laminas',
@@ -271,7 +271,7 @@ const descriptor = {
         },
         {
           preset: 'laminas',
-          text: 'Delante del material solo llegan las ondas radiadas hacia atrás: su suma **es** la onda reflejada (línea de trazos de la gráfica de abajo). Nada ha rebotado en la superficie: son los electrones de todo el material radiando a la vez. En el diagrama de abajo a la derecha se ve por qué el vidrio refleja poco: las contribuciones de las láminas van girando y casi se cancelan.',
+          text: 'Delante del material solo llegan las ondas radiadas hacia atrás: su suma **es** la onda reflejada (línea de trazos de la gráfica de abajo). Nada ha rebotado en la superficie: son los electrones de todo el material radiando a la vez. En el diagrama de abajo a la derecha se ve por qué el vidrio refleja poco: las contribuciones de las láminas van girando y en gran parte se cancelan. Lo que queda depende del espesor: en una capa tan fina como esta, entre casi nada y un 13 % (aquí cae cerca del máximo); una sola superficie de vidrio grueso refleja el 3,5 %.',
         },
         {
           preset: 'laminas',
@@ -293,11 +293,11 @@ const descriptor = {
       steps: [
         {
           preset: 'vidrio-visible',
-          text: 'El índice de refracción no es un dato «de fábrica» del material: sale de cómo responden sus osciladores. La función dieléctrica suma esas respuestas, $\\varepsilon = 1 + \\sum_j f_j\\,\\omega_p^2/(\\omega_{0j}^2 - \\omega^2 - i\\gamma_j\\omega)$, y $n + ik = \\sqrt{\\varepsilon}$. En el visible, por debajo de las resonancias ultravioletas, cada término es casi real y positivo: $\\varepsilon\' > 1$, $n \\approx 1{,}46$ y $k \\approx 0$.',
+          text: 'El índice de refracción no es un dato «de fábrica» del material: sale de cómo responden sus osciladores. La función dieléctrica suma esas respuestas, $\\varepsilon = 1 + \\sum_j f_j\\,\\omega_p^2/(\\omega_{0j}^2 - \\omega^2 - i\\gamma_j\\omega)$, y $n + ik = \\sqrt{\\varepsilon}$. En el visible, por debajo de las resonancias ultravioletas, los dos términos del ultravioleta son casi reales y positivos (el del infrarrojo resta un poco): $\\varepsilon\' > 1$, $n \\approx 1{,}46$ y $k \\approx 0$.',
         },
         {
           preset: 'laminas',
-          text: '¿Y por qué eso «frena» la luz? Mira el diagrama de arriba a la derecha. Detrás del material el campo es la onda incidente (naranja) más lo que radia cada lámina. La onda que radia una lámina va **un cuarto de periodo desfasada** respecto al movimiento de sus cargas: cada lámina añade un fasor pequeño casi perpendicular al que ya había. La suma no crece: **gira**. Ese giro es un retraso de fase.',
+          text: '¿Y por qué eso «frena» la luz? Mira el diagrama de arriba a la derecha. Detrás del material el campo es la onda incidente (naranja) más lo que radia cada lámina. La onda que radia una lámina va **un cuarto de periodo desfasada** respecto al desplazamiento de sus cargas: cada lámina añade un fasor pequeño casi perpendicular al que ya había. La suma no crece: **gira**. Ese giro es un retraso de fase.',
         },
         {
           preset: 'laminas',

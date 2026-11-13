@@ -180,9 +180,9 @@ export function mountInterface(container, ctx) {
       `Mapa de las ondas (${pol === 's' ? 'campo eléctrico E_y' : 'campo magnético H_y'}, la componente perpendicular al dibujo)` +
       ` · arriba, ${media.name1}; abajo, ${media.name2}` +
       (result.total
-        ? ` · reflexión total: abajo queda una onda evanescente que cae a 1/e en ${formatSig(depth)} λ₀`
+        ? ` · reflexión total: abajo queda una onda evanescente cuya amplitud cae a 1/e en ${formatSig(depth)} λ₀`
         : depth < 20
-          ? ` · abajo la onda se atenúa: cae a 1/e en ${formatSig(depth)} λ₀`
+          ? ` · abajo la onda se atenúa: su amplitud cae a 1/e en ${formatSig(depth)} λ₀`
           : '');
 
     // (3) Rayos y dipolos.
@@ -191,7 +191,7 @@ export function mountInterface(container, ctx) {
     const refraction = refractionAngle(result);
     let raysText = `Rayos y dipolos · polarización ${pol}`;
     if (result.total) raysText += ' · reflexión total: no hay rayo refractado';
-    else if (depth < 1) raysText += ` · la onda que entra se absorbe en ${formatSig(depth)} λ₀: no hay rayo refractado que seguir`;
+    else if (depth < 1) raysText += ` · la onda que entra se absorbe enseguida (su amplitud cae a 1/e en ${formatSig(depth)} λ₀): no hay rayo refractado que seguir`;
     else {
       raysText += ` · refractado a ${formatEs(refraction, 1)}° de la normal`;
       if (geometry) raysText += ` · reflejado y refractado forman ${formatEs(180 - angle - geometry.refraction, 1)}°`;
@@ -418,6 +418,34 @@ export function mountInterface(container, ctx) {
         g.textAlign = 'left';
         g.textBaseline = 'middle';
         g.fillText('eje de los dipolos', cx + axis.x * lobe * 1.3 + fs * 0.3, cy + axis.y * lobe * 1.3);
+      } else {
+        // Polarización s: el dipolo oscila perpendicular al dibujo. Se ve de punta: un punto
+        // cuando la carga viene hacia fuera y un aspa cuando va hacia dentro.
+        const swing = Math.cos(Math.atan2(t.im, t.re) - time);
+        const radius = fs * (0.35 + 0.55 * Math.abs(swing));
+        g.lineWidth = Math.max(2, fs * 0.2);
+        g.fillStyle = colors.surface;
+        g.beginPath();
+        g.arc(cx, cy, radius, 0, 2 * Math.PI);
+        g.fill();
+        g.stroke();
+        g.fillStyle = dipoleColor;
+        if (swing >= 0) {
+          g.beginPath();
+          g.arc(cx, cy, Math.max(1.5, radius * 0.35), 0, 2 * Math.PI);
+          g.fill();
+        } else {
+          g.beginPath();
+          g.moveTo(cx - radius * 0.7, cy - radius * 0.7);
+          g.lineTo(cx + radius * 0.7, cy + radius * 0.7);
+          g.moveTo(cx + radius * 0.7, cy - radius * 0.7);
+          g.lineTo(cx - radius * 0.7, cy + radius * 0.7);
+          g.stroke();
+        }
+        g.font = `${fs * 0.8}px ${family}`;
+        g.textAlign = 'left';
+        g.textBaseline = 'middle';
+        g.fillText('dipolos ⊥ al dibujo', cx + lobe * 0.75, cy + lobe * 0.8);
       }
       // Cuánto radia el dipolo hacia donde tendría que salir el rayo reflejado.
       const towards = pol === 'p' ? geometry.pattern : 1;
@@ -447,7 +475,7 @@ export function mountInterface(container, ctx) {
       g.font = `${fs * 0.85}px ${family}`;
       g.textAlign = 'left';
       g.textBaseline = 'top';
-      g.fillText(`entra el ${formatEs(100 * T, 1)} % y se absorbe en ${formatSig(penetrationDepth(result))} λ₀`, cx - length * 0.35, cy + depth + fs * 0.3);
+      g.fillText(`entra el ${formatEs(100 * T, 1)} % y se absorbe (amplitud a 1/e en ${formatSig(penetrationDepth(result))} λ₀)`, cx - length * 0.35, cy + depth + fs * 0.3);
     } else {
       // Onda evanescente: corre pegada a la superficie y se apaga con la profundidad.
       const depth = Math.min(length * 0.5, fs * 4);
