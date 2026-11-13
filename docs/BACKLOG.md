@@ -108,6 +108,12 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - La vista «desde dentro» ignora la absorción del medio de incidencia; con un medio absorbente habría que definir la onda incidente inhomogénea.
 - Test unitario de `controls.js` para el campo `visible` (hoy lo cubre solo la prueba de humo).
 
+## Pendientes de la revisión del encargo 02
+Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
+- Tests con cotas de orden de magnitud en lugar de deducciones exactas: el siguiente término del desarrollo del índice de Bloch (tolerancia 17–30 veces más holgada que el error real, aunque fija el coeficiente 1/12 al 1 %), `(kd)²|χ|²/12` y `4·e^{−4πkL}` en la lámina gruesa, y las cotas anchas del mínimo de R_p del oro en 650 nm. Se podrían afinar con el término O((kd)⁴) y con el valor de R_p calculado aparte.
+- El «material editable» tiene un solo oscilador y ε∞ = 1: es la lectura mínima de «material arbitrario». Varios osciladores editables pedirían una lista de parámetros de longitud variable, que el estado en la URL no admite hoy.
+- Los títulos de los paneles de luz y materia llevan mucha información y ocupan dos o tres líneas en ventanas estrechas; valorar una línea de datos aparte bajo cada gráfica.
+
 ## Pendientes de la revisión del encargo 01
 Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
 - Interpolación de Johnson & Christy: con interpolación lineal de n y k el pico del oro queda anclado al punto de 520,9 nm de la tabla (de 5 a 30 nm no se mueve nada); con spline se movería de 522,3 a 524,7 nm. La ficha lo avisa. Valorar una spline monótona o los ajustes analíticos de la función dieléctrica (Etchegoin, Rioux) para tener picos suaves.

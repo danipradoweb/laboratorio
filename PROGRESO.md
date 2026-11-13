@@ -8,14 +8,40 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 |---|---|
 | 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
 | 01 Plasmón, Mie y color | **terminado** (2026-11-12), revisado y fusionado en `main` (pull request #2) |
-| 02 Luz y materia | **en curso** (rama `claude/elegant-cori-tlnjou`) |
+| 02 Luz y materia | **terminado** (2026-11-13), revisado. Rama `claude/elegant-cori-tlnjou`, sin fusionar en `main` |
 | 03 Ondas clásicas y función de onda | pendiente |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 02 Luz y materia (`docs/encargos/02-luz-materia.md`), rama `claude/elegant-cori-tlnjou`.
-- Último paso terminado: 7 (presets, recorridos, ficha, miniatura, pruebas de humo y documentación).
-- Siguiente paso: 8 (revisión independiente: **lanzada**, pendiente de su informe; después, corregir lo que afecte a la física o a requisitos explícitos, anotar el resto en `docs/BACKLOG.md` y cerrar). Si la sesión se corta aquí: relanzar un subagente revisor con contexto limpio (solo física y cumplimiento del encargo, sin modificar el repositorio, una ronda).
+- Encargo: 02 Luz y materia (terminado). El siguiente es `docs/encargos/03-ondas-cuanticas.md`.
+- Último paso terminado: 8 (revisión independiente, correcciones y cierre). Encargo 02 terminado.
+- Siguiente paso: encargo 03, en una sesión nueva.
+
+### Cómo queda el encargo 02
+
+- `npm test`: 376 tests en verde (337 unitarios y de contrato + 39 de humo con navegador sin cabeza). `npm run check`: limpio.
+- Módulo nuevo `luz-materia` (visible en la portada, `#/luz-materia`), con cuatro vistas que comparten material y energía del fotón (parámetro `part`): **A** el material (ε, n y k, R y sus osciladores), **B** láminas de dipolos (de dónde salen n, la onda reflejada y la transmitida), **C** una superficie (Fresnel, Brewster, reflexión total) y **C** polarizadores y gafas. Nueve presets, tres recorridos, ficha y miniatura.
+- Física en tres archivos puros con 45 tests: `physics.js` (Lorentz, Drude, Kramers-Kronig), `physics-sheets.js` (láminas, índice de Bloch, matriz de transferencia) y `physics-fresnel.js` (Fresnel con índice complejo, Malus, gafas).
+- Para los módulos siguientes: campo `visible` en los parámetros (controles que se muestran según el estado), `xLabel` por dibujo en `plot2d.js`, `layerMatrix`/`slabCoefficients` (matriz de transferencia de una capa, útil para capas finas) y `fresnel()` con índice complejo.
+- No hizo falta ningún dato nuevo ni de prueba: el vidrio sale de los coeficientes de Sellmeier que ya estaban en `data/materials/SiO2.json`, y el agua y el oro, de la biblioteca.
+- La rama `claude/elegant-cori-tlnjou` **no está fusionada en `main`**: GitHub Pages no mostrará el módulo hasta que se fusione (ver "Necesito de Daniel").
+
+### Revisión independiente del encargo 02 (paso 8)
+
+Un subagente con contexto limpio revisó solo la física y el cumplimiento del encargo, con scripts propios (numpy y mpmath; no los tests del proyecto) y sin modificar el repositorio. Una ronda. (Se cortó una vez por el límite de uso y se reanudó.)
+
+- **Sin errores de física** en el código ni en las fórmulas. Comprobado por el revisor con sus cálculos: convenio e^{−iωt} coherente en las tres partes; Sellmeier → Lorentz; Kramers-Kronig (10⁻⁸) y regla de suma; campo de una lámina de corriente deducido con la función de Green; el sistema N × N resuelto con numpy y, aparte, con matrices de salto (coincide a 2·10⁻¹⁵ en seis casos); el término diagonal (una película continua de espesor → 0 converge a r = iκ/(1 − iκ); sin él, R + T = 1 + 2κ²); absorción por lámina; relación de Bloch y coeficiente 1/12; ausencia de corrección de Lorentz (el límite es ε = 1 + χ, no Clausius-Mossotti); matriz de Born & Wolf frente a un sistema 4 × 4 de condiciones de contorno (10⁻¹⁶); Fresnel como sistema lineal de continuidad en seis casos (10⁻¹⁶), T por Poynting, Stokes, la identidad de Brewster y lo que se dibuja en la vista (eje del dipolo, lóbulo, sentido de las flechas de E, mapa 1 + r); Malus, tres polarizadores y gafas. Todos los números citados en los recorridos y en las pruebas de humo coinciden con sus cálculos. Ningún test con valor esperado o tolerancia ajustados.
+- **Corregido** (cada punto comprobado antes por mi cuenta):
+  1. Requisito C.2 a medias: en polarización s no se dibujaba el dipolo. Ahora se ve de punta (punto y aspa que oscilan) en el punto de incidencia, con su diagrama circular.
+  2. Ficha: T = (n₂ cos θ_t)/(n₁ cos θ)·|t|² se daba sin decir que solo vale con el segundo medio transparente (con n₂ = 1,8 + 0,6i y polarización p da 0,935 en vez de 0,977). Añadidas T_s y T_p generales, que son las del código.
+  3. Profundidades «a 1/e»: la vista del material da la de la intensidad y las otras dos la de la amplitud (el doble), sin decirlo. Ahora los rótulos dicen «la amplitud» y la ficha explica la diferencia.
+  4. Recorrido «no rebota», paso 3: decía que el vidrio «refleja poco» mientras el preset (24 láminas, espesor óptico 7λ/4) muestra R = 13,7 %, el máximo de una capa fina. El texto explica ahora que depende del espesor (de casi 0 al 13 %) y que una sola superficie refleja el 3,5 %.
+  5. Recorridos «no rebota» (paso 1) e «índice» (paso 1): omitían el oscilador infrarrojo del vidrio, que el panel enseña en oposición (δ = 180°) y que resta a ε.
+  6. «Un cuarto de periodo desfasada respecto al movimiento de las cargas» → «respecto al desplazamiento» (respecto a la velocidad va en oposición). En el recorrido, la ficha y la cabecera de `physics-sheets.js`.
+  7. Ficha: frase sobre las dos maneras de dibujar una fase (flechas que giran en el panel de osciladores; amplitudes complejas fijas en las láminas), y notación sin símbolos repetidos (polarizabilidad *a*, profundidad ℓ).
+  8. Vista de las láminas: la onda transmitida no tenía rótulo propio; ahora el tramo de detrás del material va resaltado y con su entrada en la leyenda.
+- **Anotado en `docs/BACKLOG.md`** (sección "Pendientes de la revisión del encargo 02"): cotas de orden de magnitud en tres tests, material editable con un solo oscilador.
+- **No verificado** (ni por mí ni por el revisor): los capítulos y secciones de la bibliografía citados en la ficha y en las cabeceras del código (Feynman I §30-7 y caps. 31–33, II cap. 32; Griffiths §9.3, §9.3.3, §9.4; Born & Wolf §1.5, §1.5.2, §1.5.4, §1.6, §2.3, §2.4; Hecht caps. 3, 4 y 8), y la afirmación de que Griffiths usa el signo contrario para r_p. Los datos del agua y del oro no se cotejaron con sus artículos (vienen de la biblioteca del encargo 01). La revisión no abrió un navegador: el aspecto de las vistas lo cubren mis capturas y las pruebas de humo.
 
 ### Plan del encargo 02 (pasos y estado)
 
@@ -30,7 +56,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 | 5 | Física de la parte C (Fresnel, polarizadores) con tests | hecho |
 | 6 | Vistas de la parte C (interfaz y polarizadores) | hecho |
 | 7 | Presets, recorridos, ficha, miniatura y prueba de humo del módulo | hecho |
-| 8 | Revisión con subagente (una ronda), correcciones, documentación y cierre | pendiente |
+| 8 | Revisión con subagente (una ronda), correcciones, documentación y cierre | hecho |
 
 ### Evidencia por paso (encargo 02)
 
@@ -40,6 +66,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - Paso 5: `tests/luz-materia-fresnel.test.js`, 14 tests en verde. Las condiciones de contorno de Maxwell (E y H tangenciales, D y B normales) se cumplen a 10⁻¹² con los vectores de las tres ondas, para s y p, medios transparentes, absorbentes y en reflexión total (9 pares de medios × 8 ángulos); R_p(θ_B) < 10⁻²⁸; incidencia normal exacta; R + T = 1 con el factor de cosenos e índices y, en medios absorbentes, con el flujo de Poynting calculado aparte; ángulos críticos 41,81°, 48,75° y 24,41°; onda evanescente e^{−z/δ}; desfase s–p en reflexión total (fórmula de Born & Wolf); Stokes; Malus; tres polarizadores (I₀/8 a 45°); reflejo en agua: polarización total en 53,06°.
 - Paso 6: `npm test` 372 en verde, `npm run check` limpio. Capturas revisadas a ojo: Brewster en vidrio (R_p = 0,0 %, reflejado a 1° del eje de los dipolos), reflexión total interna en tema oscuro (onda evanescente, δ = 0,318 λ₀), oro a 70° en modo presentación (sin Brewster: mínimo de R_p del 68,7 % en 66°) y polarizadores con agua en 53° (tres polarizadores: 12,5 %; reflejo polarizado al 100 %, el polarizador vertical deja pasar el 0 %).
 - Paso 7: `npm test` 376 en verde (61 tests más que al empezar: 16 de la parte A, 15 de las láminas, 14 de Fresnel, uno de materiales, 7 de contrato del módulo nuevo, 4 pruebas de humo generales que ahora lo recorren y 4 propias); `npm run check` limpio. `tests/smoke.test.js` comprueba en el navegador: estado desde la URL, controles visibles según la vista, clic en la gráfica de ε que cambia la energía en control, URL y paneles, eje en longitud de onda, los nueve presets con su captura (`capturas/luz-materia-preset-*.png`) y lo que debe verse en cada uno (vidrio n = 1,46 y R = 3,5 %; metal R = 98,0 % y 2,1 %; láminas encendiéndose solas; espejo con R + T + A = 100 %; Brewster con R_p = 0,0 % y reflejado ⊥ refractado; reflexión total con δ = 0,318 λ₀; agua con reflejo polarizado al 100 %), tres polarizadores (12,5 %), animación y pausa, tecla 7 en modo presentación y los tres recorridos paso a paso. Capturas revisadas a ojo: ficha con KaTeX, recorrido en modo presentación a 1920 × 1080.
+- Paso 8: `npm test` 376 en verde y `npm run check` limpio tras las correcciones de la revisión. Capturas revisadas a ojo: dipolo en polarización s y onda transmitida resaltada.
 
 ### Decisiones del encargo 02
 
@@ -78,7 +105,7 @@ Un solo módulo, `luz-materia` (`#/luz-materia`), con cuatro vistas que se elige
 - Servicios nuevos para los módulos siguientes: motor de color (`ctx.color.load()`, guía en `src/color/LEEME.md`) y biblioteca de materiales (`ctx.materials.load(id)`, guía en `src/materials/LEEME.md`). Fuentes y licencias de los datos: `data/README.md`.
 - Para regenerar datos y referencias: `python3 -m venv .venv && .venv/bin/pip install -r tools/requirements.txt`; después `tools/cie.py`, `node tools/materials.mjs`, `tools/materials_fixture.py`, `tools/mie_fixture.py`.
 - No hizo falta ningún dato de prueba: la red permitió descargar todo (PyPI y la base de datos de refractiveindex.info en GitHub).
-- La rama `claude/bold-goldberg-s51hqd` **no está fusionada en `main`**: GitHub Pages no mostrará el módulo hasta que se fusione (ver "Necesito de Daniel").
+- La rama `claude/bold-goldberg-s51hqd` se fusionó en `main` (pull request #2).
 
 ### Revisión independiente del encargo 01 (paso 10b)
 
@@ -283,7 +310,8 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
 
-- **Fusionar la rama `claude/bold-goldberg-s51hqd` en `main`** (pull request o directamente) para que GitHub Pages publique el módulo de plasmón.
-- **Cotejar las referencias bibliográficas con los libros delante** (citadas de memoria, sin verificar): en `src/modules/plasmon/ficha.md`, Bohren & Huffman cap. 4, 5 y 12 y apéndice A; Gaponenko, capítulo de nanoplasmónica (falta el número de capítulo); Kreibig & Vollmer cap. 2; Gans 1912. También los números de ecuación de Bohren & Huffman citados en comentarios de `src/modules/plasmon/physics.js` y `tests/plasmon.test.js` (4.47, 4.53, 4.88, 5.4, 5.32–5.34). Y decidir si se cita una referencia para la copa de Licurgo (ver `docs/BACKLOG.md`). Siguen pendientes las del encargo 00 (`src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md`).
-- **Leer los textos de `mecanismo`** de `data/materials/catalogo.json` (por qué cada material tiene su color): son frases de física escritas para la biblioteca, con umbrales de transiciones interbanda y bandas prohibidas dados como valores aproximados de manual.
-- Opcional: probar el modo presentación del plasmón en el equipo de grabación (tecla P; teclas 1–8 para los presets) y decir si el tamaño de letra y la velocidad de la animación de la nube son los que quieres.
+- **Fusionar la rama `claude/elegant-cori-tlnjou` en `main`** (pull request o directamente) para que GitHub Pages publique el módulo de luz y materia. (La del encargo 01 ya está fusionada: pull request #2.)
+- **Cotejar las referencias bibliográficas con los libros delante** (citadas de memoria, sin verificar). Del encargo 02, en `src/modules/luz-materia/ficha.md` y en las cabeceras de `physics.js`, `physics-sheets.js` y `physics-fresnel.js`: Feynman I §30-7 y caps. 31, 32 y 33, y II cap. 32; Griffiths 4.ª ed. §9.3, §9.3.3 y §9.4 (y que su convenio de signo para r_p es el contrario al de Born & Wolf); Born & Wolf §1.5, §1.5.2, §1.5.4, §1.6, §2.3 y §2.4; Hecht caps. 3, 4 y 8. Siguen pendientes las del encargo 01 (`src/modules/plasmon/ficha.md`: Bohren & Huffman caps. 4, 5 y 12 y apéndice A, y los números de ecuación 4.47, 4.53, 4.88, 5.4, 5.32–5.34 citados en `physics.js` y `tests/plasmon.test.js`; Gaponenko; Kreibig & Vollmer cap. 2; Gans 1912; referencia para la copa de Licurgo) y las del encargo 00 (`src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md`).
+- **Decidir si te vale la anchura del «vidrio»** (γ = ω₀/100, una elección del modelo): deja k ≈ 6·10⁻⁴ en el visible, mucho más que un vidrio real. La ficha y la interfaz lo dicen. Con una anchura menor las resonancias se ven más afiladas y el vidrio más transparente (`GLASS_RELATIVE_DAMPING` en `src/modules/luz-materia/physics.js`; es cambiar un número).
+- **Leer los textos de `mecanismo`** de `data/materials/catalogo.json` (pendiente del encargo 01).
+- Opcional: probar el modo presentación de luz y materia en el equipo de grabación (tecla P; teclas 1–9 para los presets) y decir si el tamaño de letra de los títulos de los paneles, que son largos, y la velocidad de las ondas son los que quieres.
