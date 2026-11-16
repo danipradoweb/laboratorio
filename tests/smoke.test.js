@@ -753,6 +753,14 @@ test('función de onda: tres vistas enlazadas, fase global, presets y lo que cue
   assert.match(await status(), /esperado con ondas planas: 13,7 %/);
   await waitText(/al otro lado del potencial: 13,7 %/);
 
+  // Escalón con el paquete llegando por la derecha (desde encima del escalón): la energía de
+  // T(E) es la cinética más V₀. Valor esperado: 98,0 % (revisión independiente, con una
+  // integración de la ecuación de Schrödinger estacionaria en scipy).
+  await page.goto(page.url().split('#')[0] + '#/funcion-onda?potential=escalon&height=0.3&energy=0.4&sigma=3&x0=25&leftward=1&rate=50');
+  await waitText(/esperado con ondas planas: 98,0 %/);
+  await page.goto(page.url().split('#')[0] + '#/funcion-onda?potential=barrera&height=0.3&width=1&energy=0.2&sigma=3&x0=-25&rate=50');
+  await waitText(/esperado con ondas planas: 13,7 %/);
+
   // Vista enlazada: un clic en los k negativos de la gráfica de momentos manda el paquete
   // a la izquierda con E = ħ²k²/2m.
   const mom = page.locator('.fo-part .panel').nth(1).locator('canvas');

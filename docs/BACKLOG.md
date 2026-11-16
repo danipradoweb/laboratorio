@@ -78,6 +78,12 @@ Entrada al laboratorio por objetos cotidianos en lugar de por fenómenos. Cada o
 - Potencial dibujado: hoy son 16 columnas de altura constante (exacto para la matriz de transferencia); un modo «suave» con interpolación entre columnas.
 - Duración de la superposición: añadir la emisión espontánea (la oscilación de ⟨x⟩ se amortigua con la vida del estado excitado) enlazando con el ancho de línea del oscilador del encargo 00.
 
+## Pendientes de la revisión del encargo 03
+
+- Superposición de más de dos estados en la vista de estados (hoy: dos estados con peso y fase relativa, que cubre los pasos 5 y 6 del encargo; el paso 3 no limita el número).
+- Bordes absorbentes de la vista del paquete (15 nm, 1 eV): reflejan algo las componentes muy lentas (13 % a 0,01 eV, 1,25 % a 0,1 eV con σ₀ = 1 nm, 0,6 % a 0,05 eV; menos de 10⁻⁶ por encima de 0,2 eV). No afecta a ningún número citado. Una franja más ancha o un perfil optimizado lo reduciría.
+- Test del pozo finito: la tolerancia es absoluta (10⁻³ eV) y el nombre del test dice «0,1 %»; los errores reales cumplen el criterio relativo (peor caso 9·10⁻⁴). Convendría escribirla como relativa.
+
 ## Pendientes de la revisión del encargo 00
 Observaciones del revisor independiente que no afectan a la corrección física ni a requisitos explícitos (lo que sí afectaba se corrigió; ver `PROGRESO.md`).
 - `linalg.js`: reescalar la matriz por dentro para admitir elementos fuera de ~1e-140…1e150 (hoy está documentado como límite). Con todo el espectro en un mismo grupo casi degenerado, pedir todos los autovectores cuesta O(n³) (n = 1000: 1 s); si hiciera falta, cambiar a QL implícito para el caso "todos".

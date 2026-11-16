@@ -395,7 +395,7 @@ const descriptor = {
       steps: [
         {
           preset: 'cuerda-modos',
-          text: 'La ecuación de la cuerda es de **segundo orden** en el tiempo: para saber cómo seguirá hay que dar la forma y además la velocidad de cada punto. Por eso un modo puede ser real, $\\sin(kx)\\cos(\\omega t)$: sube, se aplana y baja. Cuando la cuerda pasa por la posición plana no ha perdido nada: toda la energía está en el movimiento (gráfica de abajo).',
+          text: 'La ecuación de la cuerda es de **segundo orden** en el tiempo: para saber cómo seguirá hay que dar la forma y además la velocidad de cada punto. Por eso un modo puede ser real, $\\sin(kx)\\cos(\\omega t)$: sube, se aplana y baja, y cuando pasa por la posición plana no ha perdido nada, porque toda su energía está en el movimiento. Aquí hay dos modos superpuestos: la energía va y viene entre movimiento y estiramiento (gráfica de abajo), y lo que la cuerda no tiene en forma lo tiene en velocidad.',
         },
         {
           preset: 'pozo-estados',
@@ -421,7 +421,7 @@ const descriptor = {
       steps: [
         {
           preset: 'pozo-estados',
-          text: 'Un electrón en un estado propio no emite luz: su $|\\psi|^2$ está quieta y su posición media no se mueve, y una carga que no se mueve no radia. Por eso un átomo puede quedarse indefinidamente en su estado fundamental.',
+          text: 'En esta descripción, un electrón en un estado propio no emite luz: su $|\\psi|^2$ está quieta y su posición media no se mueve, y una carga que no se mueve no radia. Aquí está $\\varphi_2$, un estado excitado: en la realidad acabaría bajando al fundamental por emisión espontánea, que solo se explica cuantizando también la luz. El estado fundamental sí es estable: un átomo puede quedarse en él indefinidamente.',
         },
         {
           preset: 'superposicion',

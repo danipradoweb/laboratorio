@@ -269,6 +269,7 @@ export function mountStates(container, ctx, setStatus, color) {
       const region = spectralRegion(lambda);
       bridgeTitle.textContent =
         `El puente con la luz · ⟨x⟩ oscila con periodo h/(E${b + 1} − E${a + 1}) = ${formatSig(period, 3)} fs` +
+        ` (frecuencia ${formatSig(tr.frequencyTHz, 3)} THz)` +
         ` (amplitud ${formatSig(amplitudeX, 2)} nm) · fotón de ${formatSig(tr.deltaE, 3)} eV: λ = ${formatSig(lambda, 4)} nm, ${region}`;
       if (region === 'visible') {
         // Tono de la línea espectral llevado al mayor brillo que cabe en pantalla.

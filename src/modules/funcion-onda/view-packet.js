@@ -233,14 +233,18 @@ export function mountPacket(container, ctx, setStatus) {
     if (segments && segments.edges.length > 0) barrierEdges = [segments.edges[0], segments.edges[segments.edges.length - 1]];
     // Solo tiene sentido si el paquete empieza a un lado del potencial y va hacia él.
     const approaching = (x0 < barrierEdges[0] && k0 > 0) || (x0 > barrierEdges[1] && k0 < 0);
+    // Energía total = cinética + potencial del lado de donde sale el paquete (en el escalón
+    // los dos lados tienen distinto potencial). Por reciprocidad, T(E) es la misma llegando
+    // por la izquierda o por la derecha, así que basta la matriz de transferencia.
+    const vStart = segments ? (x0 > barrierEdges[1] ? segments.values[segments.values.length - 1] : segments.values[0]) : 0;
     if (segments && segments.edges.length > 0 && approaching) {
       let num = 0;
       let den = 0;
       for (let j = 0; j < simGrid.n; j++) {
         const k = mom0.k[j];
+        den += mom0.density[j]; // las componentes que se alejan del potencial no pasan
         if (Math.sign(k) !== Math.sign(k0)) continue;
-        den += mom0.density[j];
-        num += mom0.density[j] * piecewiseTransmission(a * k * k, segments, mass).T;
+        num += mom0.density[j] * piecewiseTransmission(a * k * k + vStart, segments, mass).T;
       }
       expectedT = den > 0 ? num / den : NaN;
     }
@@ -254,7 +258,7 @@ export function mountPacket(container, ctx, setStatus) {
     const kHalf = Math.max(1, kAmp + 5 / (2 * sigma));
     if (segments && segments.edges.length > 0) {
       const ks = Float64Array.from({ length: 401 }, (_, i) => -kHalf + (2 * kHalf * i) / 400);
-      const T = ks.map((k) => (k === 0 ? 0 : piecewiseTransmission(a * k * k, segments, mass).T));
+      const T = ks.map((k) => (k === 0 ? 0 : piecewiseTransmission(a * k * k + vStart, segments, mass).T));
       tCurve = { k: ks, T };
     }
 
