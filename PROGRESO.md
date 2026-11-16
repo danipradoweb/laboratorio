@@ -9,13 +9,34 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
 | 01 Plasmón, Mie y color | **terminado** (2026-11-12), revisado y fusionado en `main` (pull request #2) |
 | 02 Luz y materia | **terminado** (2026-11-13), revisado. Rama `claude/elegant-cori-tlnjou`, sin fusionar en `main` |
-| 03 Ondas clásicas y función de onda | pendiente |
+| 03 Ondas clásicas y función de onda | **en curso** (2026-11-16), rama `claude/sweet-clarke-70f1i8` |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 02 Luz y materia (terminado). El siguiente es `docs/encargos/03-ondas-cuanticas.md`.
-- Último paso terminado: 8 (revisión independiente, correcciones y cierre). Encargo 02 terminado.
-- Siguiente paso: encargo 03, en una sesión nueva.
+- Encargo: 03 Ondas clásicas y función de onda (`docs/encargos/03-ondas-cuanticas.md`). Rama `claude/sweet-clarke-70f1i8` (sale de `main` con el encargo 02 ya fusionado, pull request #3).
+- Petición añadida por Daniel para este encargo: en `ficha.md`, un apartado por cada vista con tres partes: «Qué ves» (cada eje con su magnitud y unidades en palabras, cada curva y color), «Cómo leerla» (la idea física a nivel de primero de carrera, sin ecuaciones) y «Prueba esto» (una o dos acciones con el resultado que se observa, comprobadas contra la pantalla). Sustituye la regla de brevedad de las fichas.
+- Último paso terminado: 0 (plan).
+- Siguiente paso: 1 (física de la cuerda).
+
+### Plan del encargo 03 (pasos y estado)
+
+Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el parámetro `part`: `paquete` (Schrödinger dependiente del tiempo: vistas a, b, c y d del encargo), `estados` (estados propios, superposición, fase global y relativa, puente con la luz) y `cuerda` (la cuerda clásica sola: pulsos, modos, extremos fijos o libres). Unidades: nm, fs, eV y masa en masas del electrón.
+
+| # | Paso | Estado |
+|---|---|---|
+| 1 | Física de la cuerda (`physics-string.js`, salto de rana, extremos fijos, libres o abiertos) con tests | pendiente |
+| 2 | Física de Schrödinger 1D (`physics.js`: malla, potenciales, paso partido de Strang, potencial absorbente, valores esperados, espacio de momentos, T(E) por matriz de transferencia) con tests | pendiente |
+| 3 | Estados propios (`physics-states.js`: hamiltoniano tridiagonal, superposición, frecuencia de ⟨x⟩) con tests | pendiente |
+| 4 | Andamiaje del módulo y vista `paquete` (a: ψ con fase y potencial detrás; b: momentos con T(E); c: cuerda; d: ⟨x⟩, ⟨p⟩ y Δx·Δp) | pendiente |
+| 5 | Vista `estados` (niveles sobre el potencial, superposición, fase global frente a relativa, puente con la luz) | pendiente |
+| 6 | Vista `cuerda` | pendiente |
+| 7 | Presets, recorridos, ficha (con los apartados por vista), miniatura y prueba de humo | pendiente |
+| 8 | Opcional: doble rendija 2D (si no, al backlog) | pendiente |
+| 9 | Revisión con subagente (una ronda), correcciones y cierre | pendiente |
+
+### Evidencia por paso (encargo 03)
+
+### Decisiones del encargo 03
 
 ### Cómo queda el encargo 02
 
