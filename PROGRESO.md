@@ -15,8 +15,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 ## Sesión en curso
 - Encargo: 03 Ondas clásicas y función de onda (`docs/encargos/03-ondas-cuanticas.md`). Rama `claude/sweet-clarke-70f1i8` (sale de `main` con el encargo 02 ya fusionado, pull request #3).
 - Petición añadida por Daniel para este encargo: en `ficha.md`, un apartado por cada vista con tres partes: «Qué ves» (cada eje con su magnitud y unidades en palabras, cada curva y color), «Cómo leerla» (la idea física a nivel de primero de carrera, sin ecuaciones) y «Prueba esto» (una o dos acciones con el resultado que se observa, comprobadas contra la pantalla). Sustituye la regla de brevedad de las fichas.
-- Último paso terminado: 0 (plan).
-- Siguiente paso: 1 (física de la cuerda).
+- Último paso terminado: 3 (estados propios).
+- Siguiente paso: 4 (parámetros del módulo y vista `paquete`).
 
 ### Plan del encargo 03 (pasos y estado)
 
@@ -24,9 +24,9 @@ Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el p
 
 | # | Paso | Estado |
 |---|---|---|
-| 1 | Física de la cuerda (`physics-string.js`, salto de rana, extremos fijos, libres o abiertos) con tests | pendiente |
-| 2 | Física de Schrödinger 1D (`physics.js`: malla, potenciales, paso partido de Strang, potencial absorbente, valores esperados, espacio de momentos, T(E) por matriz de transferencia) con tests | pendiente |
-| 3 | Estados propios (`physics-states.js`: hamiltoniano tridiagonal, superposición, frecuencia de ⟨x⟩) con tests | pendiente |
+| 1 | Física de la cuerda (`physics-string.js`, salto de rana, extremos fijos, libres o abiertos) con tests | hecho |
+| 2 | Física de Schrödinger 1D (`physics.js`: malla, potenciales, paso partido de Strang, potencial absorbente, valores esperados, espacio de momentos, T(E) por matriz de transferencia) con tests | hecho |
+| 3 | Estados propios (`physics-states.js`: hamiltoniano tridiagonal, superposición, frecuencia de ⟨x⟩) con tests | hecho |
 | 4 | Andamiaje del módulo y vista `paquete` (a: ψ con fase y potencial detrás; b: momentos con T(E); c: cuerda; d: ⟨x⟩, ⟨p⟩ y Δx·Δp) | pendiente |
 | 5 | Vista `estados` (niveles sobre el potencial, superposición, fase global frente a relativa, puente con la luz) | pendiente |
 | 6 | Vista `cuerda` | pendiente |
@@ -36,7 +36,21 @@ Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el p
 
 ### Evidencia por paso (encargo 03)
 
+- Paso 1: `tests/funcion-onda-cuerda.test.js`, 10 tests en verde. Con número de Courant 1 el salto de rana es exacto: frecuencia del modo n = nπc/L a 10⁻⁹ (fijos y libres), pulso que viaja sin deformarse y reflexiones (fijo invertido, libre sin invertir) a 10⁻¹², energía que queda tras salir por un extremo abierto < 10⁻²⁰. Con r = 0,5 el error de la frecuencia coincide con el previsto, (kΔx)²(1 − r²)/24, a 1 %, y baja ×4 al dividir Δx por 2. Energía discreta conservada a 10⁻¹² en 5000 pasos; suma de energías modales = energía total a 10⁻¹⁰.
+- Paso 2: `tests/funcion-onda.test.js`, 12 tests en verde. ħ²/2mₑ = Ry·a₀² (fixture CODATA) a 10⁻⁹; norma conservada a < 10⁻⁹ en 1000 pasos; σ(t) del paquete libre a 10⁻⁹ (dos masas); |φ(k)|² de la gaussiana a 10⁻¹⁰; Δx·Δk = ½ a 10⁻¹⁰ y ≥ ½ en cuatro potenciales; Ehrenfest en el armónico a 10⁻⁴ de la amplitud; transmisión del paquete frente a T(E) promediada, tres barreras, < 1 %; matriz de transferencia = fórmula cerrada a 10⁻¹⁰, escalón, R + T = 1 y T = 1 en la resonancia de la doble barrera (10⁻⁸).
+- Paso 3: `tests/funcion-onda-estados.test.js`, 8 tests en verde. Pozo infinito < 0,1 % (en realidad, la fórmula discreta exacta a 10⁻¹⁰); armónico < 0,1 % (n = 0…7); pozo finito frente a las ecuaciones trascendentes a 10⁻³ eV; ortonormalidad a 10⁻¹⁰; estado propio estacionario (exacto por superposición; con paso partido y cinética de diferencias finitas, desviación < 10⁻³ que baja ×4 al dividir Δt); superposición 1 + 2: |x₁₂| = 16L/9π² y frecuencia de ⟨x⟩ medida en la simulación = (E₂ − E₁)/h a 2·10⁻³; λ = hc/ΔE (2 eV → 619,92 nm). `npm test` completo: 409 tests (un fallo de humo por la ficha provisional sin fórmulas, corregido; repetidas las pruebas de humo del módulo: 4 en verde). `npm run check` limpio.
+
 ### Decisiones del encargo 03
+
+- 2026-11-16. **Identificador `funcion-onda`**, oculto en la portada (`hidden: true`) hasta que las vistas estén hechas.
+- 2026-11-16. **Física en tres archivos puros**: `physics.js` (Schrödinger dependiente del tiempo, potenciales, observables, T(E)), `physics-states.js` (estados propios y superposición) y `physics-string.js` (cuerda clásica). Un archivo de tests por cada uno.
+- 2026-11-16. **Cuerda: número de Courant 1 por defecto**, porque así el salto de rana es exacto en 1D (reproduce d'Alembert en los nodos); el pulso clásico no se dispersa ni siquiera numéricamente, que es justo lo que hay que comparar con el cuántico. Extremos `fixed`, `free` y `open` (Mur de primer orden, exacta con r = 1, simula un medio infinito). Energía modal con la forma escalonada que conserva el esquema (la primera versión mezclaba instantes y daba un 0,2 % de error: lo detectó el test).
+- 2026-11-16. **Cinética exacta (ħ²k²/2m) en el paso partido**, con opción `kinetic: 'fd'` (la del laplaciano de tres puntos) para comprobar que los estados propios del hamiltoniano tridiagonal son estacionarios con el propagador.
+- 2026-11-16. **El paso partido necesita Δt pequeño con potenciales abruptos**: con una barrera de 1 eV y E = 0,5 eV, la transmisión del paquete difiere de la analítica +1,1 % con Δt = 0,1 fs, −0,24 % con 0,025 fs y −0,09 % con 0,0125 fs; y con paredes de 10⁵ eV y V·Δt/ħ ≈ 76 rad por paso, la frecuencia de ⟨x⟩ sale un 2 % baja (con 10³ eV, 10⁻⁴). Regla para la vista: V_máx·Δt/ħ ≲ 0,5 y Δt ≈ 0,01–0,02 fs; el pozo «infinito» de la vista usará paredes altas respecto a las energías en juego, no 10⁵ eV. (Dos tests fallaron por esto al escribirlos; se cambiaron Δt y la altura de las paredes, no las tolerancias.)
+- 2026-11-16. **Potencial dibujado = columnas de altura constante** (16 columnas): es constante a trozos, así que la matriz de transferencia da su T(E) exacta y el paquete se puede comparar con ella igual que en la barrera.
+- 2026-11-16. **T(E) por matriz de transferencia** para todos los potenciales constantes a trozos (escalón, barreras, pozos, dibujado), con referencia local en cada tramo para que una barrera gruesa no desborde. La vista de momentos dibujará T(E(k)) sobre |φ(k)|².
+- 2026-11-16. **Añadido a `plot2d.js`: eje vertical derecho** (`y2` en los datos de `draw()`, y `axis: 'y2'` en series, áreas y líneas horizontales), para dibujar |ψ|² y el potencial en eV en la misma gráfica, cada uno con su escala.
+- 2026-11-16. **Coste**: un paso de la malla de 2048 puntos tarda 0,19 ms (Node), así que 1000 pasos por segundo de animación son ~20 % de CPU.
 
 ### Cómo queda el encargo 02
 
