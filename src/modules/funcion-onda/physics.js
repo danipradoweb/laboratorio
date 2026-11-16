@@ -223,12 +223,35 @@ export function potentialAt(spec, x) {
 }
 
 /**
- * Potencial muestreado en la malla.
+ * Potencial en la malla. Cada nodo representa la celda [x − Δx/2, x + Δx/2]: en los
+ * potenciales constantes a trozos se toma el PROMEDIO exacto de V en esa celda (no el valor
+ * en el nodo); en el armónico, el valor en el nodo.
+ *
+ * Por qué: con el valor en el nodo, la anchura efectiva de una barrera queda redondeada a
+ * un número entero de celdas, y la transmisión por efecto túnel, que depende
+ * exponencialmente de la anchura, cambia mucho (barrera de 0,6 nm con Δx = 0,078 nm:
+ * 46,6 % en vez del 41,0 % analítico). Con el promedio sale 41,2 %.
  * @param {Grid} grid
  * @param {PotentialSpec} spec
  */
 export function potentialOnGrid(grid, spec) {
-  return grid.x.map((x) => potentialAt(spec, x));
+  const seg = potentialSegments(spec);
+  if (!seg) return grid.x.map((x) => potentialAt(spec, x));
+  const { edges, values } = seg;
+  const half = grid.dx / 2;
+  return grid.x.map((x) => {
+    const lo = x - half;
+    const hi = x + half;
+    // Integral de V sobre [lo, hi], tramo a tramo.
+    let integral = 0;
+    for (let i = 0; i < values.length; i++) {
+      const a = i === 0 ? -Infinity : edges[i - 1];
+      const b = i === values.length - 1 ? Infinity : edges[i];
+      const overlap = Math.min(hi, b) - Math.max(lo, a);
+      if (overlap > 0) integral += values[i] * overlap;
+    }
+    return integral / grid.dx;
+  });
 }
 
 /**
@@ -425,6 +448,36 @@ export function expectationValues(grid, psi) {
   const k = sk / m0;
   const sigmaK = Math.sqrt(Math.max(0, sk2 / m0 - k * k));
   return { norm: n0 * grid.dx, x, sigmaX, k, sigmaK, uncertainty: sigmaX * sigmaK };
+}
+
+/**
+ * Energía media ⟨H⟩ = ⟨T⟩ + ⟨V⟩ (eV), dividida por la norma. ⟨T⟩ = ∫(ħ²k²/2m)|φ|²dk sale
+ * del espacio de momentos (la cinética exacta del propagador); ⟨V⟩ = ∫V|ψ|²dx.
+ * @param {Grid} grid
+ * @param {Wave} psi
+ * @param {ArrayLike<number>} potential V en la malla (eV)
+ * @param {number} [mass]
+ * @returns {{ kinetic: number, potential: number, total: number }}
+ */
+export function meanEnergy(grid, psi, potential, mass = 1) {
+  const a = kineticCoefficient(mass);
+  const mom = momentumWave(grid, psi);
+  let m0 = 0;
+  let t = 0;
+  for (let j = 0; j < grid.n; j++) {
+    m0 += mom.density[j];
+    t += mom.density[j] * a * mom.k[j] * mom.k[j];
+  }
+  let n0 = 0;
+  let v = 0;
+  for (let j = 0; j < grid.n; j++) {
+    const p = psi.re[j] * psi.re[j] + psi.im[j] * psi.im[j];
+    n0 += p;
+    v += p * potential[j];
+  }
+  const kinetic = t / m0;
+  const pot = v / n0;
+  return { kinetic, potential: pot, total: kinetic + pot };
 }
 
 /**

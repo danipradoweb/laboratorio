@@ -18,6 +18,7 @@ import {
   freeGaussianWidth,
   gaussianPacket,
   kineticCoefficient,
+  meanEnergy,
   momentumWave,
   normOf,
   piecewiseTransmission,
@@ -313,4 +314,60 @@ test('fase global: e^{iφ}ψ tiene la misma |ψ|², ⟨x⟩, ⟨p⟩ y la misma 
   for (let j = 0; j < grid.n; j++) assert.ok(Math.abs(a[j] - b[j]) < 1e-13);
   // En cambio, la fase sí cambia ψ: Re ψ no es la misma.
   assert.ok(Math.abs(psi.re[grid.n / 2 - 40] - rotated.re[grid.n / 2 - 40]) > 1e-3);
+});
+
+test('energía media: ⟨T⟩ = (ħ²/2m)(k₀² + 1/4σ²) para la gaussiana y ⟨H⟩ constante al evolucionar', () => {
+  // Principio: (1) ⟨T⟩ del paquete gaussiano, ħ²⟨k²⟩/2m con ⟨k²⟩ = k₀² + Δk² y Δk = 1/2σ
+  // (Griffiths, problema 2.22); (2) conservación de la energía: H no depende del tiempo y
+  // ⟨H⟩ es constante. El paso partido conserva exactamente un hamiltoniano modificado que
+  // difiere de H en O(Δt²): ⟨H⟩ oscila un poco sin derivar.
+  const grid = createGrid(2048, -60, 60);
+  const sigma = 1.5;
+  const k0 = 3.2;
+  const psi0 = gaussianPacket(grid, { x0: -15, sigma, k0 });
+  const zero = new Float64Array(grid.n);
+  const e0 = meanEnergy(grid, psi0, zero);
+  assert.ok(Math.abs(e0.kinetic / (kineticCoefficient(1) * (k0 * k0 + 1 / (4 * sigma * sigma))) - 1) < 1e-10);
+  const V = potentialOnGrid(grid, { type: 'barrera', center: 0, height: 0.5, width: 1 });
+  const start = meanEnergy(grid, psi0, V).total;
+  const prop = createPropagator(grid, V, { dt: 0.01 });
+  let psi = psi0;
+  let worst = 0;
+  for (let i = 0; i < 20; i++) {
+    psi = evolve(prop, psi, 200);
+    worst = Math.max(worst, Math.abs(meanEnergy(grid, psi, V).total / start - 1));
+  }
+  assert.ok(worst < 1e-3, `variación relativa de ⟨H⟩: ${worst}`);
+});
+
+test('potencial en la malla: promedio por celda que conserva ∫V dx y da la transmisión correcta con una malla no alineada', () => {
+  // Principio: (1) el promedio exacto en cada celda conserva el área de la barrera,
+  // Σ V_j·Δx = V₀·a, esté donde esté respecto a los nodos; (2) con él, la transmisión del
+  // paquete coincide con la analítica (1 %) aunque la anchura no sea un número entero de
+  // celdas (0,6 nm con Δx = 0,078 nm, la malla de la vista). Con el valor en el nodo daría
+  // un 46,6 % frente al 41,0 % analítico (comprobado al escribir el test).
+  const grid = createGrid(2048, -80, 80);
+  for (const [center, width] of [[0, 0.6], [0.013, 0.37], [-1.21, 1.9]]) {
+    const V = potentialOnGrid(grid, { type: 'barrera', center, height: 0.7, width });
+    const area = V.reduce((acc, v) => acc + v, 0) * grid.dx;
+    assert.ok(Math.abs(area - 0.7 * width) < 1e-12, `área ${area} frente a ${0.7 * width}`);
+  }
+  const energy = 0.2;
+  const height = 0.3;
+  const width = 0.6;
+  const k0 = waveNumberFromEnergy(energy);
+  const psi0 = gaussianPacket(grid, { x0: -20, sigma: 3, k0 });
+  const dt = 0.02;
+  const prop = createPropagator(grid, potentialOnGrid(grid, { type: 'barrera', center: 0, height, width }), { dt });
+  const v = (2 * kineticCoefficient(1) * k0) / HBAR_EV_FS;
+  const psi = evolve(prop, psi0, Math.round(40 / v / dt));
+  const mom = momentumWave(grid, psi0);
+  let num = 0;
+  let den = 0;
+  for (let j = 0; j < grid.n; j++) {
+    den += mom.density[j];
+    if (mom.k[j] > 0) num += mom.density[j] * barrierTransmission(kineticCoefficient(1) * mom.k[j] ** 2, height, width);
+  }
+  const simulated = probabilityRightOf(grid, psi, width / 2);
+  assert.ok(Math.abs(simulated / (num / den) - 1) < 0.01, `simulado ${simulated}, analítico ${num / den}`);
 });

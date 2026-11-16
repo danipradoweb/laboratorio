@@ -14,7 +14,8 @@
 //
 // Qué sabe dibujar: series (líneas), áreas sombreadas bajo una curva, bandas
 // verticales, marcadores verticales y horizontales, mapas de color 2D con barra de
-// color, imágenes RGBA (para el coloreado de fase), leyenda y exportación a PNG.
+// color, imágenes RGBA (para el coloreado de fase), un segundo eje vertical a la
+// derecha (y2), leyenda y exportación a PNG.
 //
 // El contenedor debe tener una altura definida (por ejemplo, un .panel-body).
 // El tamaño de la letra sale del font-size del contenedor: en modo presentación crece
@@ -152,8 +153,9 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {boolean} [exportButton] botón "PNG" al pasar el ratón (por defecto true)
  * @property {string} [exportName] nombre del archivo PNG, sin extensión
  * @property {boolean} [equalAspect] misma escala en x e y (útil en mapas espaciales)
- * @property {(x: number, y: number) => void} [onPick] se llama al hacer clic o arrastrar
- *   sobre la gráfica, con las coordenadas de datos del puntero (vistas enlazadas)
+ * @property {(x: number, y: number, y2: number) => void} [onPick] se llama al hacer clic o
+ *   arrastrar sobre la gráfica, con las coordenadas de datos del puntero (vistas enlazadas);
+ *   y2 es la coordenada en el eje derecho, si lo hay (si no, igual a y)
  */
 
 /**
@@ -211,7 +213,7 @@ export function createPlot(container, options = {}) {
   /** @type {PlotData} */
   let data = {};
   /** Geometría del último dibujo, para convertir píxeles en datos (onPick). */
-  /** @type {{ x: ReturnType<typeof linearScale>, y: ReturnType<typeof linearScale>, left: number, right: number, top: number, bottom: number } | null} */
+  /** @type {{ x: ReturnType<typeof linearScale>, y: ReturnType<typeof linearScale>, y2: ReturnType<typeof linearScale>, left: number, right: number, top: number, bottom: number } | null} */
   let frame = null;
   /** Lienzo auxiliar para los mapas de color. @type {HTMLCanvasElement | null} */
   let offscreen = null;
@@ -338,7 +340,7 @@ export function createPlot(container, options = {}) {
     const y2Scale = y2 ? linearScale(y2.range[0], y2.range[1], plotBottom, plotTop) : yScale;
     /** @param {{ axis?: 'y' | 'y2' }} item */
     const scaleFor = (item) => (item.axis === 'y2' ? y2Scale : yScale);
-    frame = { x: xScale, y: yScale, left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
+    frame = { x: xScale, y: yScale, y2: y2Scale, left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
     const xTicks = options.xTicks
       ? fixedTicks(options.xTicks, xRange)
       : niceTicks(xRange[0], xRange[1], Math.min(10, Math.max(3, plotW / (fs * 4.5))));
@@ -776,7 +778,7 @@ export function createPlot(container, options = {}) {
     const rect = canvas.getBoundingClientRect();
     const px = Math.min(frame.right, Math.max(frame.left, event.clientX - rect.left));
     const py = Math.min(frame.bottom, Math.max(frame.top, event.clientY - rect.top));
-    options.onPick(frame.x.toData(px), frame.y.toData(py));
+    options.onPick(frame.x.toData(px), frame.y.toData(py), frame.y2.toData(py));
   }
   if (options.onPick) {
     canvas.style.cursor = 'crosshair';

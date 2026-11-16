@@ -1313,3 +1313,87 @@ h3 {
     height: 22rem;
   }
 }
+
+/* ------------------------------------------------- Ondas clásicas y función de onda */
+
+.fo-root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.fo-status {
+  flex: none;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-height: 1.6em;
+}
+
+.fo-part {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Vista «paquete»: ψ arriba a la izquierda (ancha), momentos arriba a la derecha; la
+   cuerda abajo a la izquierda y los valores esperados abajo a la derecha. */
+.fo-grid-packet {
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'psi momentum'
+    'string expect';
+}
+
+/* Gráficas apiladas dentro de un mismo panel. */
+.fo-stack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fo-with-wheel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.fo-with-wheel > .fo-stack {
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+}
+
+.fo-stack-item {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.fo-stack-item[hidden] {
+  display: none;
+}
+
+.fo-stack-tall {
+  flex: 1.25;
+}
+
+@media (max-width: 900px) {
+  .fo-root {
+    height: auto;
+  }
+
+  .fo-part .panel-grid {
+    grid-template-areas: none;
+    grid-template-rows: none;
+  }
+}
