@@ -489,7 +489,12 @@ export function mountPacket(container, ctx, setStatus) {
 
   const offTick = ctx.clock.onTick((time, dt) => {
     if (!sim || !lastState) return;
-    if (holdUntil >= 0) {
+    if (time === 0 && dt === 0) {
+      // Botón «Reiniciar» del reloj: vuelta a t = 0.
+      holdUntil = -1;
+      sim = setup(lastState);
+      record();
+    } else if (holdUntil >= 0) {
       if (time < holdUntil) return;
       holdUntil = -1;
       sim = setup(lastState);

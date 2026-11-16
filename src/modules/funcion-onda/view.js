@@ -12,6 +12,8 @@
 
 import { el } from '../../ui/dom.js';
 import { mountPacket } from './view-packet.js';
+import { mountStates } from './view-states.js';
+import { mountString } from './view-string.js';
 
 /**
  * @typedef {(container: HTMLElement, ctx: import('../types.js').ModuleContext, setStatus: (text: string) => void,
@@ -21,6 +23,8 @@ import { mountPacket } from './view-packet.js';
 /** @type {Record<string, PartFactory>} */
 const PARTS = {
   paquete: mountPacket,
+  estados: mountStates,
+  cuerda: mountString,
 };
 
 /**
