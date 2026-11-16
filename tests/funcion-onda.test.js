@@ -371,3 +371,27 @@ test('potencial en la malla: promedio por celda que conserva ∫V dx y da la tra
   const simulated = probabilityRightOf(grid, psi, width / 2);
   assert.ok(Math.abs(simulated / (num / den) - 1) < 0.01, `simulado ${simulated}, analítico ${num / den}`);
 });
+
+test('potencial absorbente: lo absorbido por cada borde más lo que queda suma la norma inicial', () => {
+  // Principio: conservación de la probabilidad con contabilidad de lo absorbido. Cada medio
+  // paso multiplica ψ por un factor f con |f| ≤ 1 y la cinética es unitaria, así que
+  // norma(t) + Σ|ψ|²(1 − |f|²)Δx acumulado = norma(0) salvo redondeo. Un paquete
+  // que va a la derecha debe salir casi todo por el borde derecho.
+  const grid = createGrid(1024, -50, 50);
+  const W = absorbingPotential(grid, { width: 10, strength: 2 });
+  const V = potentialOnGrid(grid, { type: 'barrera', center: 0, height: 0.3, width: 1 });
+  const prop = createPropagator(grid, V, { dt: 0.02, absorber: W });
+  const psi0 = gaussianPacket(grid, { x0: -15, sigma: 2, k0: waveNumberFromEnergy(0.2) });
+  const losses = { left: 0, right: 0 };
+  let psi = psi0;
+  for (let i = 0; i < 25; i++) {
+    psi = evolve(prop, psi, 1000, losses);
+    const balance = normOf(grid, psi) + losses.left + losses.right - 1;
+    // Cota de redondeo: hasta 25 000 pasos con dos FFT cada uno (~10⁻¹⁵ por paso) → 10⁻¹⁰.
+    // (Se escribió primero 10⁻¹² y el redondeo acumulado la superó en el paso 18 000.)
+    assert.ok(Math.abs(balance) < 1e-10, `balance ${balance} en el bloque ${i}`);
+  }
+  // Al final no queda casi nada: lo transmitido salió por la derecha y lo reflejado por la izquierda.
+  assert.ok(normOf(grid, psi) < 1e-3, `queda ${normOf(grid, psi)}`);
+  assert.ok(losses.right > 0.05 && losses.left > 0.5, `izquierda ${losses.left}, derecha ${losses.right}`);
+});

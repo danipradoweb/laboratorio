@@ -209,6 +209,7 @@ export function mountStates(container, ctx, setStatus, color) {
     levelsPanel.title.textContent =
       `Niveles de energía y estados propios φₙ (cada uno dibujado a la altura de su energía)` +
       (['libre', 'escalon', 'barrera', 'doble-barrera', 'dibujado'].includes(s.spec.type) ? ` · en una caja de ${formatEs(span, 0)} nm` : '') +
+      (s.spec.type === 'pozo-finito' && eMax > 0 ? ' · por encima de 0 eV los niveles son de la caja de cálculo, no estados ligados' : '') +
       ` · clic en un nivel: segundo estado`;
 
     // --- ψ(x, t) ----------------------------------------------------------------------------

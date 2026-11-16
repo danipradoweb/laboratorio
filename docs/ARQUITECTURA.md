@@ -27,7 +27,7 @@ El usuario destaca en razonamiento verbal y tiene dificultad con la visión espa
 
 ## Estructura del repositorio
 
-Los archivos marcados con (01) llegaron con el encargo 01 y los marcados con (02), con el 02; el resto existe desde el encargo 00.
+Los archivos marcados con (01), (02) y (03) llegaron con esos encargos; el resto existe desde el encargo 00.
 
 ```
 index.html                 página única: barra superior, mapa de importación de vendor/
@@ -57,7 +57,7 @@ src/
     tour-bar.js            barra de recorrido (texto, contador, flechas)
     clock-controls.js      botones de pausa y velocidad
     panels.js              paneles con título donde los módulos ponen sus vistas
-    plot2d.js              trazador Canvas 2D
+    plot2d.js              trazador Canvas 2D (con eje vertical derecho opcional, y2)
     plot-math.js           marcas de ejes, formato y escalas (parte pura del trazador)
     view3d.js              envoltorio fino de three.js
     colormaps.js           mapas de color, coloreado de fase y rueda de fase
@@ -88,6 +88,10 @@ src/
       view-<parte>.js      (02) opcional: una vista por archivo, montadas desde view.js
     luz-materia/           (02) cuatro vistas (parámetro `part`): physics.js (Lorentz),
                            physics-sheets.js (láminas), physics-fresnel.js (Fresnel)
+    funcion-onda/          (03) tres vistas (parámetro `part`): physics.js (Schrödinger 1D,
+                           paso partido, T(E)), physics-states.js (estados propios),
+                           physics-string.js (cuerda clásica); view-packet.js,
+                           view-states.js, view-string.js
 data/                      (01) fuentes y licencias en data/README.md
   cie/                     CMF y iluminantes (JSON)
   materials/               un JSON por material + index.json (generados)

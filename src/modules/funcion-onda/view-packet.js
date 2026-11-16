@@ -68,6 +68,8 @@ const MAX_DT = 0.02;
 const MAX_STEPS_PER_FRAME = 90;
 /** Segundos reales que se mantiene el final antes de volver a empezar. */
 const HOLD_SECONDS = 1.5;
+/** Fracción que ha salido por los bordes a partir de la cual no se dibujan los valores esperados. */
+const ESCAPED_LIMIT = 0.01;
 /** Puntos de la cuerda clásica (Courant 1: exacta). */
 const STRING_CELLS = 4096;
 
@@ -189,8 +191,11 @@ export function mountPacket(container, ctx, setStatus) {
     let tMax;
     if (potentialType === 'armonico') tMax = 2 * ((2 * Math.PI * HBAR_EV_FS) / Number(state.quantum));
     else if (bound) tMax = 150;
-    else tMax = (INTERIOR - 8 + Math.abs(x0)) / Math.max(vGroup, vSpread);
-    tMax = Math.min(400, Math.max(20, tMax));
+    // Abiertos: hasta que el centro del paquete (y de sus partes reflejada y transmitida)
+    // ha entrado en la franja absorbente. Lo absorbido por cada borde se lleva en cuenta
+    // (losses), así que la probabilidad al otro lado no cambia aunque el paquete salga.
+    else tMax = (INTERIOR + ABSORBER.width / 2 + Math.abs(x0)) / Math.max(vGroup, vSpread);
+    tMax = Math.min(600, Math.max(20, tMax));
 
     // Zona que se dibuja.
     /** @type {[number, number]} */
@@ -225,8 +230,10 @@ export function mountPacket(container, ctx, setStatus) {
     let expectedT = NaN;
     /** @type {[number, number]} */
     let barrierEdges = [0, 0];
-    if (segments && segments.edges.length > 0 && k0 !== 0) {
-      barrierEdges = [segments.edges[0], segments.edges[segments.edges.length - 1]];
+    if (segments && segments.edges.length > 0) barrierEdges = [segments.edges[0], segments.edges[segments.edges.length - 1]];
+    // Solo tiene sentido si el paquete empieza a un lado del potencial y va hacia él.
+    const approaching = (x0 < barrierEdges[0] && k0 > 0) || (x0 > barrierEdges[1] && k0 < 0);
+    if (segments && segments.edges.length > 0 && approaching) {
       let num = 0;
       let den = 0;
       for (let j = 0; j < simGrid.n; j++) {
@@ -292,12 +299,16 @@ export function mountPacket(container, ctx, setStatus) {
       quantum: Number(state.quantum),
       history: { t: /** @type {number[]} */ ([]), x: /** @type {number[]} */ ([]), k: /** @type {number[]} */ ([]), u: /** @type {number[]} */ ([]), xTwin: /** @type {number[]} */ ([]), kTwin: /** @type {number[]} */ ([]) },
       pendingTime: 0,
+      losses: { left: 0, right: 0 },
     };
   }
 
-  /** Guarda los valores esperados del instante actual en la historia. */
+  /** Guarda los valores esperados del instante actual en la historia. Deja de hacerlo
+   *  cuando más de un 1 % ha salido por los bordes: entonces ⟨x⟩, Δx… serían los de la parte
+   *  que queda dentro, no los del paquete. */
   function record() {
     if (!sim) return;
+    if (sim.losses.left + sim.losses.right > ESCAPED_LIMIT) return;
     const ev = expectationValues(simGrid, sim.psi);
     sim.history.t.push(sim.t);
     sim.history.x.push(ev.x);
@@ -320,7 +331,7 @@ export function mountPacket(container, ctx, setStatus) {
     const steps = Math.min(MAX_STEPS_PER_FRAME, Math.floor(sim.pendingTime / sim.dt));
     if (steps <= 0) return;
     sim.pendingTime = Math.min(sim.pendingTime - steps * sim.dt, sim.dt);
-    sim.psi = evolve(sim.prop, sim.psi, steps);
+    sim.psi = evolve(sim.prop, sim.psi, steps, sim.losses);
     if (sim.twin) sim.twin = evolve(sim.prop, sim.twin, steps);
     sim.t += steps * sim.dt;
     while (sim.string.time < sim.t - sim.string.dt / 2) stepString(sim.string);
@@ -466,7 +477,10 @@ export function mountPacket(container, ctx, setStatus) {
       xRange: [0, s.tMax],
       yRange: [0, uMax],
     });
-    expPanel.title.textContent = `Valores esperados · ⟨x⟩ = ${formatEs(ev.x, 1)} nm · Δx = ${formatEs(ev.sigmaX, 2)} nm · Δx·Δp/ħ = ${formatEs(ev.uncertainty, 3)}`;
+    expPanel.title.textContent =
+      s.losses.left + s.losses.right > ESCAPED_LIMIT
+        ? 'Valores esperados · el paquete ya sale por los bordes: las curvas se paran aquí'
+        : `Valores esperados · ⟨x⟩ = ${formatEs(ev.x, 1)} nm · Δx = ${formatEs(ev.sigmaX, 2)} nm · Δx·Δp/ħ = ${formatEs(ev.uncertainty, 3)}`;
 
     // --- Línea de estado --------------------------------------------------------------
     const norm = normOf(simGrid, s.psi);
@@ -477,10 +491,14 @@ export function mountPacket(container, ctx, setStatus) {
         const x = simGrid.x[j];
         if (s.k0 > 0 ? x > s.barrierEdges[1] : x < s.barrierEdges[0]) beyond += s.psi.re[j] ** 2 + s.psi.im[j] ** 2;
       }
-      transmitted = ` · al otro lado del potencial: ${formatEs(100 * beyond * simGrid.dx, 1)} % (esperado con ondas planas: ${formatEs(100 * s.expectedT, 1)} %)`;
+      // Lo que ya ha salido por el borde de ese lado también ha pasado.
+      beyond = beyond * simGrid.dx + (s.k0 > 0 ? s.losses.right : s.losses.left);
+      transmitted = ` · al otro lado del potencial: ${formatEs(100 * beyond, 1)} % (esperado con ondas planas: ${formatEs(100 * s.expectedT, 1)} %)`;
     }
+    const absorbed = s.losses.left + s.losses.right;
     statusText =
-      `t = ${formatEs(s.t, 1)} de ${formatEs(s.tMax, 0)} fs · probabilidad total ${formatEs(norm, 3)}` +
+      `t = ${formatEs(s.t, 1)} de ${formatEs(s.tMax, 0)} fs · probabilidad dentro ${formatEs(norm, 3)}` +
+      (absorbed > 5e-4 ? ` (${formatEs(absorbed, 3)} ya ha salido por los bordes)` : '') +
       ` · ⟨E⟩ = ${formatEs(energy.total, 3)} eV (cinética ${formatEs(energy.kinetic, 3)})` +
       transmitted;
   }

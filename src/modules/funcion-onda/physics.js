@@ -321,24 +321,49 @@ function multiplyInPlace(re, im, fr, fi) {
 }
 
 /**
+ * Probabilidad que quita el potencial absorbente en un medio paso, separada entre la mitad
+ * izquierda y la derecha de la malla: Σ|ψ|²·(1 − |f|²)·Δx, con f el factor del medio paso.
+ * @param {Propagator} prop
+ * @param {Float64Array} re
+ * @param {Float64Array} im
+ * @param {{ left: number, right: number }} losses se suma aquí
+ */
+function accumulateLoss(prop, re, im, losses) {
+  const half = prop.grid.n / 2;
+  for (let j = 0; j < re.length; j++) {
+    const f2 = prop.halfRe[j] * prop.halfRe[j] + prop.halfIm[j] * prop.halfIm[j];
+    if (f2 >= 1) continue;
+    const loss = (re[j] * re[j] + im[j] * im[j]) * (1 - f2) * prop.grid.dx;
+    if (j < half) losses.left += loss;
+    else losses.right += loss;
+  }
+}
+
+/**
  * Avanza ψ `steps` pasos de tiempo. Devuelve una onda nueva (no modifica la entrada).
+ * Si se pasa `losses`, se le suma la probabilidad que se ha llevado el potencial absorbente
+ * por cada lado (mitad izquierda y derecha de la malla). Con ella se puede saber cuánto ha
+ * salido por cada borde: norma + absorbido = norma inicial.
  * @param {Propagator} prop
  * @param {Wave} psi
  * @param {number} [steps]
+ * @param {{ left: number, right: number }} [losses]
  * @returns {Wave}
  */
-export function evolve(prop, psi, steps = 1) {
+export function evolve(prop, psi, steps = 1, losses) {
   /** @type {Float64Array} */
   let re = Float64Array.from(psi.re);
   /** @type {Float64Array} */
   let im = Float64Array.from(psi.im);
   for (let s = 0; s < steps; s++) {
+    if (losses) accumulateLoss(prop, re, im, losses);
     multiplyInPlace(re, im, prop.halfRe, prop.halfIm);
     const f = fft(re, im);
     multiplyInPlace(f.re, f.im, prop.kinRe, prop.kinIm);
     const b = ifft(f.re, f.im);
     re = b.re;
     im = b.im;
+    if (losses) accumulateLoss(prop, re, im, losses);
     multiplyInPlace(re, im, prop.halfRe, prop.halfIm);
   }
   return { re, im };
