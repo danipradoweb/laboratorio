@@ -15,8 +15,8 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 ## Sesión en curso
 - Encargo: 03 Ondas clásicas y función de onda (`docs/encargos/03-ondas-cuanticas.md`). Rama `claude/sweet-clarke-70f1i8` (sale de `main` con el encargo 02 ya fusionado, pull request #3).
 - Petición añadida por Daniel para este encargo: en `ficha.md`, un apartado por cada vista con tres partes: «Qué ves» (cada eje con su magnitud y unidades en palabras, cada curva y color), «Cómo leerla» (la idea física a nivel de primero de carrera, sin ecuaciones) y «Prueba esto» (una o dos acciones con el resultado que se observa, comprobadas contra la pantalla). Sustituye la regla de brevedad de las fichas.
-- Último paso terminado: 6 (vista `cuerda`).
-- Siguiente paso: 7 (presets, recorridos, ficha, miniatura, prueba de humo).
+- Último paso terminado: 7 (presets, recorridos, ficha, miniatura, pruebas de humo). El paso 8 (doble rendija) va al backlog.
+- Siguiente paso: 9 (revisión independiente con subagente, correcciones y cierre).
 
 ### Plan del encargo 03 (pasos y estado)
 
@@ -30,8 +30,8 @@ Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el p
 | 4 | Andamiaje del módulo y vista `paquete` (a: ψ con fase y potencial detrás; b: momentos con T(E); c: cuerda; d: ⟨x⟩, ⟨p⟩ y Δx·Δp) | hecho |
 | 5 | Vista `estados` (niveles sobre el potencial, superposición, fase global frente a relativa, puente con la luz) | hecho |
 | 6 | Vista `cuerda` | hecho |
-| 7 | Presets, recorridos, ficha (con los apartados por vista), miniatura y prueba de humo | pendiente |
-| 8 | Opcional: doble rendija 2D (si no, al backlog) | pendiente |
+| 7 | Presets, recorridos, ficha (con los apartados por vista), miniatura y prueba de humo | hecho |
+| 8 | Opcional: doble rendija 2D (si no, al backlog) | al backlog |
 | 9 | Revisión con subagente (una ronda), correcciones y cierre | pendiente |
 
 ### Evidencia por paso (encargo 03)
@@ -42,6 +42,8 @@ Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el p
 
 - Paso 4: `npm test` 419 en verde, `npm run check` limpio. 2 tests nuevos en `tests/funcion-onda.test.js` (⟨H⟩ del paquete gaussiano y su conservación; potencial promediado por celda: área exacta y transmisión correcta con una malla no alineada). Capturas revisadas a ojo: barrera en tema claro, barrera baja con paquete gemelo y Re ψ en tema oscuro, estado coherente del armónico (⟨x⟩ sobre la trayectoria clásica, Δx·Δp/ħ = 0,500 constante) y potencial dibujado.
 - Pasos 5 y 6: `npm test` 419 en verde (las vistas nuevas no añaden tests unitarios; las pruebas de humo propias llegan en el paso 7), `npm run check` limpio. Capturas revisadas a ojo: superposición 1 + 2 del pozo infinito de 0,8 nm (periodo 2,35 fs, fotón de 1,76 eV, λ = 703 nm, con su muestra de color), superposición 1 + 3 del armónico en tema oscuro (⟨x⟩ quieto: x₁₃ = 0, regla de selección) y cuerda con los modos 1 + 3 (energía total constante a < 10⁻¹²).
+
+- Paso 7: `npm test` 424 en verde (un test unitario nuevo: probabilidad absorbida por cada borde + norma = 1; cuatro pruebas de humo nuevas), `npm run check` limpio. La prueba de humo del módulo comprueba en el navegador: túnel con 13,7 % simulado = 13,7 % esperado al final; clic en los k negativos → paquete hacia la izquierda; con el reloj parado, la fase global no cambia ⟨x⟩, Δx, Δx·Δp, ⟨p⟩ ni Δk (vista paquete) ni el ángulo entre coeficientes (vista estados), y la fase relativa sí; los nueve presets con captura (`capturas/funcion-onda-preset-*.png`) y lo que debe verse (resonancia 73,0 % y escalón 86,7 % esperados; pozo de 0,8 nm: 2,35 fs, 1,76 eV, 703,4 nm con muestra de color; segundo estado 3 → «⟨x⟩ no oscila»; pozo de 0,6 nm → 395,7 nm; clic en un nivel; estado coherente con Δx·Δp/ħ = 0,500; gemelos con ⟨p⟩/ħ = 1,15 nm⁻¹; cuerda con energía constante a < 10⁻¹²); tecla 7 en modo presentación; los tres recorridos paso a paso. Comprobado aparte, con capturas y lecturas de la línea de estado: resonancia al final 72,2 % (esperado 73,0 %: la onda tarda en salir de entre las barreras), paquete libre Δx = 7,51 nm a 129 fs (fórmula: 7,53), reflexión del pulso invertida con extremo fijo (energía toda cinética al rebotar) y derecha con extremo libre (toda potencial).
 
 ### Decisiones del encargo 03
 
@@ -60,6 +62,13 @@ Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el p
 - 2026-11-16. **Regla de selección visible**: si ⟨φa|x|φb⟩ = 0 (misma paridad en un potencial simétrico) la vista dice que ⟨x⟩ no oscila y que esa transición no emite ni absorbe luz como dipolo. No lo pedía el encargo, pero sale sola de la física y es la respuesta honesta en el panel del puente con la luz.
 - 2026-11-16. **Muestra de color del fotón** con el motor de color (`wavelengthToSrgb`), llevada al mayor brillo que cabe en pantalla; solo en el visible.
 - 2026-11-16. **Botón «Reiniciar» del reloj**: las tres vistas vuelven a t = 0 con él.
+- 2026-11-16. **Probabilidad absorbida por cada borde** (`evolve(…, losses)`): la línea de estado suma a «al otro lado» lo que ya salió por ese borde, así que la transmisión se lee bien aunque el paquete se haya ido (antes el túnel bajaba de 13,7 % a 12,6 % al final). Los valores esperados dejan de dibujarse cuando ha salido más de un 1 % (serían los de la parte que queda dentro; a 400 fs el paquete libre daba Δx = 18 nm en vez de 23). El recorrido cita los valores a 100 y 200 fs.
+- 2026-11-16. **«Al otro lado» según dónde empieza el paquete**, no según hacia dónde va; si se aleja del potencial no hay comparación. La prueba de humo encontró el fallo (un paquete a la izquierda que iba a la izquierda salía con «100 %»).
+- 2026-11-16. **Nueve presets**: los ocho del encargo más «La cuerda: dos modos superpuestos», que necesitan los recorridos. Resonancia elegida con la propia física: doble barrera de 0,5 eV, 0,3 nm y separación 3 nm a 0,113 eV, donde un paquete de σ = 10 nm pasa el 73 % frente al 36 % de una sola barrera y al 9 % fuera de resonancia. Paso del control de energía: 0,001 eV para poder fijarla.
+- 2026-11-16. **Tres recorridos**: «Qué tiene de onda la función de onda» (6 pasos), «Por qué ψ es compleja» (5) y «De dónde sale el color de una transición» (5, con el tamaño del pozo y la regla de selección). Números sacados de cálculos con la física del módulo y comprobados en pantalla.
+- 2026-11-16. **Ficha con un apartado por gráfica** (once: cuatro del paquete, cuatro de estados, tres de la cuerda), cada uno con «Qué ves», «Cómo leerla» y «Prueba esto», como pidió Daniel; van como subsecciones de «Qué estás viendo» para mantener las cinco secciones que exige el test de contrato. Cada «Prueba esto» está comprobado en pantalla (prueba de humo o captura).
+- 2026-11-16. **Doble rendija 2D al backlog** (era opcional): se priorizó cerrar las tres vistas, la ficha y la revisión dentro de la sesión.
+- 2026-11-16. **El módulo ya sale en la portada** (sin `hidden`) con su miniatura.
 - 2026-11-16. **Coste**: un paso de la malla de 2048 puntos tarda 0,19 ms (Node), así que 1000 pasos por segundo de animación son ~20 % de CPU.
 
 ### Cómo queda el encargo 02
