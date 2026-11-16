@@ -14,7 +14,8 @@
 //
 // Qué sabe dibujar: series (líneas), áreas sombreadas bajo una curva, bandas
 // verticales, marcadores verticales y horizontales, mapas de color 2D con barra de
-// color, imágenes RGBA (para el coloreado de fase), leyenda y exportación a PNG.
+// color, imágenes RGBA (para el coloreado de fase), un segundo eje vertical a la
+// derecha (y2), leyenda y exportación a PNG.
 //
 // El contenedor debe tener una altura definida (por ejemplo, un .panel-body).
 // El tamaño de la letra sale del font-size del contenedor: en modo presentación crece
@@ -40,6 +41,8 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {number} [width] grosor relativo (1 = normal)
  * @property {boolean} [points] dibuja un punto en cada dato (para datos discretos)
  * @property {boolean} [line] une los datos con una línea (por defecto true)
+ * @property {'y' | 'y2'} [axis] eje vertical al que se refiere: el izquierdo (por defecto) o
+ *   el derecho (PlotData.y2)
  */
 
 /**
@@ -51,6 +54,7 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {string} [label]
  * @property {PlotColor} [color]
  * @property {number} [opacity] entre 0 y 1 (por defecto 0,25)
+ * @property {'y' | 'y2'} [axis] eje vertical (ver Series.axis)
  */
 
 /**
@@ -71,6 +75,17 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {string} [label] texto junto a la línea
  * @property {PlotColor} [color] por defecto, el color de acento del tema
  * @property {number[]} [dash]
+ * @property {'y' | 'y2'} [axis] eje de una línea horizontal (ver Series.axis)
+ */
+
+/**
+ * Segundo eje vertical, a la derecha, para curvas de otra magnitud en la misma gráfica
+ * (por ejemplo, |ψ|² a la izquierda y la energía en eV a la derecha). Las series, áreas y
+ * líneas horizontales con `axis: 'y2'` se dibujan con esta escala.
+ * @typedef {object} SecondAxis
+ * @property {[number, number]} range intervalo fijo
+ * @property {string} [label] título del eje
+ * @property {PlotColor} [color] color de las marcas y del título (por defecto, el del texto)
  */
 
 /**
@@ -123,6 +138,7 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  *   (por ejemplo, cuando el eje se puede cambiar de energía a longitud de onda)
  * @property {string} [yLabel] sustituye al título del eje y de las opciones en este dibujo
  *   (por ejemplo, cuando la unidad cambia con los datos)
+ * @property {SecondAxis} [y2] eje vertical derecho
  */
 
 /**
@@ -137,8 +153,9 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {boolean} [exportButton] botón "PNG" al pasar el ratón (por defecto true)
  * @property {string} [exportName] nombre del archivo PNG, sin extensión
  * @property {boolean} [equalAspect] misma escala en x e y (útil en mapas espaciales)
- * @property {(x: number, y: number) => void} [onPick] se llama al hacer clic o arrastrar
- *   sobre la gráfica, con las coordenadas de datos del puntero (vistas enlazadas)
+ * @property {(x: number, y: number, y2: number) => void} [onPick] se llama al hacer clic o
+ *   arrastrar sobre la gráfica, con las coordenadas de datos del puntero (vistas enlazadas);
+ *   y2 es la coordenada en el eje derecho, si lo hay (si no, igual a y)
  */
 
 /**
@@ -196,7 +213,7 @@ export function createPlot(container, options = {}) {
   /** @type {PlotData} */
   let data = {};
   /** Geometría del último dibujo, para convertir píxeles en datos (onPick). */
-  /** @type {{ x: ReturnType<typeof linearScale>, y: ReturnType<typeof linearScale>, left: number, right: number, top: number, bottom: number } | null} */
+  /** @type {{ x: ReturnType<typeof linearScale>, y: ReturnType<typeof linearScale>, y2: ReturnType<typeof linearScale>, left: number, right: number, top: number, bottom: number } | null} */
   let frame = null;
   /** Lienzo auxiliar para los mapas de color. @type {HTMLCanvasElement | null} */
   let offscreen = null;
@@ -248,10 +265,11 @@ export function createPlot(container, options = {}) {
     if (!yRange) {
       if (raster) yRange = raster.yRange;
       else {
+        const left = (/** @type {{ axis?: string }} */ item) => item.axis !== 'y2';
         const auto = extent([
-          ...series.map((s) => s.y),
-          ...areas.map((a) => a.y),
-          ...areas.map((a) => (typeof a.y0 === 'number' || a.y0 === undefined ? [a.y0 ?? 0] : a.y0)),
+          ...series.filter(left).map((s) => s.y),
+          ...areas.filter(left).map((a) => a.y),
+          ...areas.filter(left).map((a) => (typeof a.y0 === 'number' || a.y0 === undefined ? [a.y0 ?? 0] : a.y0)),
         ]);
         yRange = auto ? padRange(auto, 0.06) : [0, 1];
       }
@@ -271,13 +289,27 @@ export function createPlot(container, options = {}) {
     };
     let yTicks = computeYTicks(height - fs * 0.7 - bottom);
     let left = yTicks.width + fs * 0.9 + (yLabel ? fs * 1.5 : 0);
-    let right = fs * 0.9 + (colorbar ? fs * (colorbar.label ? 5.6 : 4.2) : 0);
+    const y2 = data.y2 ?? null;
+    /** Marcas del eje derecho (se recalculan con la altura definitiva). */
+    /** @param {number} plotHeight */
+    const computeY2Ticks = (plotHeight) => {
+      if (!y2) return null;
+      const result = niceTicks(y2.range[0], y2.range[1], Math.min(6, Math.max(2, plotHeight / (fs * 2.8))));
+      const texts = formatTicks(result.ticks, result.step);
+      return { ...result, texts, width: Math.max(0, ...texts.map((t) => g.measureText(t).width)) };
+    };
+    let y2Ticks = computeY2Ticks(height - fs * 0.7 - bottom);
+    let right =
+      fs * 0.9 +
+      (colorbar ? fs * (colorbar.label ? 5.6 : 4.2) : 0) +
+      (y2Ticks ? y2Ticks.width + fs * 0.5 + (y2?.label ? fs * 1.5 : 0) : 0);
     const legend = options.legend !== false ? layoutLegend(fs, resolve, width - left - right) : null;
     const top = fs * 0.7 + (legend ? legend.height : 0);
     if (legend && legend.rows > 0) {
       // Con la leyenda la gráfica es más baja: se recalculan las marcas del eje y.
       yTicks = computeYTicks(height - top - bottom);
       left = yTicks.width + fs * 0.9 + (yLabel ? fs * 1.5 : 0);
+      y2Ticks = computeY2Ticks(height - top - bottom);
     }
     const yTickTexts = yTicks.texts;
     const yTickWidth = yTicks.width;
@@ -305,7 +337,10 @@ export function createPlot(container, options = {}) {
     const plotBottom = plotTop + plotH;
     const xScale = linearScale(xRange[0], xRange[1], plotLeft, plotRight);
     const yScale = linearScale(yRange[0], yRange[1], plotBottom, plotTop);
-    frame = { x: xScale, y: yScale, left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
+    const y2Scale = y2 ? linearScale(y2.range[0], y2.range[1], plotBottom, plotTop) : yScale;
+    /** @param {{ axis?: 'y' | 'y2' }} item */
+    const scaleFor = (item) => (item.axis === 'y2' ? y2Scale : yScale);
+    frame = { x: xScale, y: yScale, y2: y2Scale, left: plotLeft, right: plotRight, top: plotTop, bottom: plotBottom };
     const xTicks = options.xTicks
       ? fixedTicks(options.xTicks, xRange)
       : niceTicks(xRange[0], xRange[1], Math.min(10, Math.max(3, plotW / (fs * 4.5))));
@@ -355,15 +390,16 @@ export function createPlot(container, options = {}) {
       const n = Math.min(area.x.length, area.y.length);
       if (n < 2) return;
       const base = area.y0 ?? 0;
+      const ys = scaleFor(area);
       g.beginPath();
       for (let j = 0; j < n; j++) {
         const px = xScale.toPixel(area.x[j]);
-        const py = yScale.toPixel(area.y[j]);
+        const py = ys.toPixel(area.y[j]);
         if (j === 0) g.moveTo(px, py);
         else g.lineTo(px, py);
       }
       for (let j = n - 1; j >= 0; j--) {
-        g.lineTo(xScale.toPixel(area.x[j]), yScale.toPixel(typeof base === 'number' ? base : base[j]));
+        g.lineTo(xScale.toPixel(area.x[j]), ys.toPixel(typeof base === 'number' ? base : base[j]));
       }
       g.closePath();
       g.globalAlpha = area.opacity ?? 0.25;
@@ -377,6 +413,7 @@ export function createPlot(container, options = {}) {
     g.lineCap = 'round';
     series.forEach((s, i) => {
       const n = Math.min(s.x.length, s.y.length);
+      const ys = scaleFor(s);
       g.strokeStyle = resolve(s.color, i);
       g.lineWidth = Math.max(1.5, fs * 0.14) * (s.width ?? 1);
       g.setLineDash((s.dash ?? []).map((d) => (d * fs) / 14));
@@ -390,7 +427,7 @@ export function createPlot(container, options = {}) {
           continue;
         }
         const px = xScale.toPixel(vx);
-        const py = yScale.toPixel(vy);
+        const py = ys.toPixel(vy);
         if (pen) g.lineTo(px, py);
         else g.moveTo(px, py);
         pen = true;
@@ -402,7 +439,7 @@ export function createPlot(container, options = {}) {
         for (let j = 0; j < n; j++) {
           if (!Number.isFinite(s.x[j]) || !Number.isFinite(s.y[j])) continue;
           g.beginPath();
-          g.arc(xScale.toPixel(s.x[j]), yScale.toPixel(s.y[j]), fs * 0.3 * (s.width ?? 1), 0, 2 * Math.PI);
+          g.arc(xScale.toPixel(s.x[j]), ys.toPixel(s.y[j]), fs * 0.3 * (s.width ?? 1), 0, 2 * Math.PI);
           g.fill();
         }
       }
@@ -447,7 +484,7 @@ export function createPlot(container, options = {}) {
     }
     for (const marker of data.hlines ?? []) {
       if (marker.y === undefined || !Number.isFinite(marker.y)) continue;
-      const py = yScale.toPixel(marker.y);
+      const py = scaleFor(marker).toPixel(marker.y);
       const color = resolve(marker.color ?? colors.accent, 0);
       g.strokeStyle = color;
       g.lineWidth = markerWidth;
@@ -512,6 +549,27 @@ export function createPlot(container, options = {}) {
       g.restore();
     }
 
+    if (y2 && y2Ticks) {
+      const y2Color = y2.color === undefined ? colors.textSoft : resolve(y2.color, 0);
+      g.fillStyle = y2Color;
+      g.font = tickFont;
+      g.textAlign = 'left';
+      g.textBaseline = 'middle';
+      y2Ticks.ticks.forEach((t, i) => {
+        g.fillText(y2Ticks.texts[i], plotRight + fs * 0.45, y2Scale.toPixel(t));
+      });
+      if (y2.label) {
+        g.save();
+        g.translate(plotRight + fs * 0.9 + y2Ticks.width, (plotTop + plotBottom) / 2);
+        g.rotate(Math.PI / 2);
+        g.fillStyle = y2.color === undefined ? colors.text : y2Color;
+        g.font = labelFont;
+        g.textAlign = 'center';
+        g.textBaseline = 'bottom';
+        g.fillText(y2.label, 0, 0);
+        g.restore();
+      }
+    }
     if (colorbar && valueRange) drawColorbar(colorbar, valueRange, plotRight, plotTop, plotH, fs, tickFont, labelFont, colors);
     if (legend) drawLegend(legend, legendLeft, fs * 0.45, fs, tickFont, colors);
   }
@@ -720,7 +778,7 @@ export function createPlot(container, options = {}) {
     const rect = canvas.getBoundingClientRect();
     const px = Math.min(frame.right, Math.max(frame.left, event.clientX - rect.left));
     const py = Math.min(frame.bottom, Math.max(frame.top, event.clientY - rect.top));
-    options.onPick(frame.x.toData(px), frame.y.toData(py));
+    options.onPick(frame.x.toData(px), frame.y.toData(py), frame.y2.toData(py));
   }
   if (options.onPick) {
     canvas.style.cursor = 'crosshair';

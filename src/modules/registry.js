@@ -13,6 +13,7 @@ import plantilla from './_plantilla/module.js';
 import oscilador from './oscilador/module.js';
 import plasmon from './plasmon/module.js';
 import luzMateria from './luz-materia/module.js';
+import funcionOnda from './funcion-onda/module.js';
 
 /** @type {import('./types.js').ModuleDescriptor[]} */
-export const modules = [oscilador, plasmon, luzMateria, galeria, plantilla];
+export const modules = [oscilador, plasmon, luzMateria, funcionOnda, galeria, plantilla];

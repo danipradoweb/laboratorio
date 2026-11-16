@@ -8,14 +8,94 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 |---|---|
 | 00 Base y servicios comunes | **terminado** (2026-11-11), revisado |
 | 01 Plasmón, Mie y color | **terminado** (2026-11-12), revisado y fusionado en `main` (pull request #2) |
-| 02 Luz y materia | **terminado** (2026-11-13), revisado. Rama `claude/elegant-cori-tlnjou`, sin fusionar en `main` |
-| 03 Ondas clásicas y función de onda | pendiente |
+| 02 Luz y materia | **terminado** (2026-11-13), revisado y fusionado en `main` (pull request #3) |
+| 03 Ondas clásicas y función de onda | **terminado** (2026-11-16), revisado. Rama `claude/sweet-clarke-70f1i8`, sin fusionar en `main` |
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 02 Luz y materia (terminado). El siguiente es `docs/encargos/03-ondas-cuanticas.md`.
-- Último paso terminado: 8 (revisión independiente, correcciones y cierre). Encargo 02 terminado.
-- Siguiente paso: encargo 03, en una sesión nueva.
+- Encargo: 03 Ondas clásicas y función de onda (`docs/encargos/03-ondas-cuanticas.md`). Rama `claude/sweet-clarke-70f1i8` (sale de `main` con el encargo 02 ya fusionado, pull request #3).
+- Petición añadida por Daniel para este encargo: en `ficha.md`, un apartado por cada vista con tres partes: «Qué ves» (cada eje con su magnitud y unidades en palabras, cada curva y color), «Cómo leerla» (la idea física a nivel de primero de carrera, sin ecuaciones) y «Prueba esto» (una o dos acciones con el resultado que se observa, comprobadas contra la pantalla). Sustituye la regla de brevedad de las fichas.
+- Último paso terminado: 9 (revisión independiente, correcciones y cierre). Encargo 03 terminado.
+- Siguiente paso: encargo 04 (`docs/encargos/04-cristales-bragg.md`), en una sesión nueva.
+
+### Cómo queda el encargo 03
+
+- `npm test`: 424 tests en verde (unitarios, de contrato y de humo). `npm run check`: limpio.
+- Módulo nuevo `funcion-onda` (en la portada, `#/funcion-onda`), con tres vistas (parámetro `part`): **paquete** (ψ con color de fase y el potencial detrás, espacio de momentos con T(E), la cuerda clásica con la misma forma inicial, ⟨x⟩, ⟨p⟩ y Δx·Δp), **estados** (niveles sobre el potencial, superposición de dos estados, coeficientes en el plano complejo, fase global frente a relativa, puente con la luz y regla de selección) y **cuerda** (pulsos, modos, extremos fijos o libres, frecuencias de cuerda frente a caja, energía). Ocho potenciales, incluido uno dibujado a mano. Nueve presets, tres recorridos, ficha con un apartado por gráfica (Qué ves, Cómo leerla, Prueba esto) y miniatura.
+- Física en tres archivos puros con 33 tests: `physics.js`, `physics-states.js` y `physics-string.js`.
+- Para los módulos siguientes: eje vertical derecho en `plot2d.js` (`y2`, `axis: 'y2'`) y tercer argumento de `onPick` con la coordenada en ese eje.
+- La doble rendija 2D (opcional) quedó en `docs/BACKLOG.md`.
+- No hizo falta ningún dato externo.
+
+### Revisión independiente del encargo 03 (paso 9)
+
+Un subagente con contexto limpio revisó solo la física y el cumplimiento del encargo, con scripts propios (una referencia en scipy que integra la ecuación estacionaria con `solve_ivp`, sin usar la matriz de transferencia; simulación de la línea de estado de la vista) y sin modificar el repositorio. Una ronda.
+
+- **Sin errores** en fórmulas, unidades, convenios ni signos de `physics*.js`. Comprobado por el revisor: ħ y ħ²/2mₑ frente a scipy; φ(k) frente a una suma directa (2·10⁻¹⁵); propagador de Strang con el signo correcto y de segundo orden; σ(t) libre; matriz de transferencia (flujos, tramos evanescentes, reciprocidad, R + T = 1 a 6·10⁻¹⁶); promedio por celda; contabilidad de lo absorbido; niveles de pozo infinito, armónico y finito; ⟨x⟩(t), |x₁₂| = 16L/9π² y x₁₃ ≈ 10⁻¹³; λ = hc/ΔE; salto de rana, Mur y energía discreta. Todos los números de presets, recorridos y ficha coinciden con sus cálculos (túnel 13,74 %, escalón 86,73 %, resonancia 72,98 %, 2,35 fs, 703,4/395,7/1099 nm, 5,87 y 11,62 nm, 41,36 fs, 1,146 nm⁻¹). Ningún valor esperado ni tolerancia ajustados.
+- **Corregido** (comprobado antes por mi cuenta):
+  1. Escalón con el paquete llegando desde la derecha: el «esperado» y la curva T(E) usaban solo la energía cinética; ahora E = cinética + V del lado de partida (por reciprocidad la matriz de transferencia sirve igual). Con escalón de 0,3 eV y 0,4 eV de cinética, «esperado» pasa de 86,7 % a 98,0 % (simulado: 98,2 %). La prueba de humo lo comprueba. De paso, el denominador del promedio es ahora toda la distribución (como en el test), no solo los k que van hacia el potencial.
+  2. Paso 6 del encargo: el panel del puente con la luz da ahora también la frecuencia de la transición (THz).
+  3. Ficha, requisito de Daniel: colores que faltaban en «Qué ves» (Re ψ e Im ψ y paredes en la vista de estados, curva de ⟨x⟩ del puente, líneas de ⟨x⟩ y ⟨k⟩) y una ecuación que sobraba en el «Cómo leerla» de los niveles.
+  4. Ficha: era falso que solo el pulso de cuerda se recomponga periódicamente (en la caja ideal también hay reapariciones del paquete cuántico); reescrito: la diferencia es la forma entre medias. «Pozos» → «pozo finito» en la curva T(E).
+  5. Recorrido «Por qué ψ es compleja», paso 1: decía que la cuerda se aplana con toda la energía en el movimiento, y en el preset (modos 1 + 2) nunca se aplana (la fracción cinética no pasa de 0,90). Texto reescrito.
+  6. Recorrido «color», paso 1, y ficha: «un estado propio no emite luz» vale en esta descripción semiclásica; ahora dicen que un estado excitado real baja por emisión espontánea, que requiere cuantizar la luz.
+- **Anotado en `docs/BACKLOG.md`** (sección «Pendientes de la revisión del encargo 03»): superposición de más de dos estados (decisión: dos estados cubren los pasos 5 y 6; el paso 3 no fija el número), reflexión de los bordes absorbentes con componentes muy lentas, tolerancia absoluta del test del pozo finito.
+- **No verificado**: los capítulos de la bibliografía citados en la ficha y en las cabeceras del código (Griffiths 3.ª ed. caps. 1–2, §3.5 y los problemas 2.21, 2.22, 2.33 y 2.34; Levine caps. 1–4; Feynman III caps. 1–3 y 7, I caps. 47–49; Strikwerda cap. 8; Feit, Fleck y Steiger 1982; Mur 1981). El revisor no abrió un navegador: el aspecto de las vistas lo cubren mis capturas y las pruebas de humo.
+
+### Plan del encargo 03 (pasos y estado)
+
+Un módulo, `funcion-onda` (`#/funcion-onda`), con vistas que se eligen con el parámetro `part`: `paquete` (Schrödinger dependiente del tiempo: vistas a, b, c y d del encargo), `estados` (estados propios, superposición, fase global y relativa, puente con la luz) y `cuerda` (la cuerda clásica sola: pulsos, modos, extremos fijos o libres). Unidades: nm, fs, eV y masa en masas del electrón.
+
+| # | Paso | Estado |
+|---|---|---|
+| 1 | Física de la cuerda (`physics-string.js`, salto de rana, extremos fijos, libres o abiertos) con tests | hecho |
+| 2 | Física de Schrödinger 1D (`physics.js`: malla, potenciales, paso partido de Strang, potencial absorbente, valores esperados, espacio de momentos, T(E) por matriz de transferencia) con tests | hecho |
+| 3 | Estados propios (`physics-states.js`: hamiltoniano tridiagonal, superposición, frecuencia de ⟨x⟩) con tests | hecho |
+| 4 | Andamiaje del módulo y vista `paquete` (a: ψ con fase y potencial detrás; b: momentos con T(E); c: cuerda; d: ⟨x⟩, ⟨p⟩ y Δx·Δp) | hecho |
+| 5 | Vista `estados` (niveles sobre el potencial, superposición, fase global frente a relativa, puente con la luz) | hecho |
+| 6 | Vista `cuerda` | hecho |
+| 7 | Presets, recorridos, ficha (con los apartados por vista), miniatura y prueba de humo | hecho |
+| 8 | Opcional: doble rendija 2D (si no, al backlog) | al backlog |
+| 9 | Revisión con subagente (una ronda), correcciones y cierre | hecho |
+
+### Evidencia por paso (encargo 03)
+
+- Paso 1: `tests/funcion-onda-cuerda.test.js`, 10 tests en verde. Con número de Courant 1 el salto de rana es exacto: frecuencia del modo n = nπc/L a 10⁻⁹ (fijos y libres), pulso que viaja sin deformarse y reflexiones (fijo invertido, libre sin invertir) a 10⁻¹², energía que queda tras salir por un extremo abierto < 10⁻²⁰. Con r = 0,5 el error de la frecuencia coincide con el previsto, (kΔx)²(1 − r²)/24, a 1 %, y baja ×4 al dividir Δx por 2. Energía discreta conservada a 10⁻¹² en 5000 pasos; suma de energías modales = energía total a 10⁻¹⁰.
+- Paso 2: `tests/funcion-onda.test.js`, 12 tests en verde. ħ²/2mₑ = Ry·a₀² (fixture CODATA) a 10⁻⁹; norma conservada a < 10⁻⁹ en 1000 pasos; σ(t) del paquete libre a 10⁻⁹ (dos masas); |φ(k)|² de la gaussiana a 10⁻¹⁰; Δx·Δk = ½ a 10⁻¹⁰ y ≥ ½ en cuatro potenciales; Ehrenfest en el armónico a 10⁻⁴ de la amplitud; transmisión del paquete frente a T(E) promediada, tres barreras, < 1 %; matriz de transferencia = fórmula cerrada a 10⁻¹⁰, escalón, R + T = 1 y T = 1 en la resonancia de la doble barrera (10⁻⁸).
+- Paso 3: `tests/funcion-onda-estados.test.js`, 8 tests en verde. Pozo infinito < 0,1 % (en realidad, la fórmula discreta exacta a 10⁻¹⁰); armónico < 0,1 % (n = 0…7); pozo finito frente a las ecuaciones trascendentes a 10⁻³ eV; ortonormalidad a 10⁻¹⁰; estado propio estacionario (exacto por superposición; con paso partido y cinética de diferencias finitas, desviación < 10⁻³ que baja ×4 al dividir Δt); superposición 1 + 2: |x₁₂| = 16L/9π² y frecuencia de ⟨x⟩ medida en la simulación = (E₂ − E₁)/h a 2·10⁻³; λ = hc/ΔE (2 eV → 619,92 nm). `npm test` completo: 409 tests (un fallo de humo por la ficha provisional sin fórmulas, corregido; repetidas las pruebas de humo del módulo: 4 en verde). `npm run check` limpio.
+
+- Paso 4: `npm test` 419 en verde, `npm run check` limpio. 2 tests nuevos en `tests/funcion-onda.test.js` (⟨H⟩ del paquete gaussiano y su conservación; potencial promediado por celda: área exacta y transmisión correcta con una malla no alineada). Capturas revisadas a ojo: barrera en tema claro, barrera baja con paquete gemelo y Re ψ en tema oscuro, estado coherente del armónico (⟨x⟩ sobre la trayectoria clásica, Δx·Δp/ħ = 0,500 constante) y potencial dibujado.
+- Pasos 5 y 6: `npm test` 419 en verde (las vistas nuevas no añaden tests unitarios; las pruebas de humo propias llegan en el paso 7), `npm run check` limpio. Capturas revisadas a ojo: superposición 1 + 2 del pozo infinito de 0,8 nm (periodo 2,35 fs, fotón de 1,76 eV, λ = 703 nm, con su muestra de color), superposición 1 + 3 del armónico en tema oscuro (⟨x⟩ quieto: x₁₃ = 0, regla de selección) y cuerda con los modos 1 + 3 (energía total constante a < 10⁻¹²).
+
+- Paso 7: `npm test` 424 en verde (un test unitario nuevo: probabilidad absorbida por cada borde + norma = 1; cuatro pruebas de humo nuevas), `npm run check` limpio. La prueba de humo del módulo comprueba en el navegador: túnel con 13,7 % simulado = 13,7 % esperado al final; clic en los k negativos → paquete hacia la izquierda; con el reloj parado, la fase global no cambia ⟨x⟩, Δx, Δx·Δp, ⟨p⟩ ni Δk (vista paquete) ni el ángulo entre coeficientes (vista estados), y la fase relativa sí; los nueve presets con captura (`capturas/funcion-onda-preset-*.png`) y lo que debe verse (resonancia 73,0 % y escalón 86,7 % esperados; pozo de 0,8 nm: 2,35 fs, 1,76 eV, 703,4 nm con muestra de color; segundo estado 3 → «⟨x⟩ no oscila»; pozo de 0,6 nm → 395,7 nm; clic en un nivel; estado coherente con Δx·Δp/ħ = 0,500; gemelos con ⟨p⟩/ħ = 1,15 nm⁻¹; cuerda con energía constante a < 10⁻¹²); tecla 7 en modo presentación; los tres recorridos paso a paso. Comprobado aparte, con capturas y lecturas de la línea de estado: resonancia al final 72,2 % (esperado 73,0 %: la onda tarda en salir de entre las barreras), paquete libre Δx = 7,51 nm a 129 fs (fórmula: 7,53), reflexión del pulso invertida con extremo fijo (energía toda cinética al rebotar) y derecha con extremo libre (toda potencial).
+
+- Paso 9: `npm test` 424 en verde tras las correcciones de la revisión (la prueba de humo comprueba además el escalón desde la derecha: 98,0 %). `npm run check` limpio.
+
+### Decisiones del encargo 03
+
+- 2026-11-16. **Identificador `funcion-onda`**, oculto en la portada (`hidden: true`) hasta que las vistas estén hechas.
+- 2026-11-16. **Física en tres archivos puros**: `physics.js` (Schrödinger dependiente del tiempo, potenciales, observables, T(E)), `physics-states.js` (estados propios y superposición) y `physics-string.js` (cuerda clásica). Un archivo de tests por cada uno.
+- 2026-11-16. **Cuerda: número de Courant 1 por defecto**, porque así el salto de rana es exacto en 1D (reproduce d'Alembert en los nodos); el pulso clásico no se dispersa ni siquiera numéricamente, que es justo lo que hay que comparar con el cuántico. Extremos `fixed`, `free` y `open` (Mur de primer orden, exacta con r = 1, simula un medio infinito). Energía modal con la forma escalonada que conserva el esquema (la primera versión mezclaba instantes y daba un 0,2 % de error: lo detectó el test).
+- 2026-11-16. **Cinética exacta (ħ²k²/2m) en el paso partido**, con opción `kinetic: 'fd'` (la del laplaciano de tres puntos) para comprobar que los estados propios del hamiltoniano tridiagonal son estacionarios con el propagador.
+- 2026-11-16. **El paso partido necesita Δt pequeño con potenciales abruptos**: con una barrera de 1 eV y E = 0,5 eV, la transmisión del paquete difiere de la analítica +1,1 % con Δt = 0,1 fs, −0,24 % con 0,025 fs y −0,09 % con 0,0125 fs; y con paredes de 10⁵ eV y V·Δt/ħ ≈ 76 rad por paso, la frecuencia de ⟨x⟩ sale un 2 % baja (con 10³ eV, 10⁻⁴). Regla para la vista: V_máx·Δt/ħ ≲ 0,5 y Δt ≈ 0,01–0,02 fs; el pozo «infinito» de la vista usará paredes altas respecto a las energías en juego, no 10⁵ eV. (Dos tests fallaron por esto al escribirlos; se cambiaron Δt y la altura de las paredes, no las tolerancias.)
+- 2026-11-16. **Potencial dibujado = columnas de altura constante** (16 columnas): es constante a trozos, así que la matriz de transferencia da su T(E) exacta y el paquete se puede comparar con ella igual que en la barrera.
+- 2026-11-16. **T(E) por matriz de transferencia** para todos los potenciales constantes a trozos (escalón, barreras, pozos, dibujado), con referencia local en cada tramo para que una barrera gruesa no desborde. La vista de momentos dibujará T(E(k)) sobre |φ(k)|².
+- 2026-11-16. **Añadido a `plot2d.js`: eje vertical derecho** (`y2` en los datos de `draw()`, y `axis: 'y2'` en series, áreas y líneas horizontales), para dibujar |ψ|² y el potencial en eV en la misma gráfica, cada uno con su escala.
+- 2026-11-16. **Potencial promediado en cada celda** (`potentialOnGrid`): con el valor en el nodo, una barrera de 0,6 nm en la malla de la vista (Δx = 0,078 nm) se comportaba como una de 0,55 nm y el paquete transmitía un 46,6 % en lugar del 41,0 % analítico; con el promedio exacto, 41,2 %. Lo detectó la línea de estado de la vista, que compara lo simulado con lo esperado.
+- 2026-11-16. **Vista `paquete`**: malla de 2048 puntos en [−80, 80] nm; bordes absorbentes de 15 nm (1 eV); Δt = mín(0,02 fs; 0,5ħ/V_máx); pozo «infinito» con paredes de 15 eV y armónico recortado a 20 eV (lejos de la partícula), por la regla de V_máx·Δt. La simulación vuelve a empezar al llegar a un tiempo final que depende del caso. La cuerda comparada viaja a la velocidad de grupo ħk₀/m (con k₀ = 0, se suelta en reposo y c = ħΔk/m) y no tiene potencial. La línea de estado da la probabilidad al otro lado del potencial frente a la esperada con ondas planas.
+- 2026-11-16. **Representación de ψ**: relleno del color de la fase (rueda de fase común) cuya altura es |ψ| o, con el conmutador, |ψ|²; Re ψ e Im ψ son líneas opcionales (solo con |ψ|, porque tienen sus unidades, 1/√nm). El potencial va detrás con su propia escala de energía a la derecha.
+- 2026-11-16. **Vista `estados`**: los estados se calculan en una caja que contiene el potencial (el propio pozo infinito, con paredes exactas; el pozo finito con 8 longitudes de decaimiento a cada lado; el armónico en ±9 longitudes del oscilador; el resto, en una caja de 20 nm). Superposición de dos estados con peso y fase relativa; los coeficientes se dibujan como flechas en el plano complejo (la fase global las gira juntas; el tiempo las gira a ritmos distintos). El tiempo corre a un periodo de la oscilación cada 4 s. Clic en un nivel: segundo estado.
+- 2026-11-16. **Regla de selección visible**: si ⟨φa|x|φb⟩ = 0 (misma paridad en un potencial simétrico) la vista dice que ⟨x⟩ no oscila y que esa transición no emite ni absorbe luz como dipolo. No lo pedía el encargo, pero sale sola de la física y es la respuesta honesta en el panel del puente con la luz.
+- 2026-11-16. **Muestra de color del fotón** con el motor de color (`wavelengthToSrgb`), llevada al mayor brillo que cabe en pantalla; solo en el visible.
+- 2026-11-16. **Botón «Reiniciar» del reloj**: las tres vistas vuelven a t = 0 con él.
+- 2026-11-16. **Probabilidad absorbida por cada borde** (`evolve(…, losses)`): la línea de estado suma a «al otro lado» lo que ya salió por ese borde, así que la transmisión se lee bien aunque el paquete se haya ido (antes el túnel bajaba de 13,7 % a 12,6 % al final). Los valores esperados dejan de dibujarse cuando ha salido más de un 1 % (serían los de la parte que queda dentro; a 400 fs el paquete libre daba Δx = 18 nm en vez de 23). El recorrido cita los valores a 100 y 200 fs.
+- 2026-11-16. **«Al otro lado» según dónde empieza el paquete**, no según hacia dónde va; si se aleja del potencial no hay comparación. La prueba de humo encontró el fallo (un paquete a la izquierda que iba a la izquierda salía con «100 %»).
+- 2026-11-16. **Nueve presets**: los ocho del encargo más «La cuerda: dos modos superpuestos», que necesitan los recorridos. Resonancia elegida con la propia física: doble barrera de 0,5 eV, 0,3 nm y separación 3 nm a 0,113 eV, donde un paquete de σ = 10 nm pasa el 73 % frente al 36 % de una sola barrera y al 9 % fuera de resonancia. Paso del control de energía: 0,001 eV para poder fijarla.
+- 2026-11-16. **Tres recorridos**: «Qué tiene de onda la función de onda» (6 pasos), «Por qué ψ es compleja» (5) y «De dónde sale el color de una transición» (5, con el tamaño del pozo y la regla de selección). Números sacados de cálculos con la física del módulo y comprobados en pantalla.
+- 2026-11-16. **Ficha con un apartado por gráfica** (once: cuatro del paquete, cuatro de estados, tres de la cuerda), cada uno con «Qué ves», «Cómo leerla» y «Prueba esto», como pidió Daniel; van como subsecciones de «Qué estás viendo» para mantener las cinco secciones que exige el test de contrato. Cada «Prueba esto» está comprobado en pantalla (prueba de humo o captura).
+- 2026-11-16. **Doble rendija 2D al backlog** (era opcional): se priorizó cerrar las tres vistas, la ficha y la revisión dentro de la sesión.
+- 2026-11-16. **El módulo ya sale en la portada** (sin `hidden`) con su miniatura.
+- 2026-11-16. **Coste**: un paso de la malla de 2048 puntos tarda 0,19 ms (Node), así que 1000 pasos por segundo de animación son ~20 % de CPU.
 
 ### Cómo queda el encargo 02
 
@@ -310,7 +390,9 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
 
-- **Fusionar la rama `claude/elegant-cori-tlnjou` en `main`** (pull request o directamente) para que GitHub Pages publique el módulo de luz y materia. (La del encargo 01 ya está fusionada: pull request #2.)
+- **Fusionar la rama `claude/sweet-clarke-70f1i8` en `main`** (pull request o directamente) para que GitHub Pages publique el módulo de ondas y función de onda.
+- **Cotejar las referencias del encargo 03 con los libros delante** (citadas de memoria): en `src/modules/funcion-onda/ficha.md` y en las cabeceras de `physics.js`, `physics-states.js` y `physics-string.js` (Griffiths y Schroeter 3.ª ed. caps. 1–2, §2.1–2.6, §3.5, problemas 2.5, 2.21, 2.22, 2.33 y 2.34, ecs. 2.30, 2.62 y 2.155; Levine caps. 1–4; Feynman III caps. 1–3 y 7, I caps. 47–49; Strikwerda cap. 8).
+- Opcional: decir si quieres la doble rendija 2D (está descrita en el backlog) y probar el modo presentación del módulo nuevo (tecla P; 1–9 para los presets), sobre todo si la fila de valores esperados se lee bien a 1080p.
 - **Cotejar las referencias bibliográficas con los libros delante** (citadas de memoria, sin verificar). Del encargo 02, en `src/modules/luz-materia/ficha.md` y en las cabeceras de `physics.js`, `physics-sheets.js` y `physics-fresnel.js`: Feynman I §30-7 y caps. 31, 32 y 33, y II cap. 32; Griffiths 4.ª ed. §9.3, §9.3.3 y §9.4 (y que su convenio de signo para r_p es el contrario al de Born & Wolf); Born & Wolf §1.5, §1.5.2, §1.5.4, §1.6, §2.3 y §2.4; Hecht caps. 3, 4 y 8. Siguen pendientes las del encargo 01 (`src/modules/plasmon/ficha.md`: Bohren & Huffman caps. 4, 5 y 12 y apéndice A, y los números de ecuación 4.47, 4.53, 4.88, 5.4, 5.32–5.34 citados en `physics.js` y `tests/plasmon.test.js`; Gaponenko; Kreibig & Vollmer cap. 2; Gans 1912; referencia para la copa de Licurgo) y las del encargo 00 (`src/modules/oscilador/ficha.md` y `src/modules/_plantilla/ficha.md`).
 - **Decidir si te vale la anchura del «vidrio»** (γ = ω₀/100, una elección del modelo): deja k ≈ 6·10⁻⁴ en el visible, mucho más que un vidrio real. La ficha y la interfaz lo dicen. Con una anchura menor las resonancias se ven más afiladas y el vidrio más transparente (`GLASS_RELATIVE_DAMPING` en `src/modules/luz-materia/physics.js`; es cambiar un número).
 - **Leer los textos de `mecanismo`** de `data/materials/catalogo.json` (pendiente del encargo 01).

@@ -727,6 +727,163 @@ for (const [tourId, steps] of /** @type {const} */ ([
   });
 }
 
+test('función de onda: tres vistas enlazadas, fase global, presets y lo que cuenta la ficha', { skip }, async () => {
+  const { page, errors, close } = await openPage(
+    '#/funcion-onda?potential=barrera&height=0.3&width=1&energy=0.2&sigma=3&x0=-25&rate=50',
+    { width: 1440, height: 900 },
+  );
+  const status = async () => String(await page.locator('.fo-status').textContent());
+  const title = async (/** @type {number} */ i) => String(await page.locator('.fo-part .panel-title').nth(i).textContent());
+  /** @param {string[]} parts */
+  const hashHas = (parts) => page.waitForFunction((/** @type {string[]} */ ps) => ps.every((x) => location.hash.includes(x)), parts);
+  /** @param {RegExp} re @param {number} [i] índice del panel, o −1 para la línea de estado */
+  const waitText = (re, i = -1) =>
+    page.waitForFunction(
+      (/** @type {[string, number]} */ [source, index]) => {
+        const node = Number(index) < 0 ? document.querySelector('.fo-status') : document.querySelectorAll('.fo-part .panel-title')[Number(index)];
+        return new RegExp(String(source)).test(node?.textContent ?? '');
+      },
+      [re.source, i],
+      { timeout: 20000 },
+    );
+
+  // Efecto túnel: la línea de estado compara lo simulado con las ondas planas, y al final
+  // (lo absorbido por el borde derecho cuenta como transmitido) coinciden: 13,7 %.
+  assert.equal(await page.locator('.fo-part .panel').count(), 4);
+  assert.match(await status(), /esperado con ondas planas: 13,7 %/);
+  await waitText(/al otro lado del potencial: 13,7 %/);
+
+  // Escalón con el paquete llegando por la derecha (desde encima del escalón): la energía de
+  // T(E) es la cinética más V₀. Valor esperado: 98,0 % (revisión independiente, con una
+  // integración de la ecuación de Schrödinger estacionaria en scipy).
+  await page.goto(page.url().split('#')[0] + '#/funcion-onda?potential=escalon&height=0.3&energy=0.4&sigma=3&x0=25&leftward=1&rate=50');
+  await waitText(/esperado con ondas planas: 98,0 %/);
+  await page.goto(page.url().split('#')[0] + '#/funcion-onda?potential=barrera&height=0.3&width=1&energy=0.2&sigma=3&x0=-25&rate=50');
+  await waitText(/esperado con ondas planas: 13,7 %/);
+
+  // Vista enlazada: un clic en los k negativos de la gráfica de momentos manda el paquete
+  // a la izquierda con E = ħ²k²/2m.
+  const mom = page.locator('.fo-part .panel').nth(1).locator('canvas');
+  const box = await mom.boundingBox();
+  await page.mouse.click(box.x + box.width * 0.25, box.y + box.height * 0.6);
+  await hashHas(['leftward=1']);
+  // El paquete está a la izquierda de la barrera y se aleja de ella: no hay transmisión que comparar.
+  await page.waitForFunction(() => !/otro lado/.test(document.querySelector('.fo-status')?.textContent ?? ''));
+
+  // Fase global: con el reloj parado, girar ψ no cambia ⟨x⟩, Δx, Δx·Δp ni ⟨p⟩.
+  await page.locator('.clock-controls button').first().click();
+  await page.waitForTimeout(300);
+  const before = [await title(1), await title(3)];
+  await page.locator('[data-key="globalPhase"] input[type="range"]').fill('120');
+  await hashHas(['globalPhase=120']);
+  await page.waitForTimeout(200);
+  assert.deepEqual([await title(1), await title(3)], before);
+  await page.locator('.clock-controls button').first().click();
+
+  // Los presets: URL, captura y lo que debe verse.
+  for (const [id, expected] of /** @type {[string, string[]][]} */ ([
+    ['paquete-libre', ['part=paquete&potential=libre', 'x0=-30&sigma=1&energy=0.1']],
+    ['tunel', ['potential=barrera&height=0.3&width=1', 'energy=0.2']],
+    ['resonancia', ['potential=doble-barrera&height=0.5&width=0.3&separation=3', 'energy=0.113&leftward=0']],
+    ['escalon', ['potential=escalon&height=0.3', 'energy=0.4']],
+    ['pozo-estados', ['part=estados&potential=pozo-infinito', 'wellWidth=1', 'n1=2&n2=3&weight=0']],
+    ['superposicion', ['part=estados&potential=pozo-infinito', 'wellWidth=0.8', 'n1=1&n2=2&weight=0.5']],
+    ['coherente', ['part=paquete&potential=armonico', 'quantum=0.1', 'x0=4&sigma=0.62&energy=0&']],
+    ['opuestos', ['potential=libre', 'x0=0&sigma=2&energy=0.05&leftward=0&twin=1']],
+    ['cuerda-modos', ['part=cuerda', 'shape=dos-modos&mode=1&mode2=2']],
+  ])) {
+    await page.locator(`.preset[data-preset="${id}"]`).click();
+    await hashHas(expected);
+    await page.waitForTimeout(1800); // fin de la transición
+    await page.screenshot({ path: join(shots, `funcion-onda-preset-${id}.png`) });
+    if (id === 'tunel') assert.match(await status(), /esperado con ondas planas: 13,7 %/);
+    else if (id === 'resonancia') assert.match(await status(), /esperado con ondas planas: 73,0 %/);
+    else if (id === 'escalon') assert.match(await status(), /esperado con ondas planas: 86,7 %/);
+    else if (id === 'pozo-estados') {
+      assert.match(await title(1), /un solo estado propio, φ2: solo gira su fase, \|ψ\|² no cambia/);
+      assert.match(await title(2), /⟨x⟩ no oscila/);
+    } else if (id === 'superposicion') {
+      // Pozo de 0,8 nm: ΔE = 1,76 eV, periodo 2,35 fs, fotón de 703 nm (rojo).
+      assert.match(await title(2), /periodo h\/\(E2 − E1\) = 2,35 fs/);
+      assert.match(await title(2), /fotón de 1,76 eV: λ = 703,4 nm, visible/);
+      assert.equal(await page.locator('.fo-swatch').isVisible(), true);
+      // Prueba esto: el segundo estado en 3 → ⟨x⟩ quieto (regla de selección).
+      await page.locator('[data-key="n2"] input[type="range"]').fill('3');
+      await hashHas(['n2=3']);
+      await waitText(/⟨x⟩ no oscila: ⟨φ1\|x\|φ3⟩ = 0/, 2);
+      await page.locator('[data-key="n2"] input[type="range"]').fill('2');
+      // Prueba esto: pozo de 0,6 nm → fotón de 396 nm, en el borde del violeta.
+      await page.locator('[data-key="wellWidth"] input[type="range"]').fill('0.6');
+      await hashHas(['wellWidth=0.6', 'n2=2']);
+      await waitText(/λ = 395,7 nm/, 2);
+      // Vista enlazada: un clic en el diagrama de niveles elige el segundo estado.
+      const levels = page.locator('.fo-part .panel').nth(0).locator('canvas');
+      const lb = await levels.boundingBox();
+      await page.mouse.click(lb.x + lb.width * 0.5, lb.y + lb.height * 0.3);
+      await page.waitForFunction(() => !location.hash.includes('n2=2&'));
+      // Fase global: las flechas giran juntas y el ángulo entre ellas no cambia (reloj parado).
+      await page.locator('.clock-controls button').first().click();
+      await page.waitForTimeout(300);
+      const angle = await title(3);
+      await page.locator('[data-key="globalPhase"] input[type="range"]').fill('200');
+      await hashHas(['globalPhase=200']);
+      await page.waitForTimeout(200);
+      assert.equal(await title(3), angle);
+      await page.locator('[data-key="relPhase"] input[type="range"]').fill('90');
+      await hashHas(['relPhase=90']);
+      await page.waitForTimeout(200);
+      assert.notEqual(await title(3), angle, 'la fase relativa sí cambia el ángulo entre los coeficientes');
+      await page.locator('.clock-controls button').first().click();
+    } else if (id === 'coherente') {
+      assert.match(await title(3), /Δx·Δp\/ħ = 0,500/);
+    } else if (id === 'opuestos') {
+      assert.equal(await page.locator('.fo-part .panel').nth(0).locator('.fo-stack-item:not([hidden])').count(), 2);
+      assert.match(await title(1), /⟨p⟩\/ħ = 1,15 nm⁻¹/);
+    } else if (id === 'cuerda-modos') {
+      assert.match(await title(0), /superposición de los modos 1 y 2/);
+      assert.match(await title(2), /variación relativa < 10⁻¹²/);
+      for (const key of ['potential', 'mass', 'x0']) assert.equal(await page.locator(`[data-key="${key}"]`).isVisible(), false);
+      assert.equal(await page.locator('[data-key="d0"]').isVisible(), false);
+    }
+  }
+
+  // Modo presentación con la tecla 7 (estado coherente).
+  await page.keyboard.press('p');
+  await page.keyboard.press('7');
+  await hashHas(['potential=armonico']);
+  await page.waitForTimeout(1800);
+  await page.screenshot({ path: join(shots, 'funcion-onda-presentacion.png') });
+  await page.keyboard.press('Escape');
+
+  await close();
+  assert.deepEqual(errors, []);
+});
+
+for (const [tourId, steps] of /** @type {const} */ ([
+  ['onda', ['part=cuerda', 'part=estados&potential=pozo-infinito', 'wellWidth=0.8', 'potential=barrera', 'potential=libre', 'twin=1']],
+  ['compleja', ['part=cuerda', 'part=estados', 'wellWidth=0.8', 'twin=1', 'potential=armonico']],
+  ['color', ['part=estados', 'wellWidth=0.8', 'wellWidth=0.8', 'wellWidth=0.8', 'wellWidth=0.8']],
+])) {
+  test(`función de onda: recorrido «${tourId}» en modo presentación`, { skip }, async () => {
+    const { page, errors, close } = await openPage('#/funcion-onda', { width: 1920, height: 1080 });
+    await page.locator(`.tour-start[data-tour="${tourId}"]`).click();
+    await page.keyboard.press('p');
+    for (let step = 0; step < steps.length; step++) {
+      assert.match(await page.locator('.tour-counter').textContent(), new RegExp(`Paso ${step + 1} de ${steps.length}`));
+      await page.waitForFunction((/** @type {string} */ e) => location.hash.includes(e), steps[step]);
+      const text = modules.find((m) => m.id === 'funcion-onda')?.tours.find((t) => t.id === tourId)?.steps[step].text ?? '';
+      if (text.includes('$')) await page.waitForSelector('.tour-text .katex');
+      assert.ok(String(await page.locator('.tour-text').textContent()).trim().length > 40, 'el paso no tiene texto');
+      assert.equal(await page.locator('.tour-text .katex-error').count(), 0);
+      await page.waitForTimeout(1700);
+      await page.screenshot({ path: join(shots, `funcion-onda-recorrido-${tourId}-${step + 1}.png`) });
+      await page.keyboard.press('ArrowRight');
+    }
+    await close();
+    assert.deepEqual(errors, []);
+  });
+}
+
 // Navegación: de la portada a un módulo por su tarjeta, vuelta a la portada, y de un
 // módulo a otro. Cada cambio destruye el módulo anterior (gráficas, WebGL, reloj): no
 // debe quedar ningún error ni ningún resto en pantalla.
