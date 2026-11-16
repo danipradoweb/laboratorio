@@ -16,7 +16,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 - Encargo: 03 Ondas clásicas y función de onda (`docs/encargos/03-ondas-cuanticas.md`). Rama `claude/sweet-clarke-70f1i8` (sale de `main` con el encargo 02 ya fusionado, pull request #3).
 - Petición añadida por Daniel para este encargo: en `ficha.md`, un apartado por cada vista con tres partes: «Qué ves» (cada eje con su magnitud y unidades en palabras, cada curva y color), «Cómo leerla» (la idea física a nivel de primero de carrera, sin ecuaciones) y «Prueba esto» (una o dos acciones con el resultado que se observa, comprobadas contra la pantalla). Sustituye la regla de brevedad de las fichas.
 - Último paso terminado: 7 (presets, recorridos, ficha, miniatura, pruebas de humo). El paso 8 (doble rendija) va al backlog.
-- Siguiente paso: 9 (revisión independiente con subagente, correcciones y cierre).
+- Siguiente paso: 9 (revisión independiente con subagente, correcciones y cierre). La revisión está lanzada (2026-11-16); si la sesión se corta antes de recibirla, relánzala con el mismo encargo: solo física y requisitos, sin modificar el repositorio.
 
 ### Plan del encargo 03 (pasos y estado)
 
