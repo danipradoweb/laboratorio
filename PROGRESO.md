@@ -27,7 +27,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 3 | Pantallas, navegación (ubicación, pestañas, flechas), selección en la URL, «Ver juntas», móvil, barra lateral con bloque «Estado», títulos en palabras y líneas secundarias | hecho |
 | 4 | Explicaciones bajo cada gráfica desde `ficha.md` (identificadores estables), «Más detalle», glosario común | hecho |
 | 5 | Tipografía: fuente del texto, KaTeX en títulos, líneas secundarias y leyendas (leyenda HTML en `plot2d.js`), rótulos de ejes con cursivas y ⟨ ⟩, capturas comparativas | hecho |
-| 6 | ARQUITECTURA, revisión independiente (una ronda), correcciones y cierre | pendiente |
+| 6 | ARQUITECTURA, revisión independiente (una ronda), correcciones y cierre | en curso: ARQUITECTURA hecha; revisión independiente lanzada |
 
 ### Evidencia y decisiones del encargo R1
 
