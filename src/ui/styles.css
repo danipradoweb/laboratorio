@@ -1400,6 +1400,13 @@ h3 {
     'energy energy';
 }
 
+/* Vista «rendijas»: el plano a la izquierda (cuadrado) y la pantalla a la derecha. */
+.fo-grid-slits {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'plane screen';
+}
+
 /* Muestra del color del fotón en el título del panel del puente con la luz. */
 .fo-swatch {
   display: inline-block;

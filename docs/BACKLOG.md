@@ -3,7 +3,7 @@
 Ideas para después de los encargos 00–04, ordenadas por bloque. Entre paréntesis, la asignatura de la que salen. Las que más valor dan para estudiar o para vídeos van marcadas con ★. Las sesiones de trabajo añaden aquí lo que surja y no entre en su encargo.
 
 ## Pendientes de los encargos actuales
-- Doble rendija 2D con control de coherencia: no entró en el encargo 03 (detalle en «Ideas surgidas en el encargo 03»).
+- (hecho 2026-11-18, tarea de mantenimiento) Doble rendija 2D con control de coherencia: vista `rendijas` de `funcion-onda`.
 
 ## Vista por objetos: "por qué veo lo que veo" ★
 Entrada al laboratorio por objetos cotidianos en lugar de por fenómenos. Cada objeto muestra su espectro, el color calculado con el motor y el mecanismo, con enlace al módulo que lo explica. Clasificación de Kurt Nassau (*The Physics and Chemistry of Color: The Fifteen Causes of Color*).
@@ -71,7 +71,7 @@ Entrada al laboratorio por objetos cotidianos en lugar de por fenómenos. Cada o
 
 ## Ideas surgidas en el encargo 03 (ondas clásicas y función de onda)
 
-- **Doble rendija en 2D** (paso 7 del encargo 03, opcional; no se hizo por margen de la sesión): paso partido 2D en una malla de 256 × 256 (`fft2d` ya existe en `src/core/fft.js`), pantalla que acumula |ψ|², comparación con Fraunhofer y un control de coherencia entre las dos ramas (|ψ₁ + ψ₂|² frente a |ψ₁|² + |ψ₂|² e intermedios), con la ficha explicando la decoherencia como información del camino registrada en otro sistema. La física de 1D (`physics.js`) sirve de modelo: mismo convenio de unidades y de potencial absorbente.
+- (hecho 2026-11-18: vista `rendijas`) **Doble rendija en 2D** (paso 7 del encargo 03, opcional; no se hizo por margen de la sesión): paso partido 2D en una malla de 256 × 256 (`fft2d` ya existe en `src/core/fft.js`), pantalla que acumula |ψ|², comparación con Fraunhofer y un control de coherencia entre las dos ramas (|ψ₁ + ψ₂|² frente a |ψ₁|² + |ψ₂|² e intermedios), con la ficha explicando la decoherencia como información del camino registrada en otro sistema. La física de 1D (`physics.js`) sirve de modelo: mismo convenio de unidades y de potencial absorbente.
 - Vista de valores esperados del paquete: en el modo presentación las dos gráficas apiladas quedan bajas; se podría dar más alto a esa fila o separar la incertidumbre en su propio panel.
 - Seguir el paquete con la ventana de x (zoom automático) para que el color de fase se lea mejor con energías altas (con k₀ grande las franjas de color son muy finas a la escala de toda la región).
 - Estados de un pozo finito: distinguir en el dibujo los niveles ligados (E < 0) de los de la caja de cálculo, no solo en el título.

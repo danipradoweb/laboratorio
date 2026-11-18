@@ -957,6 +957,48 @@ test('función de onda: aviso de fin de la simulación con botón para reiniciar
   assert.deepEqual(errors, []);
 });
 
+// Doble rendija: la vista se elige en «Vista», la pantalla dibuja sus curvas, la
+// coherencia cambia el dibujo sin repetir la simulación y al final sale el aviso de fin.
+// λ = 1 nm y d = 4 nm: primer máximo en sen θ = λ/d = 0,25, θ = 14,5°.
+test('función de onda: doble rendija con control de coherencia', { skip }, async () => {
+  const { page, errors, close } = await openPage('#/funcion-onda?part=paquete', { width: 1440, height: 900 });
+  await page.locator('[data-key="part"] select').selectOption('rendijas');
+  await page.waitForFunction(() => location.hash.includes('part=rendijas') && location.hash.includes('slitSeparation=4'));
+  await page.locator('[data-key="rate"] input[type="range"]').fill('50');
+  assert.equal(await page.locator('.fo-part .panel').count(), 2);
+  for (const key of ['slitWavelength', 'slitSeparation', 'slitWidth', 'coherence', 'rate']) assert.equal(await page.locator(`[data-key="${key}"]`).isVisible(), true, key);
+  for (const key of ['potential', 'height', 'mass', 'x0', 'showRe', 'globalPhase']) assert.equal(await page.locator(`[data-key="${key}"]`).isVisible(), false, key);
+  await page.waitForFunction(() => /primer máximo a θ = 14,5°/.test(document.querySelector('.fo-status')?.textContent ?? ''));
+  const title = async (/** @type {number} */ i) => String(await page.locator('.fo-part .panel-title').nth(i).textContent());
+  assert.match(await title(0), /\|ψ₁ \+ ψ₂\|²/);
+  await page.waitForSelector('.fo-end:not([hidden])', { timeout: 120000 });
+  assert.match(String(await page.locator('.fo-end').textContent()), /Simulación terminada/);
+  await page.screenshot({ path: join(shots, 'funcion-onda-rendijas.png') });
+  // La pantalla dibuja la simulación (serie 1), la suma sin interferencia y Fraunhofer (serie 3).
+  const screen = page.locator('.fo-part .panel').nth(1).locator('canvas');
+  const [sim, fraun] = await colorPixels(page, screen, ['--series-1', '--series-3']);
+  assert.ok(sim > 50 && fraun > 50, `curvas de la pantalla: ${sim}, ${fraun} px`);
+  // Sin coherencia: el dibujo cambia al momento y la simulación no vuelve a empezar.
+  const at = String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1];
+  await page.locator('[data-key="coherence"] input[type="range"]').fill('0');
+  await page.waitForFunction(() => /sin interferencia/.test(document.querySelectorAll('.fo-part .panel-title')[0]?.textContent ?? ''));
+  assert.equal(String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1], at);
+  assert.equal(await page.locator('.fo-end').isVisible(), true);
+  await page.screenshot({ path: join(shots, 'funcion-onda-rendijas-sin-coherencia.png') });
+  // Cambiar d sí repite la simulación: se quita el aviso y vuelve a t ≈ 0.
+  await page.locator('[data-key="slitSeparation"] input[type="range"]').fill('2');
+  await page.waitForFunction(() => /primer máximo a θ = 30,0°/.test(document.querySelector('.fo-status')?.textContent ?? ''));
+  assert.equal(await page.locator('.fo-end').isVisible(), false);
+  // Tema oscuro y modo presentación.
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+  await page.keyboard.press('p');
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: join(shots, 'funcion-onda-rendijas-presentacion-dark.png') });
+  await page.keyboard.press('Escape');
+  await close();
+  assert.deepEqual(errors, []);
+});
+
 for (const [tourId, steps] of /** @type {const} */ ([
   ['onda', ['part=cuerda', 'part=estados&potential=pozo-infinito', 'wellWidth=0.8', 'potential=barrera', 'potential=libre', 'twin=1']],
   ['compleja', ['part=cuerda', 'part=estados', 'wellWidth=0.8', 'twin=1', 'potential=armonico']],

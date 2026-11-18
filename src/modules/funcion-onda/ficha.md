@@ -2,7 +2,7 @@
 
 ## Qué estás viendo
 
-El módulo tiene tres vistas (control «Vista»). En las dos cuánticas, la función de onda $\psi$ se dibuja siempre igual: un **relleno de color** cuya altura es $|\psi|$ (o $|\psi|^2$, con el conmutador «Dibujar |ψ|²») y cuyo **tono es la fase** de $\psi$, según la rueda de colores que hay junto a la gráfica (rojo, fase 0; amarillo verdoso, π/2; azul verdoso, ±π; violeta, −π/2). La línea de arriba de las vistas resume el instante actual.
+El módulo tiene cuatro vistas (control «Vista»). En las dos primeras, la función de onda $\psi$ se dibuja siempre igual: un **relleno de color** cuya altura es $|\psi|$ (o $|\psi|^2$, con el conmutador «Dibujar |ψ|²») y cuyo **tono es la fase** de $\psi$, según la rueda de colores que hay junto a la gráfica (rojo, fase 0; amarillo verdoso, π/2; azul verdoso, ±π; violeta, −π/2). La línea de arriba de las vistas resume el instante actual.
 
 Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹⁵ s), energías en electronvoltios (eV) y masas en masas del electrón ($m_e$).
 
@@ -94,6 +94,22 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** Con «Pulso que viaja», mira el instante en que el pulso toca el extremo: con extremos fijos la cuerda queda momentáneamente plana y toda la energía es cinética (azul en 1); con extremos libres el desplazamiento se duplica, la cuerda se para un instante y toda la energía es potencial (naranja en 1).
 
+### Vista «Doble rendija (2D) y coherencia» · El plano visto desde arriba, a la izquierda
+
+**Qué ves.** Un plano de 25 × 25 nanómetros visto desde arriba. El eje horizontal es la posición $x$ a lo largo de la pared, en nanómetros; el vertical, la posición $y$ en la dirección en que avanza el electrón, también en nanómetros. El paquete sale de abajo y sube. La franja gris horizontal es una pared opaca con dos huecos, las rendijas; la línea negra de trazos de arriba es la pantalla. El color dice cuánta probabilidad hay en cada punto: violeta oscuro, nada; verde y amarillo, mucha. La barra de color de la derecha da la escala, que se reajusta en cada instante al punto más brillante. Lo que se colorea es la raíz de la densidad de probabilidad, en uno partido por nanómetro, para que se vea también la parte débil que pasa por las rendijas. Delante de la pared se dibuja la onda que llega; detrás, la que ha pasado por las rendijas, con la coherencia que marque el control «Coherencia γ».
+
+**Cómo leerla.** Cada rendija deja pasar una onda que se abre en abanico. Detrás de la pared las dos ondas se solapan y, donde llegan en fase, se refuerzan (franjas brillantes que salen como radios) y donde llegan en oposición se anulan (radios oscuros). No es que el electrón se parta en dos: lo que interfiere son las dos maneras posibles de llegar a cada punto, y cada electrón acaba en un solo punto de la pantalla. Cuando otro sistema guarda la información de por qué rendija ha pasado (una molécula del aire que choca con él, un fotón que rebota, cualquier detector, mire alguien o no), las dos maneras de llegar dejan de poder sumarse y la interferencia se borra: eso es la decoherencia. La coherencia γ mide cuánto se parecen los estados de ese otro sistema en los dos casos: 1 si no guarda nada, 0 si lo guarda todo.
+
+**Prueba esto.** (1) Elige esta vista en «Vista» (empieza con λ = 1 nm, d = 4 nm, w = 1 nm y γ = 1); cuando la onda ha pasado la pared, se ven radios brillantes que salen de entre las dos rendijas, separados por radios oscuros: uno central y tres a cada lado, los de fuera más débiles. (2) En cualquier instante, baja «Coherencia γ» a 0: los radios oscuros desaparecen y detrás de la pared queda un solo abanico ancho y suave, sin repetir la simulación. Súbela otra vez a 1 y vuelven.
+
+### Vista «Doble rendija» · La pantalla, a la derecha
+
+**Qué ves.** El eje horizontal es la posición $x$ a lo largo de la pantalla, en nanómetros; el vertical, la probabilidad por nanómetro de que el electrón llegue a cada punto, relativa al valor más alto de la gráfica (sin unidades). La curva azul continua es lo que ha llegado hasta ese instante en la simulación: la pantalla suma el flujo de probabilidad que la cruza, como un detector que cuenta electrones (sale cuando ya ha llegado el 0,5 % de la probabilidad; antes solo habrían llegado las colas más rápidas del paquete). La curva gris de puntos es lo que habría llegado sin ninguna interferencia, la suma de lo que deja cada rendija por separado. La curva verde de trazos es el patrón de Fraunhofer (la fórmula de libro para una pantalla muy lejana), con la misma coherencia y escalado para que su pico mida lo mismo. Las líneas verticales grises de puntos marcan dónde la diferencia de caminos desde las dos rendijas es un número entero de longitudes de onda, $m = 0, 1, 2\ldots$ (la etiqueta solo sale en las del lado derecho). La línea de estado de arriba da la energía del electrón, el ángulo del primer máximo y la probabilidad que ya ha llegado a la pantalla.
+
+**Cómo leerla.** Las franjas brillantes están donde un camino es más largo que el otro un número entero de longitudes de onda: así las dos ondas llegan en fase. Por eso las franjas se separan si la longitud de onda crece y se juntan si las rendijas se separan. El patrón de cada rendija sola (la curva gris) baja hacia los lados, y eso empuja un poco hacia el centro los máximos de la curva azul respecto a las líneas verticales; la fórmula de Fraunhofer hace lo mismo. Sin coherencia la curva azul se pega a la gris: la probabilidad total que llega no cambia, solo deja de repartirse en franjas. Con coherencia intermedia las franjas siguen en su sitio pero los mínimos ya no bajan a cero. El contraste de las franjas mide la coherencia. La pantalla está a 10 nm de las rendijas, no en el infinito, así que la simulación y Fraunhofer no coinciden del todo, sobre todo lejos del centro.
+
+**Prueba esto.** (1) Con los valores con que empieza la vista, al terminar, los máximos de la curva azul caen sobre las líneas $m = 0$, $1$ y $2$, y la línea de estado dice «primer máximo a θ = 14,5°». Cambia «Distancia entre las rendijas d» a 2 nm: al volver a terminar quedan tres franjas, el primer máximo pasa a θ = 30,0° (cerca de $x$ = 5,8 nm) y las líneas $m$ se separan el doble. (2) Pon «Coherencia γ» en 0,5: las franjas siguen en el mismo sitio, pero el mínimo junto al máximo central se queda a media altura (hacia 0,33 de la escala) en lugar de bajar casi a cero. Con 0, la curva azul coincide con la gris.
+
 ## Qué es físico y qué es representación
 
 - **Físico**: $|\psi|^2$ (densidad de probabilidad), los valores esperados, las incertidumbres, las energías de los niveles, las probabilidades de transmisión y reflexión, y la frecuencia de oscilación de $\langle x\rangle$. También el desplazamiento de la cuerda, que es una magnitud que se mueve de verdad en el espacio.
@@ -101,6 +117,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 - **ψ no es una onda en el espacio físico.** Para una partícula vive en una dimensión, como aquí; para $N$ partículas es una función de $3N$ coordenadas, $\psi(\mathbf{r}_1, \dots, \mathbf{r}_N, t)$, y no se puede dibujar como algo que vibre en nuestro espacio. La cuerda, en cambio, sí.
 - La cuerda de la vista del paquete viaja a la velocidad de grupo del paquete para comparar formas; su velocidad no sale de ninguna relación física con el electrón.
 - Las alturas de las funciones $\varphi_n$ en el diagrama de niveles tienen una escala arbitraria: solo su forma y su nivel tienen sentido.
+- En la doble rendija, con coherencia menor que 1 ya no hay una sola función de onda que dibujar: lo que se ve es la densidad de probabilidad de la partícula sola, sin mirar el otro sistema que guarda el camino (la «matriz densidad reducida»). Ese otro sistema no se dibuja; solo entra por el número γ. Nadie necesita «mirar»: basta con que la información quede registrada en algún sitio.
 
 ## Ecuaciones
 
@@ -134,6 +151,14 @@ $$\psi = c_1\varphi_1 e^{-iE_1t/\hbar} + c_2\varphi_2 e^{-iE_2t/\hbar}, \qquad \
 
 con $\omega_{21} = (E_2 - E_1)/\hbar$ y $x_{12} = \int\varphi_1\,x\,\varphi_2\,dx$. El fotón asociado tiene energía $E_2 - E_1$ y longitud de onda $\lambda = hc/(E_2 - E_1)$. En el pozo infinito, $|x_{12}| = 16L/9\pi^2$; con estados de la misma paridad en un potencial simétrico, $x_{12} = 0$.
 
+Doble rendija: la misma ecuación en dos dimensiones, con el mismo paso partido (FFT 2D). Si $\psi_1$ es la onda que llega con solo la rendija 1 abierta y $\psi_2$ con solo la 2, y otro sistema queda en $|e_1\rangle$ o $|e_2\rangle$ según el camino, con $\gamma = \langle e_1|e_2\rangle$ (Feynman, vol. III §1-6 y §3-2):
+
+$$\rho = |\psi_1|^2 + |\psi_2|^2 + 2\gamma\,\mathrm{Re}\!\left(\psi_1^*\psi_2\right), \qquad j_y = \frac{\hbar}{m}\,\mathrm{Im}\!\left[\psi_1^*\partial_y\psi_1 + \psi_2^*\partial_y\psi_2 + \gamma\left(\psi_1^*\partial_y\psi_2 + \psi_2^*\partial_y\psi_1\right)\right]$$
+
+La pantalla acumula $\int j_y\,dt$. Máximos de interferencia y patrón de Fraunhofer de dos rendijas de anchura $w$ separadas $d$ (Born & Wolf §7.3 y §8.5), con $\lambda = h/p$:
+
+$$d\,\sin\theta = m\lambda, \qquad I(\theta) \propto \left(\frac{\sin u}{u}\right)^2\left[1 + \gamma\cos\!\left(\frac{2\pi d\sin\theta}{\lambda}\right)\right], \quad u = \frac{\pi w\sin\theta}{\lambda}$$
+
 Cuerda: modos $\sin(n\pi x/L)$ (extremos fijos) o $\cos(n\pi x/L)$ (libres) con $\omega_n = n\pi c/L$; esquema de salto de rana con número de Courant $c\Delta t/\Delta x = 1$, que en una dimensión es exacto en los nodos.
 
 ## Límites del modelo
@@ -145,6 +170,7 @@ Cuerda: modos $\sin(n\pi x/L)$ (extremos fijos) o $\cos(n\pi x/L)$ (libres) con 
 - El paso partido tiene un error que crece con el cuadrado del paso de tiempo (aquí, como mucho 0,02 fs), mayor con potenciales de bordes abruptos; en las comprobaciones, la transmisión simulada coincide con la de ondas planas a menos del 1 %.
 - Los estados de la vista de estados se calculan en una caja de 1000 puntos: los niveles altos de un pozo finito o de los potenciales abiertos dependen de esa caja.
 - La cuerda es ideal: sin rigidez, sin rozamiento y con desplazamientos pequeños.
+- Doble rendija: malla de 256 × 256 puntos en un cuadrado de 32 nm de lado (Δx = 0,125 nm), con franjas absorbentes de 3,5 nm en los cuatro bordes. La pared es absorbente (una lámina negra de 1,5 nm de grosor, de bordes suaves), no un muro que refleja. $\psi_2$ se obtiene reflejando $\psi_1$ (el montaje es simétrico) y la onda con las dos rendijas abiertas se toma como $\psi_1 + \psi_2$: comparado con simularla directamente, la pantalla difiere en un 0,9 %. El paquete tiene una dispersión de energías (su anchura en $y$ es de 1,2 nm), y la onda que pasa por las rendijas tiene una longitud de onda media un 1 % menor que la nominal; por eso, y por la pantalla a solo 10 nm, los máximos quedan a 1–2 % de $d\sin\theta = m\lambda$. La coherencia γ es un número fijo: no se simula el sistema que registra el camino.
 - La conexión con la luz es la aproximación dipolar: no se calcula la emisión, solo la frecuencia y el dipolo oscilante. La vida de la superposición (emisión espontánea) no está incluida: la oscilación sigue para siempre.
 
 ## Referencias
@@ -153,4 +179,5 @@ Cuerda: modos $\sin(n\pi x/L)$ (extremos fijos) o $\cos(n\pi x/L)$ (libres) con 
 - I. N. Levine, *Quantum Chemistry*, caps. 1–4 (ecuación de Schrödinger, partícula en una caja, oscilador armónico).
 - R. P. Feynman, *The Feynman Lectures on Physics*, vol. III, caps. 1–3 (comportamiento cuántico, amplitudes de probabilidad, interferencia) y cap. 7 (dependencia temporal de las amplitudes, estados estacionarios).
 - Ecuación de ondas y modos de una cuerda: Feynman, vol. I, caps. 47–49.
+- Doble rendija e interferencia: Feynman, vol. III, cap. 1 (§1-4 a §1-8: experimento con electrones, observarlos) y cap. 3 (§3-2 y §3-3: sumar amplitudes, caminos distinguibles e indistinguibles); M. Born y E. Wolf, *Principles of Optics*, §7.3 (experimento de Young), §8.5 (difracción de Fraunhofer por una y varias rendijas) y §10.4 (coherencia parcial y visibilidad de las franjas). Matriz densidad reducida: M. A. Nielsen e I. L. Chuang, *Quantum Computation and Quantum Information*, §2.4.
 - Método de paso partido: M. D. Feit, J. A. Fleck y A. Steiger, *J. Comput. Phys.* 47, 412 (1982).
