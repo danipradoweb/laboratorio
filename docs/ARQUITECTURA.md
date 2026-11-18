@@ -88,10 +88,11 @@ src/
       view-<parte>.js      (02) opcional: una vista por archivo, montadas desde view.js
     luz-materia/           (02) cuatro vistas (parámetro `part`): physics.js (Lorentz),
                            physics-sheets.js (láminas), physics-fresnel.js (Fresnel)
-    funcion-onda/          (03) tres vistas (parámetro `part`): physics.js (Schrödinger 1D,
+    funcion-onda/          (03) cuatro vistas (parámetro `part`): physics.js (Schrödinger 1D,
                            paso partido, T(E)), physics-states.js (estados propios),
-                           physics-string.js (cuerda clásica); view-packet.js,
-                           view-states.js, view-string.js
+                           physics-string.js (cuerda clásica), physics-slits.js (doble
+                           rendija 2D y coherencia); view-packet.js, view-states.js,
+                           view-string.js, view-slits.js
 data/                      (01) fuentes y licencias en data/README.md
   cie/                     CMF y iluminantes (JSON)
   materials/               un JSON por material + index.json (generados)
@@ -176,14 +177,17 @@ Cada material es un JSON con `λ` (nm), `n`, `k`, fuente bibliográfica, licenci
 
 ## Fichas
 
-Cada módulo tiene `ficha.md` con estas secciones, breves:
-- **Qué estás viendo.** Qué representa cada vista y cada color.
+Cada módulo tiene `ficha.md` con estas secciones, en este orden y con estos títulos (la prueba de humo los comprueba):
+- **Qué estás viendo.** Una introducción corta (vistas, unidades, convenios de color comunes) y, después, **un apartado por cada vista** (por cada gráfica o panel), con un título `###` que la nombre como en pantalla y diga dónde está, y estas tres partes, en negrita y en este orden:
+  - **Qué ves.** Cada eje con su magnitud y sus unidades dichas en palabras («la posición x en nanómetros», no solo «x (nm)»), y cada curva, zona, línea y color: qué representa y de qué color es.
+  - **Cómo leerla.** La idea física que enseña la vista, al nivel de primero de carrera y **sin ecuaciones**: qué relación hay que mirar y por qué sale así.
+  - **Prueba esto.** Una o dos acciones concretas en los controles o en la gráfica, cada una con el resultado que se observa (números incluidos cuando los haya). **Cada acción se comprueba contra la pantalla** (a mano o con la prueba de humo) antes de escribirla.
 - **Qué es físico y qué es representación.**
-- **Ecuaciones.** Las que implementa el módulo, en KaTeX y con notación coherente con la bibliografía de la carrera.
+- **Ecuaciones.** Las que implementa el módulo, en KaTeX y con notación coherente con la bibliografía de la carrera. Es el único sitio de la ficha con ecuaciones desarrolladas.
 - **Límites del modelo.** Qué deja fuera y cuándo deja de valer.
 - **Referencias.** Libro y sección concretos: Griffiths (Electrodynamics), Born & Wolf, Bohren & Huffman, Feynman Lectures, Kittel, Ashcroft-Mermin, Levine, Nielsen & Chuang, Gaponenko.
 
-Las fichas no son un libro de texto. Explican lo que se ve en pantalla.
+Ejemplos completos: `src/modules/_plantilla/ficha.md` (dos vistas) y `src/modules/funcion-onda/ficha.md` (cuatro vistas con varias gráficas cada una).
 
 ## Accesibilidad y rendimiento
 
