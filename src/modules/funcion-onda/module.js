@@ -418,7 +418,7 @@ const descriptor = {
       ],
       combos: [
         { id: 'barrera', title: 'Qué parte del paquete atraviesa la barrera', summary: 'Las componentes de momento que la curva de transmisión deja pasar son las que acaban al otro lado.', graphs: ['psi', 'momentos'] },
-        { id: 'incertidumbre', title: 'La incertidumbre mientras el paquete se mueve', summary: 'Mientras el paquete avanza y se ensancha, las medias siguen a la partícula clásica y Δx·Δp crece.', graphs: ['psi', 'valores-esperados'] },
+        { id: 'incertidumbre', title: 'La incertidumbre mientras el paquete se mueve', summary: 'Mientras el paquete avanza, se ensancha o se parte, Δx·Δp crece; con el potencial libre o el armónico, las medias siguen a la partícula clásica.', graphs: ['psi', 'valores-esperados'] },
         { id: 'onda', title: 'Qué tiene de onda y qué no', summary: 'Con la misma forma inicial, la cuerda lleva el pulso intacto y el paquete se dispersa.', graphs: ['psi', 'cuerda-comparada'] },
       ],
     },

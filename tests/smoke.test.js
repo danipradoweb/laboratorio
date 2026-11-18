@@ -857,7 +857,7 @@ test('función de onda: pantallas, vistas enlazadas, fase global, presets y lo q
       await hashHas(['pantalla=2']);
       assert.deepEqual(await shown(), ['niveles', 'puente-luz']);
       // Pozo de 0,8 nm: ΔE = 1,76 eV, periodo 2,35 fs, fotón de 703 nm (rojo).
-      await waitText(/periodo h\/\(E2−E1\)=2,35 fs/, 'puente-luz');
+      await waitText(/periodo h\/∣E2−E1∣=2,35 fs/, 'puente-luz');
       assert.match(await info('puente-luz'), /fotón de 1,76 eV: λ=703,4 nm, visible/);
       assert.equal(await page.locator('.fo-swatch').isVisible(), true);
       // Prueba esto: el segundo estado en 3 → ⟨x⟩ quieto (regla de selección).
@@ -962,6 +962,9 @@ test('función de onda: el enlace copiado restaura la pantalla, y otra pantalla 
   assert.deepEqual(await shown(), ['coeficientes']);
   assert.equal(await page.locator('.sim-together').isVisible(), false);
   assert.match(await info('coeficientes'), /ángulo entre ellos/);
+  // Con peso 0 solo queda un estado: no hay ángulo entre coeficientes (revisión independiente).
+  await page.locator('[data-key="weight"] input[type="range"]').fill('0');
+  await waitText(/un solo coeficiente/, 'coeficientes');
   await close();
   assert.deepEqual(errors, []);
 });

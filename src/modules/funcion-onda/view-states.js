@@ -277,7 +277,7 @@ export function mountStates(ctx, color) {
       const lambda = tr.wavelengthNm;
       const region = spectralRegion(lambda);
       bridgeSlot.setInfo([
-        quantity('periodo', `h/(E_{${b + 1}} - E_{${a + 1}})`, texSig(period, 3), 'fs') + ` (frecuencia ${formatSig(tr.frequencyTHz, 3)} THz)`,
+        quantity('periodo', `h/|E_{${b + 1}} - E_{${a + 1}}|`, texSig(period, 3), 'fs') + ` (frecuencia ${formatSig(tr.frequencyTHz, 3)} THz)`,
         `amplitud $${texSig(amplitudeX, 2)}\\ \\mathrm{nm}$`,
         `fotón de $${texSig(tr.deltaE, 3)}\\ \\mathrm{eV}$: ` + quantity('', '\\lambda', texSig(lambda, 4), 'nm') + `, ${region}`,
       ]);
@@ -326,8 +326,9 @@ export function mountStates(ctx, color) {
     if (a !== b) phasorSeries.push({ ...arrow(zb), color: 1, width: 1.6, label: `$c_{${b + 1}}\\,e^{-iE_{${b + 1}}t/\\hbar}$` });
     if (phasorSlot.visible) phasorPlot.draw({ series: phasorSeries });
     const relative = a === b ? 0 : Math.atan2(za.re * zb.im - za.im * zb.re, za.re * zb.re + za.im * zb.im);
+    // Con un solo estado (mismo índice, o peso 0 o 1) el ángulo entre coeficientes no existe.
     phasorSlot.setInfo(
-      a === b
+      a === b || pa === 0 || pb === 0
         ? ['un solo coeficiente: gira, y nada observable cambia']
         : [`ángulo entre ellos: $${Math.round((relative * 180) / Math.PI)}^\\circ$ (esto es lo observable)`],
     );
