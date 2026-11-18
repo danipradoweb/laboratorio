@@ -15,7 +15,6 @@
 // caja que contiene el potencial; la evolución es exacta: cada término gira a su ritmo.
 
 import { el } from '../../ui/dom.js';
-import { addPanel, createPanelGrid } from '../../ui/panels.js';
 import { createPlot } from '../../ui/plot2d.js';
 import { createPhaseWheel } from '../../ui/colormaps.js';
 import { formatEs } from '../../ui/format.js';
@@ -28,7 +27,7 @@ import {
   twoStateCoefficients,
   twoStateMeanPosition,
 } from './physics-states.js';
-import { DRAW_COLUMNS, DRAW_RANGE, DRAW_WIDTH, formatSig, phaseFillImage, potentialSpecFromState, spectralRegion } from './view-common.js';
+import { DRAW_COLUMNS, DRAW_RANGE, DRAW_WIDTH, formatSig, phaseFillImage, potentialSpecFromState, quantity, spectralRegion, texNum, texSig } from './view-common.js';
 
 /** Número de estados que se calculan y se pueden elegir. */
 const COUNT = 8;
@@ -65,17 +64,13 @@ function boxFor(spec) {
 }
 
 /**
- * @param {HTMLElement} container
- * @param {import('../types.js').ModuleContext} ctx
- * @param {(text: string) => void} setStatus
+ * @param {import('./view-common.js').PartContext} ctx
  * @param {import('../../color/spectrum.js').ColorEngine} color
  * @returns {import('./view-common.js').PartView}
  */
-export function mountStates(container, ctx, setStatus, color) {
-  const grid = createPanelGrid(container, 'fo-grid-states');
-
-  const levelsPanel = addPanel(grid, 'Niveles de energía', { area: 'levels' });
-  const levelsPlot = createPlot(levelsPanel.body, {
+export function mountStates(ctx, color) {
+  const levelsSlot = ctx.graph('niveles');
+  const levelsPlot = createPlot(levelsSlot.body, {
     xLabel: 'posición x (nm)',
     yLabel: 'energía (eV)',
     exportName: 'funcion-onda-niveles',
@@ -99,23 +94,23 @@ export function mountStates(container, ctx, setStatus, color) {
   /** Con el potencial dibujado, un clic por debajo del nivel 1 dibuja; por encima elige nivel. */
   let pickDraws = false;
 
-  const psiPanel = addPanel(grid, 'ψ(x, t)', { area: 'psi' });
+  const psiSlot = ctx.graph('superposicion');
   const psiBox = el('div', { class: 'fo-stack' });
   const psiItem = el('div', { class: 'fo-stack-item' });
   psiBox.append(psiItem);
   const psiBody = el('div', { class: 'fo-with-wheel' }, psiBox);
-  psiPanel.body.append(psiBody);
+  psiSlot.body.append(psiBody);
   const psiPlot = createPlot(psiItem, { xLabel: 'posición x (nm)', exportName: 'funcion-onda-superposicion' });
   const wheel = createPhaseWheel(psiBody, { label: 'tono: fase de ψ · altura: |ψ| (o |ψ|²)' });
 
-  const bridgePanel = addPanel(grid, 'El puente con la luz', { area: 'bridge' });
-  const swatch = el('span', { class: 'fo-swatch', 'aria-hidden': 'true' });
-  const bridgeTitle = el('span');
-  bridgePanel.title.replaceChildren(bridgeTitle, swatch);
-  const bridgePlot = createPlot(bridgePanel.body, { xLabel: 'tiempo t (fs)', yLabel: '⟨x⟩ (nm)', exportName: 'funcion-onda-dipolo' });
+  const bridgeSlot = ctx.graph('puente-luz');
+  // Muestra del color del fotón, junto al título.
+  const swatch = el('span', { class: 'fo-swatch', 'aria-hidden': 'true', hidden: true });
+  bridgeSlot.titleExtra.append(swatch);
+  const bridgePlot = createPlot(bridgeSlot.body, { xLabel: 'tiempo t (fs)', yLabel: '⟨x⟩ (nm)', exportName: 'funcion-onda-dipolo' });
 
-  const phasorPanel = addPanel(grid, 'Los coeficientes en el plano complejo', { area: 'phasors' });
-  const phasorPlot = createPlot(phasorPanel.body, {
+  const phasorSlot = ctx.graph('coeficientes');
+  const phasorPlot = createPlot(phasorSlot.body, {
     xLabel: 'parte real',
     yLabel: 'parte imaginaria',
     xRange: [-1.15, 1.15],
@@ -199,18 +194,21 @@ export function mountStates(container, ctx, setStatus, color) {
         label: n === a ? `φ${a + 1} (primer estado)` : n === b && a !== b ? `φ${b + 1} (segundo estado)` : undefined,
       });
     }
-    pickDraws = false;
-    if (state.potential === 'dibujado') pickDraws = true;
+    pickDraws = state.potential === 'dibujado';
+    if (levelsSlot.visible) {
     levelsPlot.draw({
       series: levelSeries,
       xRange,
       yRange: [Math.min(eMin, s.spec.type === 'dibujado' ? DRAW_RANGE[0] : eMin) - 0.3 * spacing, top],
     });
-    levelsPanel.title.textContent =
-      `Niveles de energía y estados propios φₙ (cada uno dibujado a la altura de su energía)` +
-      (['libre', 'escalon', 'barrera', 'doble-barrera', 'dibujado'].includes(s.spec.type) ? ` · en una caja de ${formatEs(span, 0)} nm` : '') +
-      (s.spec.type === 'pozo-finito' && eMax > 0 ? ' · por encima de 0 eV los niveles son de la caja de cálculo, no estados ligados' : '') +
-      ` · clic en un nivel: segundo estado`;
+    levelsSlot.setInfo([
+      quantity('primer estado', `E_{${a + 1}}`, texSig(s.energies[a], 4), 'eV'),
+      a !== b ? quantity('segundo', `E_{${b + 1}}`, texSig(s.energies[b], 4), 'eV') : '',
+      ['libre', 'escalon', 'barrera', 'doble-barrera', 'dibujado'].includes(s.spec.type) ? `estados calculados en una caja de ${formatEs(span, 0)} nm` : '',
+      s.spec.type === 'pozo-finito' && eMax > 0 ? 'por encima de 0 eV, los niveles son de la caja de cálculo, no estados ligados' : '',
+      'clic en un nivel: segundo estado',
+    ]);
+    }
 
     // --- ψ(x, t) ----------------------------------------------------------------------------
     const psi = applyGlobalPhase(superpose(s.states, s.energies, coefs, t), phi);
@@ -225,6 +223,9 @@ export function mountStates(container, ctx, setStatus, color) {
     const psiSeries = [];
     if (showRe) psiSeries.push({ x: s.x, y: psi.re, color: 0, label: 'Re ψ' });
     if (showIm) psiSeries.push({ x: s.x, y: psi.im, color: 1, label: 'Im ψ' });
+    const pa = ca.re * ca.re + ca.im * ca.im;
+    const pb = a === b ? 0 : cb.re * cb.re + cb.im * cb.im;
+    if (psiSlot.visible) {
     psiPlot.draw({
       image: phaseFillImage(psi.re, psi.im, { xRange: [s.x[0] - step / 2, s.x[NODES - 1] + step / 2], yRange, squared }),
       series: psiSeries,
@@ -233,12 +234,16 @@ export function mountStates(container, ctx, setStatus, color) {
       yRange,
       yLabel: squared ? '|ψ|² (nm⁻¹)' : 'ψ (1/√nm)',
     });
-    const pa = ca.re * ca.re + ca.im * ca.im;
-    const pb = a === b ? 0 : cb.re * cb.re + cb.im * cb.im;
-    psiPanel.title.textContent =
-      a === b || pb === 0 || pa === 0
-        ? `ψ(x, t) = un solo estado propio, φ${pb === 0 || a === b ? a + 1 : b + 1}: solo gira su fase, |ψ|² no cambia · t = ${formatEs(t, 2)} fs`
-        : `ψ = ${formatEs(Math.sqrt(pa), 2)}·φ${a + 1} + ${formatEs(Math.sqrt(pb), 2)}·e^(i·${Math.round((theta * 180) / Math.PI)}°)·φ${b + 1}, cada término girando a su ritmo · t = ${formatEs(t, 2)} fs`;
+    const single = a === b || pb === 0 || pa === 0;
+    psiSlot.setInfo(
+      single
+        ? [`un solo estado propio, $\\varphi_{${pb === 0 || a === b ? a + 1 : b + 1}}$: solo gira su fase y $|\\psi|^2$ no cambia`, quantity('', 't', texNum(t, 2), 'fs')]
+        : [
+            `$\\psi = ${texNum(Math.sqrt(pa), 2)}\\,\\varphi_{${a + 1}} + ${texNum(Math.sqrt(pb), 2)}\\,e^{i\\,${Math.round((theta * 180) / Math.PI)}^\\circ}\\varphi_{${b + 1}}$, cada término girando a su ritmo`,
+            quantity('', 't', texNum(t, 2), 'fs'),
+          ],
+    );
+    }
 
     // --- Puente con la luz --------------------------------------------------------------------
     const tr = transition(s.energies[a], s.energies[b]);
@@ -251,6 +256,7 @@ export function mountStates(container, ctx, setStatus, color) {
     const amplitudeX = a === b ? 0 : 2 * Math.sqrt(pa * pb) * Math.abs(elements.xab);
     const xMid = a === b ? s.xm[a][a] : pa * elements.xaa + pb * elements.xbb;
     const ySpan = Math.max(0.05 * span, 1.3 * amplitudeX);
+    if (bridgeSlot.visible) {
     bridgePlot.draw({
       series: [{ x: ts, y: xMean, color: 0, label: '⟨x⟩(t): la carga oscila como un dipolo' }],
       vlines: [{ x: t % window, color: colors.textSoft }],
@@ -260,17 +266,19 @@ export function mountStates(container, ctx, setStatus, color) {
     });
     if (Number.isFinite(period) && amplitudeX < 1e-6 * span) {
       // ⟨φa|x|φb⟩ = 0: los dos estados tienen la misma paridad (potencial simétrico).
-      bridgeTitle.textContent =
-        `El puente con la luz · ⟨x⟩ no oscila: ⟨φ${a + 1}|x|φ${b + 1}⟩ = 0 (los dos estados tienen la misma simetría)` +
-        ` · |ψ|² cambia, pero sin dipolo oscilante esta transición no emite ni absorbe luz (regla de selección)`;
+      bridgeSlot.setInfo([
+        `$\\langle x\\rangle$ no oscila: $\\langle\\varphi_{${a + 1}}|x|\\varphi_{${b + 1}}\\rangle = 0$ (los dos estados tienen la misma simetría)`,
+        '$|\\psi|^2$ cambia, pero sin dipolo oscilante esta transición no emite ni absorbe luz (regla de selección)',
+      ]);
       swatch.hidden = true;
     } else if (Number.isFinite(period)) {
       const lambda = tr.wavelengthNm;
       const region = spectralRegion(lambda);
-      bridgeTitle.textContent =
-        `El puente con la luz · ⟨x⟩ oscila con periodo h/(E${b + 1} − E${a + 1}) = ${formatSig(period, 3)} fs` +
-        ` (frecuencia ${formatSig(tr.frequencyTHz, 3)} THz)` +
-        ` (amplitud ${formatSig(amplitudeX, 2)} nm) · fotón de ${formatSig(tr.deltaE, 3)} eV: λ = ${formatSig(lambda, 4)} nm, ${region}`;
+      bridgeSlot.setInfo([
+        quantity('periodo', `h/(E_{${b + 1}} - E_{${a + 1}})`, texSig(period, 3), 'fs') + ` (frecuencia ${formatSig(tr.frequencyTHz, 3)} THz)`,
+        `amplitud $${texSig(amplitudeX, 2)}\\ \\mathrm{nm}$`,
+        `fotón de $${texSig(tr.deltaE, 3)}\\ \\mathrm{eV}$: ` + quantity('', '\\lambda', texSig(lambda, 4), 'nm') + `, ${region}`,
+      ]);
       if (region === 'visible') {
         // Tono de la línea espectral llevado al mayor brillo que cabe en pantalla.
         const rgb = color.wavelengthToSrgb(lambda, 1);
@@ -279,8 +287,9 @@ export function mountStates(container, ctx, setStatus, color) {
         swatch.hidden = false;
       } else swatch.hidden = true;
     } else {
-      bridgeTitle.textContent = 'El puente con la luz · con un solo estado ⟨x⟩ no oscila: ni absorbe ni emite';
+      bridgeSlot.setInfo(['con un solo estado $\\langle x\\rangle$ no oscila: ni absorbe ni emite']);
       swatch.hidden = true;
+    }
     }
 
     // --- Coeficientes ---------------------------------------------------------------------------
@@ -313,18 +322,19 @@ export function mountStates(container, ctx, setStatus, color) {
     const phasorSeries = [{ x: circle.map(Math.cos), y: circle.map(Math.sin), color: colors.grid, width: 0.8 }];
     phasorSeries.push({ ...arrow(za), color: 0, width: 1.6, label: `c${a + 1}·e^(−iE${a + 1}t/ħ)` });
     if (a !== b) phasorSeries.push({ ...arrow(zb), color: 1, width: 1.6, label: `c${b + 1}·e^(−iE${b + 1}t/ħ)` });
-    phasorPlot.draw({ series: phasorSeries });
+    if (phasorSlot.visible) phasorPlot.draw({ series: phasorSeries });
     const relative = a === b ? 0 : Math.atan2(za.re * zb.im - za.im * zb.re, za.re * zb.re + za.im * zb.im);
-    phasorPanel.title.textContent =
+    phasorSlot.setInfo(
       a === b
-        ? 'El coeficiente en el plano complejo: gira, y nada observable cambia'
-        : `Los coeficientes en el plano complejo · ángulo entre ellos ${Math.round((relative * 180) / Math.PI)}° (esto es lo observable)`;
-
-    setStatus(
-      `E${a + 1} = ${formatSig(s.energies[a], 4)} eV` +
-        (a !== b ? ` · E${b + 1} = ${formatSig(s.energies[b], 4)} eV · probabilidades ${formatEs(pa, 2)} y ${formatEs(pb, 2)}` : '') +
-        ` · t = ${formatEs(t, 2)} fs · masa ${formatEs(Number(state.mass), 2)} mₑ`,
+        ? ['un solo coeficiente: gira, y nada observable cambia']
+        : [`ángulo entre ellos: $${Math.round((relative * 180) / Math.PI)}^\\circ$ (esto es lo observable)`],
     );
+
+    ctx.setStatus([
+      pa > 0 && pb > 0 && a !== b ? `probabilidades de cada energía: ${formatEs(pa, 2)} y ${formatEs(pb, 2)}` : '',
+      quantity('tiempo', 't', texNum(t, 2), 'fs'),
+      quantity('masa de la partícula', 'm', texNum(Number(state.mass), 2), 'm_e'),
+    ]);
   }
 
   const offTick = ctx.clock.onTick((time, dt) => {
@@ -350,7 +360,8 @@ export function mountStates(container, ctx, setStatus, color) {
       offTick();
       wheel.destroy();
       for (const p of [levelsPlot, psiPlot, bridgePlot, phasorPlot]) p.destroy();
-      grid.remove();
+      psiBody.remove();
+      swatch.remove();
     },
   };
 }

@@ -12,7 +12,9 @@
 //   T            muestra u oculta el texto del recorrido
 //   F            pantalla completa       C       tema claro / oscuro
 //   ← →          paso anterior / siguiente del recorrido (también fuera de este modo,
-//                y con RePág / AvPág, que es lo que envían los mandos de presentación)
+//                y con RePág / AvPág, que es lo que envían los mandos de presentación);
+//                sin recorrido, pantalla anterior / siguiente de la simulación (formato
+//                con simulaciones), dentro y fuera de este modo
 //
 // La parte que decide qué hace cada tecla (keyToAction) es una función pura y se
 // prueba en Node. El resto maneja el DOM.
@@ -25,7 +27,8 @@ import { getTheme, toggleTheme, onThemeChange } from './theme.js';
  *   | { type: 'preset', index: number } | { type: 'toggle-play' }
  *   | { type: 'slower' } | { type: 'faster' } | { type: 'toggle-tour-text' }
  *   | { type: 'toggle-fullscreen' } | { type: 'toggle-theme' }
- *   | { type: 'tour-next' } | { type: 'tour-previous' }} KeyAction
+ *   | { type: 'tour-next' } | { type: 'tour-previous' }
+ *   | { type: 'screen-next' } | { type: 'screen-previous' }} KeyAction
  */
 
 /**
@@ -50,6 +53,11 @@ export function keyToAction(event, { presenting, tourActive }) {
   if (tourActive && !altGr) {
     if (key === 'ArrowRight' || key === 'PageDown') return { type: 'tour-next' };
     if (key === 'ArrowLeft' || key === 'PageUp') return { type: 'tour-previous' };
+  }
+  // Sin recorrido, las flechas cambian de pantalla (no chocan con ningún otro atajo).
+  if (!tourActive && !altGr) {
+    if (key === 'ArrowRight') return { type: 'screen-next' };
+    if (key === 'ArrowLeft') return { type: 'screen-previous' };
   }
   if (!presenting) return null;
 
@@ -77,6 +85,8 @@ export function keyToAction(event, { presenting, tourActive }) {
  * @property {(index: number) => void} goToPresetIndex
  * @property {import('./tours.js').TourRunner | null} tour
  * @property {boolean} [presentable] false si la página no se puede presentar (página de entrada)
+ * @property {() => void} [nextScreen] pantalla siguiente (formato con simulaciones)
+ * @property {() => void} [previousScreen] pantalla anterior
  */
 
 /**
@@ -194,6 +204,12 @@ export function createPresentation({ getPage }) {
       case 'tour-previous':
         page.tour?.previous();
         break;
+      case 'screen-next':
+        page.nextScreen?.();
+        break;
+      case 'screen-previous':
+        page.previousScreen?.();
+        break;
     }
   }
 
@@ -211,6 +227,10 @@ export function createPresentation({ getPage }) {
     if (!page) return;
     const action = keyToAction(event, { presenting: isActive(), tourActive: page.tour !== null });
     if (!action) return;
+    // Sobre un control (un deslizador, una casilla) o en un cuadro de diálogo, las flechas
+    // son suyas: no cambian de pantalla.
+    const screenKey = action.type === 'screen-next' || action.type === 'screen-previous';
+    if (screenKey && (!page.nextScreen || (target instanceof HTMLElement && target.closest('input, select, textarea, [role="dialog"]')))) return;
     event.preventDefault();
     run(action);
   });

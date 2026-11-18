@@ -24,6 +24,45 @@ export const BOUND_POTENTIALS = ['pozo-infinito', 'armonico'];
  */
 
 /**
+ * Lo que recibe cada simulación: el contexto del módulo, con los huecos de las gráficas y
+ * el bloque «Estado» seguros (este módulo usa el formato con simulaciones).
+ * @typedef {import('../types.js').ModuleContext & {
+ *   graph: (id: string) => import('../types.js').GraphSlot,
+ *   setStatus: (parts: string[]) => void }} PartContext
+ */
+
+/**
+ * Número con coma decimal escrito para TeX: la coma entre llaves, para que KaTeX no añada
+ * el espacio que pone tras una coma de enumeración (1{,}15 se ve «1,15»).
+ * @param {number} value
+ * @param {number} [decimals]
+ */
+export function texNum(value, decimals = 2) {
+  return formatEs(value, decimals).replace(/,/g, '{,}');
+}
+
+/**
+ * Lo mismo con unas cifras significativas (formatSig).
+ * @param {number} value
+ * @param {number} [digits]
+ */
+export function texSig(value, digits = 3) {
+  return formatSig(value, digits).replace(/,/g, '{,}');
+}
+
+/**
+ * Trozo de una línea secundaria: «significado $magnitud = valor\ unidad$».
+ * @param {string} meaning en palabras («momento medio»); puede ir vacío
+ * @param {string} tex magnitud en TeX ('\\langle p\\rangle/\\hbar')
+ * @param {string} value valor ya en TeX (texNum)
+ * @param {string} [unit] unidad en TeX, en redonda ('nm^{-1}', 'fs')
+ */
+export function quantity(meaning, tex, value, unit) {
+  const u = unit ? `\\ \\mathrm{${unit}}` : '';
+  return `${meaning ? `${meaning} ` : ''}$${tex} = ${value}${u}$`;
+}
+
+/**
  * Segundos (de reloj, a velocidad 1×) que una simulación con tiempo final se queda en su
  * último instante antes de volver a empezar sola. Daniel prefiere el bucle a un aviso de
  * fin (encargo R1); la breve espera deja ver el resultado (lo que ha pasado la barrera, el

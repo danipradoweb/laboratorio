@@ -1,25 +1,25 @@
 // @ts-check
 // Ondas clásicas y función de onda: vista del módulo.
 //
-// Cuatro vistas, que se eligen con el parámetro `part`:
+// Cuatro simulaciones, que se eligen con el parámetro `part` (formato con simulaciones del
+// encargo R1: el núcleo pone las gráficas en pantallas, con su título y su explicación):
 //
 //   paquete   un paquete de ondas con la ecuación de Schrödinger            view-packet.js
 //   estados   estados propios, superposición, fases y el puente con la luz   view-states.js
 //   cuerda    la cuerda clásica sola                                         view-string.js
 //   rendijas  doble rendija en 2D con control de coherencia                  view-slits.js
 //
-// Este archivo solo mantiene la línea de estado de arriba y monta la vista que toca. Cada
-// vista vive en su archivo y cumple { update(state), destroy() }.
+// Este archivo solo monta la simulación que toca. Cada una vive en su archivo, dibuja en los
+// huecos que le da el núcleo (ctx.graph(id), con los id de module.js) y cumple
+// { update(state), destroy() }.
 
-import { el } from '../../ui/dom.js';
 import { mountPacket } from './view-packet.js';
 import { mountStates } from './view-states.js';
 import { mountString } from './view-string.js';
 import { mountSlits } from './view-slits.js';
 
 /**
- * @typedef {(container: HTMLElement, ctx: import('../types.js').ModuleContext, setStatus: (text: string) => void,
- *   color: import('../../color/spectrum.js').ColorEngine) => import('./view-common.js').PartView} PartFactory
+ * @typedef {(ctx: import('./view-common.js').PartContext, color: import('../../color/spectrum.js').ColorEngine) => import('./view-common.js').PartView} PartFactory
  */
 
 /** @type {Record<string, PartFactory>} */
@@ -31,39 +31,34 @@ const PARTS = {
 };
 
 /**
- * @param {HTMLElement} container
+ * @param {HTMLElement} _container no se usa: las gráficas van en los huecos de ctx.graph
  * @param {import('../types.js').ModuleContext} ctx
  * @returns {Promise<import('../types.js').ModuleInstance>}
  */
-export async function mount(container, ctx) {
+export async function mount(_container, ctx) {
   const color = await ctx.color.load();
-  const status = el('p', { class: 'fo-status', role: 'status' });
-  const partBox = el('div', { class: 'fo-part' });
-  const root = el('div', { class: 'fo-root' }, status, partBox);
-  container.append(root);
+  const { graph, setStatus } = ctx;
+  if (!graph || !setStatus) throw new Error('funcion-onda usa el formato con simulaciones: falta ctx.graph');
+  /** @type {import('./view-common.js').PartContext} */
+  const partCtx = { ...ctx, graph, setStatus };
 
   /** @type {import('./view-common.js').PartView | null} */
   let current = null;
   let currentPart = '';
-  const setStatus = (/** @type {string} */ text) => {
-    if (status.textContent !== text) status.textContent = text;
-  };
 
   return {
     update(state) {
       const part = String(state.part) in PARTS ? String(state.part) : 'paquete';
       if (part !== currentPart) {
         current?.destroy();
-        setStatus('');
-        current = PARTS[part](partBox, ctx, setStatus, color);
+        setStatus([]);
+        current = PARTS[part](partCtx, color);
         currentPart = part;
-        root.dataset.part = part;
       }
       current?.update(state);
     },
     destroy() {
       current?.destroy();
-      root.remove();
     },
   };
 }

@@ -42,8 +42,11 @@ test('las flechas (y RePág/AvPág) mueven el recorrido solo si hay uno en curso
   assert.deepEqual(keyToAction({ key: 'PageDown' }, tour), { type: 'tour-next' });
   assert.deepEqual(keyToAction({ key: 'PageUp' }, tour), { type: 'tour-previous' });
   assert.deepEqual(keyToAction({ key: 'ArrowRight' }, { presenting: true, tourActive: true }), { type: 'tour-next' });
-  assert.equal(keyToAction({ key: 'ArrowRight' }, normal), null);
-  assert.equal(keyToAction({ key: 'ArrowRight' }, presenting), null);
+  // Sin recorrido, las flechas cambian de pantalla de la simulación (formato del encargo R1);
+  // RePág y AvPág solo sirven para los recorridos.
+  assert.deepEqual(keyToAction({ key: 'ArrowRight' }, normal), { type: 'screen-next' });
+  assert.deepEqual(keyToAction({ key: 'ArrowLeft' }, presenting), { type: 'screen-previous' });
+  assert.equal(keyToAction({ key: 'PageDown' }, normal), null);
 });
 
 test('los atajos del navegador (Ctrl, Cmd, Alt) no se interceptan', () => {

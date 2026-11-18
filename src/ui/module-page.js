@@ -26,6 +26,8 @@ import { loadColorEngine } from '../color/spectrum.js';
 import { loadMaterial, loadMaterialIndex } from '../materials/library.js';
 import { createEntryPage, presetLink } from './entry-page.js';
 import { isPilot, normalizeSelection, simulationHash, simulationOf, splitViewQuery, parseScreen } from '../core/simulations.js';
+import { createScreens } from './screens.js';
+import { katexReady, renderInfo } from './info-line.js';
 
 /**
  * @typedef {import('../modules/types.js').ModuleDescriptor} ModuleDescriptor
@@ -108,17 +110,42 @@ export async function createModulePage(root, module, query, shell) {
       panelClosedByFicha = false; // lo ha decidido el usuario: no se toca más
     },
   });
-  const stage = el('div', { class: 'stage' });
-  const stageFrame = el('div', { class: 'stage-frame' }, stage);
+  // En el formato con simulaciones, la vista no pone nada en `stage` (oculto): dibuja en los
+  // huecos de las tarjetas de gráfica, que reparte en pantallas src/ui/screens.js.
+  const stage = el('div', { class: 'stage', hidden: pilot });
+  const stageFrame = el('div', { class: pilot ? 'stage-frame sim-frame' : 'stage-frame' }, stage);
+  // En el móvil, los controles de una simulación empiezan plegados: primero, la gráfica.
+  const startClosed = pilot && window.matchMedia('(max-width: 760px)').matches;
   const page = el(
     'div',
-    { class: 'module-page', dataset: { panel: 'open', module: module.id } },
+    { class: 'module-page', dataset: { panel: startClosed ? 'closed' : 'open', module: module.id, format: pilot ? 'simulaciones' : 'clasico' } },
     sidePanel,
     panelToggle,
     stageFrame,
   );
   root.replaceChildren(page);
   const ficha = createFichaPanel(page, module.id);
+  /** La vista ya está montada (antes no hay nada que redibujar). */
+  let started = false;
+  const screens = simulation
+    ? createScreens(stageFrame, {
+        module,
+        onChange: (graphs, newScreen) => {
+          selection = graphs;
+          screen = newScreen;
+          writeUrlSoon();
+        },
+        onShow: () => {
+          if (started) scheduleUpdate();
+        },
+      })
+    : null;
+  if (screens && simulation) {
+    // KaTeX, antes de la primera pintura de títulos y líneas secundarias.
+    await katexReady();
+    screens.setSimulation(simulation, selection, screen);
+    screen = screens.screen;
+  }
 
   const controls = buildControls(controlsBox, module.params, store);
   const clockControls = module.animated ? buildClockControls(clockBox, clock) : null;
@@ -298,15 +325,11 @@ export async function createModulePage(root, module, query, shell) {
   if (pilot) {
     ctx.setStatus = (parts) => renderInfo(statusBox, parts);
   }
+  if (screens) ctx.graph = (id) => screens.slot(id);
   const instance = await module.mount(stage, ctx);
   instance.update(store.get());
+  started = true;
 
-  // Recorrido pedido desde la página de entrada.
-  if (pendingTour && pendingTour.moduleId === module.id) {
-    const tour = module.tours.find((t) => t.id === pendingTour?.tourId);
-    pendingTour = null;
-    if (tour) startTour(tour);
-  }
 
   // Con el módulo ya en pantalla, y en un rato libre, se descargan la ficha y KaTeX:
   // desde ese momento el módulo funciona entero aunque se pierda la conexión.
@@ -334,6 +357,8 @@ export async function createModulePage(root, module, query, shell) {
   function setSelection(graphs, newScreen) {
     selection = graphs;
     screen = newScreen;
+    screens?.setSelection(graphs, newScreen);
+    if (screens) screen = screens.screen;
     writeUrlSoon();
   }
 
@@ -346,7 +371,11 @@ export async function createModulePage(root, module, query, shell) {
     if (simulation && simulationOf(module, state).id !== simulation.id) {
       // Otra simulación (un preset, un recorrido, la URL): sus gráficas, desde la pantalla 1.
       simulation = simulationOf(module, state);
-      setSelection(normalizeSelection(simulation, pendingSelection).graphs, 0);
+      selection = normalizeSelection(simulation, pendingSelection).graphs;
+      screen = 0;
+      // Las tarjetas nuevas, antes de que la vista monte la simulación (en el próximo update).
+      screens?.setSimulation(simulation, selection, screen);
+      writeUrlSoon();
       pendingSelection = null;
       filterPresets();
     }
@@ -363,6 +392,13 @@ export async function createModulePage(root, module, query, shell) {
     scheduleUpdate();
     requestAnimationFrame(refreshPlots);
   });
+
+  // Recorrido pedido desde la página de entrada (con todo lo anterior ya preparado).
+  if (pendingTour && pendingTour.moduleId === module.id) {
+    const tour = module.tours.find((t) => t.id === pendingTour?.tourId);
+    pendingTour = null;
+    if (tour) startTour(tour);
+  }
 
   return {
     module,
@@ -385,8 +421,12 @@ export async function createModulePage(root, module, query, shell) {
     },
     stopTour,
     /** Pantalla siguiente y anterior (formato con simulaciones; flechas del teclado). */
-    nextScreen() {},
-    previousScreen() {},
+    nextScreen() {
+      screens?.next();
+    },
+    previousScreen() {
+      screens?.previous();
+    },
     /**
      * La URL ha cambiado a mano dentro del mismo módulo: se aplica al estado.
      * @param {Record<string, string>} newQuery
@@ -428,21 +468,11 @@ export async function createModulePage(root, module, query, shell) {
       tourBar.destroy();
       ficha.destroy();
       instance.destroy();
+      screens?.destroy();
       shell.actions.replaceChildren();
       page.remove();
     },
   };
-}
-
-/**
- * Escribe una línea de información (trozos con fórmulas $…$) en un elemento. De momento,
- * texto: KaTeX llega en el paso de la tipografía.
- * @param {HTMLElement} element
- * @param {readonly string[]} parts
- */
-function renderInfo(element, parts) {
-  const text = parts.join(' · ');
-  if (element.textContent !== text) element.textContent = text;
 }
 
 /**

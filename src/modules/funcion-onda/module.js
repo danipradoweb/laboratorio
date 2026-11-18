@@ -473,7 +473,7 @@ const descriptor = {
     { id: 'resonancia', label: 'Resonancia en una doble barrera', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'doble-barrera', height: 0.5, width: 0.3, separation: 3, energy: 0.113, sigma: 10, x0: -35, rate: 40 } },
     { id: 'escalon', label: 'Escalón por encima de su altura', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'escalon', height: 0.3, energy: 0.4, sigma: 3, x0: -25, rate: 30 } },
     { id: 'pozo-estados', label: 'Estados del pozo', graphs: ['niveles', 'superposicion'], state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 1, n1: 2, n2: 3, weight: 0, showRe: true } },
-    { id: 'superposicion', label: 'Superposición 1 + 2 oscilando', state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 0.8, n1: 1, n2: 2, weight: 0.5 } },
+    { id: 'superposicion', label: 'Superposición 1 + 2 oscilando', graphs: ['superposicion', 'coeficientes', 'niveles', 'puente-luz'], state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 0.8, n1: 1, n2: 2, weight: 0.5 } },
     { id: 'coherente', label: 'Estado coherente en el oscilador armónico', graphs: ['psi', 'valores-esperados'], state: { part: 'paquete', potential: 'armonico', quantum: 0.1, x0: 4, sigma: 0.62, energy: 0, rate: 20 } },
     { id: 'opuestos', label: 'Misma |ψ|² con momentos opuestos', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'libre', twin: true, x0: 0, sigma: 2, energy: 0.05, rate: 20 } },
     { id: 'cuerda-modos', label: 'La cuerda: dos modos superpuestos', graphs: ['cuerda', 'energia-cuerda'], state: { part: 'cuerda', shape: 'dos-modos', mode: 1, mode2: 2 } },
