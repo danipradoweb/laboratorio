@@ -22,6 +22,64 @@
  * @property {string} id identificador corto, sin espacios
  * @property {string} label texto del botón
  * @property {Record<string, number | string | boolean>} state
+ * @property {string[]} [graphs] (formato con simulaciones) gráficas que abre; si falta, todas
+ *   las de su simulación
+ */
+
+// --- Formato con página de entrada y simulaciones (encargo R1, en piloto) ----------------
+// Un módulo con este formato declara `intro`, `simulationParam` y `simulations`. El núcleo
+// le da una página de entrada (#/<id>), reparte las gráficas elegidas en pantallas cortas,
+// pone bajo cada gráfica su explicación (sacada de ficha.md) y escribe en la URL la
+// selección. Ver src/core/simulations.js y docs/ARQUITECTURA.md, «Formato en piloto».
+
+/**
+ * Una gráfica de una simulación.
+ * @typedef {object} GraphSpec
+ * @property {string} id identificador único en el módulo; es también el del apartado de la
+ *   ficha que la explica («### Título {#id}» en ficha.md) y el que va en la URL (`ver`)
+ * @property {string} title qué es la gráfica, en palabras («Superposición de dos estados»)
+ * @property {string} short nombre corto para las pestañas y la línea de ubicación
+ *   («ψ(x)», «espacio de momentos»)
+ * @property {string} summary una frase: qué muestra (página de entrada y «Cambiar gráficas»)
+ */
+
+/**
+ * Combinación sugerida de gráficas: una explica a la otra.
+ * @typedef {object} ComboSpec
+ * @property {string} id
+ * @property {string} title lo que se entiende al verlas juntas («Por qué una superposición se mueve»)
+ * @property {string} summary una frase
+ * @property {string[]} graphs identificadores de gráficas de la misma simulación (dos, como mucho)
+ */
+
+/**
+ * Una simulación del módulo. Las gráficas de simulaciones distintas no comparten estado:
+ * solo se eligen gráficas de una misma simulación.
+ * @typedef {object} SimulationSpec
+ * @property {string} id valor del parámetro `simulationParam` que la abre
+ * @property {string} title
+ * @property {string} summary una frase: qué simula
+ * @property {Record<string, number | string | boolean>} initial estado inicial propio, que se
+ *   aplica al entrar desde la página de entrada (las claves que falten, por defecto)
+ * @property {GraphSpec[]} graphs
+ * @property {ComboSpec[]} combos
+ */
+
+/**
+ * Hueco del núcleo donde una vista dibuja una gráfica (formato con simulaciones).
+ * @typedef {object} GraphSlot
+ * @property {HTMLElement} body contenedor con altura definida: aquí van createPlot y lo demás
+ * @property {(parts: InfoPart[]) => void} setInfo línea secundaria bajo el título: los valores
+ *   numéricos de la gráfica con su significado
+ * @property {HTMLElement} legend caja para la leyenda en HTML (opción `htmlLegend` de createPlot)
+ * @property {HTMLElement} titleExtra caja junto al título para un detalle propio (una muestra de color)
+ * @property {boolean} visible si la gráfica está en la pantalla: las que no se ven no hace falta dibujarlas
+ */
+
+/**
+ * Trozo de la línea secundaria de una gráfica: un texto con fórmulas $…$ (KaTeX), por
+ * ejemplo 'momento medio $\langle p\rangle/\hbar = 1{,}15$ nm⁻¹'. Los trozos se separan con « · ».
+ * @typedef {string} InfoPart
  */
 
 /**
@@ -52,6 +110,10 @@
  * @property {{ isActive: () => boolean }} presentation modo presentación
  * @property {MaterialsService} materials biblioteca de materiales (src/materials/)
  * @property {ColorService} color motor espectro → color (src/color/)
+ * @property {(id: string) => GraphSlot} [graph] (formato con simulaciones) hueco de la gráfica
+ *   `id` de la simulación abierta
+ * @property {(parts: InfoPart[]) => void} [setStatus] (formato con simulaciones) bloque «Estado»
+ *   de la barra lateral, para los números que no son de ninguna gráfica
  */
 
 /**
@@ -96,6 +158,11 @@
  * @property {string} [thumbnail] nombre del archivo de miniatura dentro de la carpeta del módulo
  * @property {number} [transitionSeconds] duración de la transición entre presets, en segundos
  *   (por defecto 1,5; 0 = cambio instantáneo)
+ * @property {string} [intro] (formato con simulaciones) párrafo de la página de entrada: de qué
+ *   va el módulo y por qué importa (Markdown con fórmulas)
+ * @property {string} [simulationParam] (formato con simulaciones) clave del parámetro select
+ *   cuyas opciones son las simulaciones
+ * @property {SimulationSpec[]} [simulations] (formato con simulaciones) las simulaciones
  */
 
 export {};

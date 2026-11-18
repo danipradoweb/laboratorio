@@ -6,7 +6,7 @@ El módulo tiene cuatro vistas (control «Vista»). En las dos primeras, la func
 
 Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹⁵ s), energías en electronvoltios (eV) y masas en masas del electrón ($m_e$).
 
-### Vista «Un paquete de ondas en movimiento» · ψ(x), arriba a la izquierda
+### Vista «Un paquete de ondas en movimiento» · ψ(x), arriba a la izquierda {#psi}
 
 **Qué ves.** El eje horizontal es la posición $x$ en nanómetros. El eje izquierdo es la amplitud de la función de onda, $\psi$, en unidades de uno partido por la raíz de un nanómetro (con «Dibujar |ψ|²», la densidad de probabilidad $|\psi|^2$ en probabilidad por nanómetro). El eje derecho es energía, en electronvoltios, y solo se refiere a dos cosas: la línea gris con la zona sombreada debajo, que es el potencial $V(x)$, y la línea azul de trazos horizontal, que es la energía media del paquete $\langle E\rangle$. La línea vertical azul de puntos marca la posición media $\langle x\rangle$. Con «Mostrar Re ψ» y «Mostrar Im ψ» aparecen la parte real (azul) y la imaginaria (naranja). Con «Comparar con el mismo paquete con k₀ opuesto» aparece debajo una segunda gráfica igual, para un paquete que solo difiere en el signo de su número de onda.
 
@@ -14,7 +14,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) Elige el preset «Efecto túnel por debajo de la barrera»: el paquete, de energía media 0,2 eV, llega a una barrera de 0,3 eV; dentro de ella el relleno no se corta de golpe, y al final una parte sigue al otro lado. La línea de estado acaba en «al otro lado del potencial: 13,7 % (esperado con ondas planas: 13,7 %)». (2) Pausa el reloj, activa «Mostrar Re ψ» y mueve «Fase global φ»: los colores y la curva azul cambian, pero la altura del relleno y los títulos de las gráficas de momentos y de valores esperados (⟨p⟩/ħ, Δk, ⟨x⟩, Δx) se quedan exactamente igual.
 
-### Vista «Un paquete» · Espacio de momentos, arriba a la derecha
+### Vista «Un paquete» · Espacio de momentos, arriba a la derecha {#momentos}
 
 **Qué ves.** El eje horizontal es el número de onda $k$, en uno partido por nanómetro; es el momento dividido por la constante de Planck reducida, $p/\hbar$. Valores positivos, movimiento hacia la derecha; negativos, hacia la izquierda. El eje izquierdo es la densidad de probabilidad en momentos, $|\varphi(k)|^2$, en nanómetros, dibujada con el mismo relleno de color de fase. La curva verde, con el eje derecho (de 0 a 1), es la probabilidad de que una onda plana de ese número de onda atraviese el potencial; solo aparece con potenciales hechos de escalones (escalón, barreras, pozo finito y el dibujado). La línea vertical azul de puntos marca el momento medio $\langle k\rangle$. Con el paquete gemelo, su distribución aparece en gris de trazos.
 
@@ -22,7 +22,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) En «Escalón por encima de su altura», cuando el paquete llega al escalón aparece un bulto pequeño en los $k$ negativos aunque el paquete tiene energía de sobra para subir: es la reflexión cuántica (al final, un 13 % ha rebotado). (2) Haz clic en la zona de $k$ negativos: el paquete vuelve a empezar con la energía $\hbar^2k^2/2m$ de ese punto y el conmutador «Hacia la izquierda» activado.
 
-### Vista «Un paquete» · La cuerda clásica, abajo a la izquierda
+### Vista «Un paquete» · La cuerda clásica, abajo a la izquierda {#cuerda-comparada}
 
 **Qué ves.** El eje horizontal es la posición en nanómetros, la misma que en la gráfica de $\psi$. El eje vertical es el desplazamiento de una cuerda, relativo a su valor máximo al empezar. La curva azul es una cuerda clásica que arrancó con la misma forma que la parte real de $\psi$ y viaja a la velocidad de grupo del paquete (el título dice cuánto vale, en nanómetros por femtosegundo). Las líneas rosas de trazos son la envolvente del paquete cuántico, $\pm|\psi|$, con la misma escala que la cuerda al empezar. La cuerda no siente el potencial.
 
@@ -30,7 +30,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** Elige «Paquete libre que se ensancha»: a los 100 fs la envolvente rosa mide unas seis veces la anchura inicial y es mucho más baja, mientras la cuerda azul sigue con altura 1. Sube después la masa a 3 $m_e$: el ensanchamiento es claramente más lento (el tiempo característico crece con la masa).
 
-### Vista «Un paquete» · Valores esperados, abajo a la derecha
+### Vista «Un paquete» · Valores esperados, abajo a la derecha {#valores-esperados}
 
 **Qué ves.** Dos gráficas con el tiempo en femtosegundos en el eje horizontal. En la de arriba, la curva azul es la posición media $\langle x\rangle$ (eje izquierdo, en nanómetros) y la naranja el momento medio dividido por $\hbar$, $\langle k\rangle$ (eje derecho, en uno partido por nanómetro). Con el potencial libre o el armónico, una línea gris de puntos da la trayectoria de una partícula clásica que sale del mismo sitio con la misma velocidad. En la de abajo, la curva amarilla es el producto de las incertidumbres $\Delta x\,\Delta p$ dividido por $\hbar$, y la línea azul de trazos marca su mínimo posible, 1/2. La línea vertical gris es el instante actual. Cuando más de un 1 % del paquete ha salido por los bordes de la región simulada, las curvas se paran (los valores serían los de la parte que queda dentro).
 
@@ -38,7 +38,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) Con «Estado coherente en el oscilador armónico», la curva azul va y viene encima de la línea de puntos clásica, con periodo de 41 fs, y el título de esta gráfica muestra $\Delta x\cdot\Delta p/\hbar = 0{,}500$ todo el rato. (2) Con «Paquete libre que se ensancha», $\langle k\rangle$ se queda constante mientras $\Delta x\cdot\Delta p/\hbar$ crece (unos 2,0 a los 67 fs y 3,8 a los 130 fs).
 
-### Vista «Estados propios y superposición» · Niveles de energía, arriba a la izquierda
+### Vista «Estados propios y superposición» · Niveles de energía, arriba a la izquierda {#niveles}
 
 **Qué ves.** El eje horizontal es la posición en nanómetros; el vertical, energía en electronvoltios. La línea gris es el potencial (en el pozo infinito, dos paredes verticales). Cada línea horizontal es la energía de un estado propio, y sobre ella está dibujada la forma de ese estado, $\varphi_n$, con una escala vertical arbitraria. El primer estado elegido va en azul y el segundo en naranja; los demás, en gris.
 
@@ -46,7 +46,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) Haz clic sobre un nivel: pasa a ser el segundo estado de la superposición (se ve en el control «Segundo estado» y en las demás gráficas). (2) En «Superposición 1 + 2 oscilando», cambia la anchura del pozo de 0,8 a 0,6 nm: todos los niveles suben, las energías crecen como uno partido por el cuadrado de la anchura.
 
-### Vista «Estados» · ψ(x, t), arriba a la derecha
+### Vista «Estados» · ψ(x, t), arriba a la derecha {#superposicion}
 
 **Qué ves.** El eje horizontal es la posición en nanómetros; el vertical, $\psi$ en uno partido por la raíz de un nanómetro (o $|\psi|^2$ en uno partido por nanómetro). Es la superposición de los dos estados elegidos, con el relleno de color de fase y, si se activan, su parte real (azul) y su parte imaginaria (naranja). En el pozo infinito, dos líneas verticales grises marcan las paredes. El título escribe la superposición: los pesos de cada estado y la fase relativa.
 
@@ -54,7 +54,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) Con «Estados del pozo» (un solo estado, el segundo), activa «Mostrar Im ψ»: las curvas real e imaginaria se pasan el relevo como un coseno y un seno, y el relleno no cambia de altura. (2) En «Superposición 1 + 2 oscilando», sube y baja «Peso del segundo estado»: con 0 la forma se congela; con 0,5 la probabilidad se balancea entre las dos mitades del pozo.
 
-### Vista «Estados» · El puente con la luz, abajo a la izquierda
+### Vista «Estados» · El puente con la luz, abajo a la izquierda {#puente-luz}
 
 **Qué ves.** El eje horizontal es el tiempo en femtosegundos (tres periodos de la oscilación); el vertical, la posición media de la partícula $\langle x\rangle$ en nanómetros, que es la curva azul. La línea gris de trazos es el valor medio alrededor del cual oscila, y la línea gris vertical, el instante actual. El título da el periodo y la frecuencia de la oscilación, su amplitud, la energía del fotón asociado y su longitud de onda, con una muestra de su color si cae en el visible.
 
@@ -62,7 +62,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) En «Superposición 1 + 2 oscilando» el título dice periodo 2,35 fs y fotón de 1,76 eV con λ = 703,4 nm, visible, con su muestra roja; baja la anchura del pozo a 0,6 nm y pasa a λ = 395,7 nm, en el borde del violeta. (2) Pon «Segundo estado» en 3: la curva se queda plana y el título dice que ⟨x⟩ no oscila porque el elemento de matriz de la posición entre los estados 1 y 3 es cero.
 
-### Vista «Estados» · Los coeficientes en el plano complejo, abajo a la derecha
+### Vista «Estados» · Los coeficientes en el plano complejo, abajo a la derecha {#coeficientes}
 
 **Qué ves.** Un plano con la parte real del número complejo en horizontal y la imaginaria en vertical, sin unidades, con el círculo de radio 1. Cada flecha es el coeficiente de un estado en este instante, ya multiplicado por su factor de giro: azul el primero y naranja el segundo. Su longitud es la raíz del peso del estado. El título da el ángulo entre las dos flechas.
 
@@ -70,7 +70,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** Pausa el reloj. Mueve «Fase global φ»: las dos flechas giran juntas y el ángulo del título no cambia (tampoco $|\psi|^2$). Mueve «Fase relativa θ»: cambia el ángulo, y cambian la forma de $|\psi|^2$ y la posición de la curva del puente con la luz.
 
-### Vista «La cuerda clásica» · La cuerda, arriba a la izquierda
+### Vista «La cuerda clásica» · La cuerda, arriba a la izquierda {#cuerda}
 
 **Qué ves.** El eje horizontal es la posición a lo largo de la cuerda, como fracción de su longitud $L$; el vertical, el desplazamiento de la cuerda, en unidades arbitrarias. La curva azul es la cuerda. Con un modo, las líneas rosas de trazos son su envolvente y las verticales grises sus nodos; con dos modos, cada modo por separado aparece en trazos finos verde y amarillo.
 
@@ -78,7 +78,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) Con «Pulso que viaja» y extremos fijos, el pulso vuelve boca abajo; cambia a extremos libres y vuelve boca arriba. (2) Con «Pulso soltado en reposo», el pulso se parte en dos de la mitad de altura que se separan en sentidos contrarios.
 
-### Vista «La cuerda» · Misma forma, distinto reloj, arriba a la derecha
+### Vista «La cuerda» · Misma forma, distinto reloj, arriba a la derecha {#frecuencias}
 
 **Qué ves.** El eje horizontal es el número del modo, $n$; el vertical, la frecuencia de cada modo dividida por la del primero. Los puntos azules son la cuerda; los naranjas, una partícula en una caja de la misma anchura. Las líneas verticales marcan los modos elegidos.
 
@@ -86,7 +86,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** Con la forma «Un modo», haz clic sobre el modo 3 de esta gráfica: la cuerda pasa al modo 3, con dos nodos en el interior, y la línea vertical marca n = 3, donde la partícula tendría una frecuencia 9 veces la fundamental y la cuerda solo 3.
 
-### Vista «La cuerda» · Energía de la cuerda, abajo
+### Vista «La cuerda» · Energía de la cuerda, abajo {#energia-cuerda}
 
 **Qué ves.** El eje horizontal es el tiempo, en periodos del modo fundamental con extremos fijos; el vertical, la energía dividida por la energía total. Azul, la cinética (la del movimiento); naranja, la potencial (la del estiramiento); negro (blanco en el tema oscuro), la total.
 
@@ -94,7 +94,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** Con «Pulso que viaja», mira el instante en que el pulso toca el extremo: con extremos fijos la cuerda queda momentáneamente plana y toda la energía es cinética (azul en 1); con extremos libres el desplazamiento se duplica, la cuerda se para un instante y toda la energía es potencial (naranja en 1).
 
-### Vista «Doble rendija (2D) y coherencia» · El plano visto desde arriba, a la izquierda
+### Vista «Doble rendija (2D) y coherencia» · El plano visto desde arriba, a la izquierda {#plano}
 
 **Qué ves.** Un plano de 25 × 25 nanómetros visto desde arriba. El eje horizontal es la posición $x$ a lo largo de la pared, en nanómetros; el vertical, la posición $y$ en la dirección en que avanza el electrón, también en nanómetros. El paquete sale de abajo y sube. La franja gris horizontal es una pared opaca con dos huecos, las rendijas; la línea negra de trazos de arriba es la pantalla. El color dice cuánta probabilidad hay en cada punto: violeta oscuro, nada; verde y amarillo, mucha. La barra de color de la derecha da la escala, que se reajusta en cada instante al punto más brillante. Lo que se colorea es la raíz de la densidad de probabilidad, en uno partido por nanómetro, para que se vea también la parte débil que pasa por las rendijas. Delante de la pared se dibuja la onda que llega; detrás, la que ha pasado por las rendijas, con la coherencia que marque el control «Coherencia γ».
 
@@ -102,7 +102,7 @@ Unidades: posiciones en nanómetros (nm), tiempos en femtosegundos (fs, 10⁻¹�
 
 **Prueba esto.** (1) Elige esta vista en «Vista» (empieza con λ = 1 nm, d = 4 nm, w = 1 nm y γ = 1); cuando la onda ha pasado la pared, se ven radios brillantes que salen de entre las dos rendijas, separados por radios oscuros: uno central y tres a cada lado, los de fuera más débiles. (2) En cualquier instante, baja «Coherencia γ» a 0: los radios oscuros desaparecen y detrás de la pared queda un solo abanico ancho y suave, sin repetir la simulación. Súbela otra vez a 1 y vuelven.
 
-### Vista «Doble rendija» · La pantalla, a la derecha
+### Vista «Doble rendija» · La pantalla, a la derecha {#pantalla}
 
 **Qué ves.** El eje horizontal es la posición $x$ a lo largo de la pantalla, en nanómetros; el vertical, la probabilidad por nanómetro de que el electrón llegue a cada punto, relativa al valor más alto de la gráfica (sin unidades). La curva azul continua es lo que ha llegado hasta ese instante en la simulación: la pantalla suma el flujo de probabilidad que la cruza, como un detector que cuenta electrones (sale cuando llega a la pantalla el centro del paquete; antes solo habrían llegado las colas más rápidas y su forma engañaría). La curva gris de puntos es lo que habría llegado sin ninguna interferencia, la suma de lo que deja cada rendija por separado. La curva verde de trazos es el patrón de Fraunhofer (la fórmula de libro para una pantalla muy lejana), con la misma coherencia y escalado para que su pico mida lo mismo. Las líneas verticales grises de puntos marcan dónde la diferencia de caminos desde las dos rendijas es un número entero de longitudes de onda, $m = 0, 1, 2\ldots$ (la etiqueta solo sale en las del lado derecho). La línea de estado de arriba da la energía del electrón, el ángulo del primer máximo y la probabilidad que ya ha llegado a la pantalla.
 

@@ -103,3 +103,16 @@ test('una ficha completa conserva el orden de sus secciones', () => {
     position = index;
   }
 });
+
+// Formato con simulaciones (encargo R1): cada apartado de la ficha lleva un identificador
+// estable que lo une a su gráfica, y las marcas <!-- … --> no se ven en la ficha completa.
+test('títulos con identificador: «### Título {#id}» da id="ficha-id" y no muestra la marca', () => {
+  assert.equal(renderMarkdown('### La pantalla {#pantalla}'), '<h3 id="ficha-pantalla">La pantalla</h3>');
+  assert.equal(renderMarkdown('## Sección'), '<h2>Sección</h2>');
+});
+
+test('los comentarios <!-- … --> no se muestran ni cortan párrafos o listas', () => {
+  assert.equal(renderMarkdown('<!-- gráficas: psi -->\nTexto.'), '<p>Texto.</p>');
+  assert.equal(renderMarkdown('Uno\n<!-- fin -->\ndos'), '<p>Uno dos</p>');
+  assert.equal(renderMarkdown('- a <!-- gráficas: psi -->\n- b'), '<ul><li>a</li><li>b</li></ul>');
+});

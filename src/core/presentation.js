@@ -76,6 +76,7 @@ export function keyToAction(event, { presenting, tourActive }) {
  * @property {import('./clock.js').Clock} clock
  * @property {(index: number) => void} goToPresetIndex
  * @property {import('./tours.js').TourRunner | null} tour
+ * @property {boolean} [presentable] false si la página no se puede presentar (página de entrada)
  */
 
 /**
@@ -133,7 +134,8 @@ export function createPresentation({ getPage }) {
   }
 
   function enter() {
-    if (isActive() || !getPage()) return;
+    const page = getPage();
+    if (isActive() || !page || page.presentable === false) return;
     root.dataset.presentation = 'true';
     toolbar.hidden = false;
     showToolbar();

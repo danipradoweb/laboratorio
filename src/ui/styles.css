@@ -866,6 +866,237 @@ h3 {
   }
 }
 
+/* ------------------------------------- Página de entrada (formato con simulaciones, R1) */
+
+/* #/<id> en un módulo con simulaciones (src/ui/entry-page.js): de qué va el módulo, sus
+   simulaciones con la lista de gráficas para elegir, combinaciones, presets y recorridos.
+   Con la ficha abierta, la ficha va a la derecha. */
+.entry-page {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.entry-page[data-ficha='open'] {
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 28rem);
+}
+
+.entry-inner {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 1.75rem clamp(1rem, 4vw, 3rem) 3rem;
+}
+
+.entry-header,
+.entry-section {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.entry-header h1 {
+  font-size: 1.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.entry-intro {
+  max-width: 46rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.entry-section {
+  margin-top: 2rem;
+}
+
+.entry-section > h2 {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.entry-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.entry-sims {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+  gap: 1rem;
+}
+
+.entry-sim {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.15rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.entry-sim h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.entry-sim-summary {
+  margin: 0 0 0.9rem;
+}
+
+.graph-choice {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.graph-choice label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.graph-choice label:hover {
+  border-color: var(--accent);
+}
+
+.graph-choice input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0.2rem 0 0;
+  accent-color: var(--accent);
+}
+
+.graph-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.graph-choice-text span {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.entry-actions {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+a.btn {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-primary {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.entry-combo-group h3 {
+  margin: 1rem 0 0.4rem;
+  font-size: 1rem;
+}
+
+.entry-combos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.entry-combos li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  align-items: baseline;
+}
+
+.entry-combos a {
+  font-weight: 600;
+}
+
+.entry-combos span {
+  color: var(--text-soft);
+}
+
+.entry-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+}
+
+a.preset {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.preset-sim {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  text-align: right;
+}
+
+.entry-section .tour-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.entry-section .tour-start {
+  width: auto;
+}
+
+.preset[hidden] {
+  display: none;
+}
+
+/* Bloque «Estado» de la barra lateral: los números que no son de ninguna gráfica. */
+.side-status {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+@media (max-width: 760px) {
+  .entry-page,
+  .entry-page[data-ficha='open'] {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+  }
+
+  .entry-inner {
+    overflow: visible;
+    padding-top: 1.1rem;
+  }
+
+  .entry-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
 /* ----------------------------------------------------------------- Galería de componentes */
 
 .galeria-grid {

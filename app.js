@@ -47,8 +47,9 @@ async function route() {
   const { moduleId, query } = parseHash(location.hash);
   document.documentElement.dataset.ready = 'false';
 
-  // Misma página de módulo: solo ha cambiado el estado en la URL.
-  if (current && current.module.id === moduleId) {
+  // Misma página de módulo: solo ha cambiado el estado en la URL. (En el formato con
+  // simulaciones, pasar de la página de entrada a una simulación, o al revés, rehace la página.)
+  if (current && current.module.id === moduleId && current.canApply(query)) {
     current.applyQuery(query);
     document.documentElement.dataset.ready = 'true';
     return;

@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { startServer } from '../tools/serve.mjs';
 import { modules } from '../src/modules/registry.js';
 import { buildHash, defaultState, optionValues } from '../src/core/state.js';
+import { entryLink, isPilot } from '../src/core/simulations.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shots = join(root, 'capturas');
@@ -111,8 +112,15 @@ for (const m of modules) {
     test(`[${m.id}] carga sin errores (tema ${theme})`, { skip }, async () => {
       const { page, errors, close } = await openPage(`#/${m.id}`, { theme });
       assert.equal(await page.locator('#topbar-title').textContent(), m.title);
-      // La dirección se completa con todos los parámetros.
-      assert.equal(new URL(page.url()).hash, buildHash(m.id, m.params, defaultState(m.params)));
+      if (isPilot(m)) {
+        // Formato con simulaciones: #/<id> es la página de entrada y no carga ninguna.
+        assert.equal(new URL(page.url()).hash, `#/${m.id}`);
+        assert.equal(await page.locator('.entry-page h1').textContent(), m.title);
+        assert.equal(await page.locator('canvas').count(), 0);
+      } else {
+        // La dirección se completa con todos los parámetros.
+        assert.equal(new URL(page.url()).hash, buildHash(m.id, m.params, defaultState(m.params)));
+      }
       await page.waitForTimeout(300);
       await page.screenshot({ path: join(shots, `${m.id}-${theme}.png`) });
       await close();
@@ -792,7 +800,14 @@ test('función de onda: tres vistas enlazadas, fase global, presets y lo que cue
     ['opuestos', ['potential=libre', 'x0=0&sigma=2&energy=0.05&leftward=0&twin=1']],
     ['cuerda-modos', ['part=cuerda', 'shape=dos-modos&mode=1&mode2=2']],
   ])) {
-    await page.locator(`.preset[data-preset="${id}"]`).click();
+    // La barra lateral solo enseña los presets de la simulación abierta; los demás se abren
+    // desde la página de entrada.
+    const button = page.locator(`.side-panel .preset[data-preset="${id}"]`);
+    if (await button.isVisible()) await button.click();
+    else {
+      await page.evaluate(() => (location.hash = '#/funcion-onda'));
+      await page.locator(`.entry-page .preset[data-preset="${id}"]`).click();
+    }
     await hashHas(expected);
     await page.waitForTimeout(1800); // fin de la transición
     await page.screenshot({ path: join(shots, `funcion-onda-preset-${id}.png`) });
@@ -952,12 +967,12 @@ test('función de onda: al llegar al tiempo final la simulación vuelve a empeza
   assert.deepEqual(errors, []);
 });
 
-// Doble rendija: la vista se elige en «Vista», la pantalla dibuja sus curvas, la
+// Doble rendija: se entra desde la página de entrada, la pantalla dibuja sus curvas, la
 // coherencia cambia el dibujo sin repetir la simulación y al final sale el aviso de fin.
 // λ = 1 nm y d = 4 nm: primer máximo en sen θ = λ/d = 0,25, θ = 14,5°.
 test('función de onda: doble rendija con control de coherencia', { skip }, async () => {
-  const { page, errors, close } = await openPage('#/funcion-onda?part=paquete', { width: 1440, height: 900 });
-  await page.locator('[data-key="part"] select').selectOption('rendijas');
+  const { page, errors, close } = await openPage('#/funcion-onda', { width: 1440, height: 900 });
+  await page.locator('.entry-sim[data-simulation="rendijas"] .entry-all').click();
   await page.waitForFunction(() => location.hash.includes('part=rendijas') && location.hash.includes('slitSeparation=4'));
   await page.locator('[data-key="rate"] input[type="range"]').fill('50');
   assert.equal(await page.locator('.fo-part .panel').count(), 2);
@@ -1001,8 +1016,10 @@ for (const [tourId, steps] of /** @type {const} */ ([
   ['color', ['part=estados', 'wellWidth=0.8', 'wellWidth=0.8', 'wellWidth=0.8', 'wellWidth=0.8']],
 ])) {
   test(`función de onda: recorrido «${tourId}» en modo presentación`, { skip }, async () => {
+    // El recorrido se empieza en la página de entrada: abre la simulación de su primer paso.
     const { page, errors, close } = await openPage('#/funcion-onda', { width: 1920, height: 1080 });
     await page.locator(`.tour-start[data-tour="${tourId}"]`).click();
+    await page.waitForFunction(() => /Paso 1 de/.test(document.querySelector('.tour-counter')?.textContent ?? ''));
     await page.keyboard.press('p');
     for (let step = 0; step < steps.length; step++) {
       assert.match(await page.locator('.tour-counter').textContent(), new RegExp(`Paso ${step + 1} de ${steps.length}`));
@@ -1041,6 +1058,52 @@ test('navegación entre portada y módulos sin errores ni restos', { skip }, asy
   // El botón "atrás" del navegador vuelve al módulo anterior.
   await page.goBack();
   await page.waitForSelector('html[data-ready="true"][data-route="oscilador"]');
+  await close();
+  assert.deepEqual(errors, []);
+});
+
+// Página de entrada (encargo R1): de qué va el módulo, sus simulaciones con las gráficas
+// para elegir, combinaciones, presets y recorridos. Cada enlace abre su simulación con su
+// estado inicial, y «Ver las elegidas» lleva las gráficas marcadas a la URL.
+test('función de onda: página de entrada, «ver todas», combinaciones y «ver las elegidas»', { skip }, async () => {
+  const fo = /** @type {import('../src/modules/types.js').ModuleDescriptor} */ (modules.find((m) => m.id === 'funcion-onda'));
+  const { page, errors, close } = await openPage('#/funcion-onda', { width: 1366, height: 650 });
+  const sims = fo.simulations ?? [];
+  assert.equal(await page.locator('.entry-sim').count(), sims.length);
+  for (const sim of sims) {
+    const card = page.locator(`.entry-sim[data-simulation="${sim.id}"]`);
+    assert.equal(await card.locator('h3').textContent(), sim.title);
+    assert.equal(await card.locator('.graph-choice input').count(), sim.graphs.length);
+    assert.equal(await card.locator('.entry-all').getAttribute('href'), entryLink(fo, sim));
+    for (const combo of sim.combos) {
+      assert.equal(await page.locator(`.entry-combos li[data-combo="${combo.id}"] a`).getAttribute('href'), entryLink(fo, sim, combo.graphs));
+    }
+  }
+  assert.equal(await page.locator('.entry-presets .preset').count(), fo.presets.length);
+  assert.equal(await page.locator('.entry-page .tour-start').count(), fo.tours.length);
+  await page.screenshot({ path: join(shots, 'funcion-onda-entrada.png') });
+
+  // «Ver las elegidas»: desactivado sin nada marcado; con dos gráficas de «estados», la URL
+  // las lleva y el estado es el inicial de la simulación (la superposición 1 + 2).
+  const estados = page.locator('.entry-sim[data-simulation="estados"]');
+  assert.equal(await estados.locator('.btn-primary').isDisabled(), true);
+  await estados.locator('label[data-graph="coeficientes"] input').check();
+  await estados.locator('label[data-graph="superposicion"] input').check();
+  await estados.locator('.btn-primary').click();
+  await page.waitForFunction(() => location.hash.includes('part=estados') && location.hash.endsWith('&ver=superposicion,coeficientes'));
+  assert.match(new URL(page.url()).hash, /potential=pozo-infinito.*wellWidth=0\.8.*n1=1&n2=2&weight=0\.5/);
+
+  // Cada «ver todas» y cada combinación cargan sin errores.
+  for (const sim of sims) {
+    for (const href of [entryLink(fo, sim), ...sim.combos.map((c) => entryLink(fo, sim, c.graphs))]) {
+      await page.evaluate((/** @type {string} */ h) => (location.hash = h), href);
+      await page.waitForSelector('html[data-ready="true"][data-route="funcion-onda"]');
+      await page.waitForSelector('.side-panel');
+      await page.waitForTimeout(250);
+    }
+  }
+  // La barra lateral solo enseña los presets de la simulación abierta (rendijas: ninguno).
+  assert.equal(await page.locator('.side-panel .preset:not([hidden])').count(), 0);
   await close();
   assert.deepEqual(errors, []);
 });

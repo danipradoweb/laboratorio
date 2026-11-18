@@ -8,6 +8,9 @@
 //   **negrita**, *cursiva*, `código` y [enlaces](https://…)
 //   fórmulas en línea $…$ y en bloque $$…$$ (TeX, las dibuja KaTeX en src/ui/ficha.js)
 //   bloques de código entre líneas ```
+//   «### Título {#id}»: el título lleva id="ficha-id" (une el apartado a su gráfica)
+//   comentarios <!-- … --> en su línea o al final de una línea: no se muestran (marcas para
+//   src/core/ficha-sections.js)
 //
 // No es un Markdown completo: no hay tablas, imágenes, citas ni listas anidadas. Si una
 // ficha necesita algo más, se amplía aquí con su test.
@@ -121,7 +124,10 @@ export function renderMarkdown(markdown) {
   };
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    // Comentario en su propia línea: no se muestra (ni corta un párrafo o una lista).
+    if (/^<!--.*-->$/.test(lines[i].trim())) continue;
+    // Un comentario al final de la línea tampoco se muestra.
+    const line = lines[i].replace(/\s*<!--.*?-->\s*$/, '');
     const trimmed = line.trim();
 
     // Bloque de código: se copia tal cual hasta la línea de cierre.
@@ -163,7 +169,9 @@ export function renderMarkdown(markdown) {
     if (heading) {
       flush();
       const level = heading[1].length;
-      out.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+      const id = heading[2].match(/\s*\{#([a-z0-9-]+)\}\s*$/);
+      const text = id ? heading[2].slice(0, id.index) : heading[2];
+      out.push(`<h${level}${id ? ` id="ficha-${id[1]}"` : ''}>${renderInline(text)}</h${level}>`);
       continue;
     }
 
