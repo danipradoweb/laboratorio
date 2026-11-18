@@ -16,7 +16,7 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 
 ## Sesión en curso
 - **Encargo R1** (`docs/encargos/R1-rediseno.md`), empezado el 2026-11-18 en la rama `claude/determined-fermi-y2edai` (sale de `main` en 2eb34ac más el commit del encargo). Base: `npm test` 440 en verde.
-- Siguiente paso: el que figure como «pendiente» en la tabla de abajo.
+- Pasos 1–5 hechos y subidos; paso 6: ARQUITECTURA hecha y revisión independiente lanzada (una ronda). Siguiente: aplicar sus correcciones (solo física y requisitos explícitos; lo demás a `docs/BACKLOG.md`) y cerrar.
 
 ### Plan del encargo R1 (pasos y estado)
 
@@ -458,6 +458,10 @@ Entorno de la sesión: Node 22.23, Python 3.13, Playwright + Chromium disponible
 
 ## Necesito de Daniel
 (archivos que subir, decisiones que tomar; vacío si no hay nada)
+
+- **Validar el piloto del encargo R1** (rama `claude/determined-fermi-y2edai`, sin fusionar en `main`): la pregunta del encargo es «¿sé en todo momento qué estoy viendo y llego fácilmente a lo que quiero ver?». Para verlo en local: `npx serve .` (o `python3 -m http.server`) y abrir `#/funcion-onda`. Una ronda de correcciones como máximo; después se extiende a los demás módulos.
+- **Confirmar la letra del texto**: el encargo pedía `KaTeX_Main`, pero no tiene á, é, í, ó, ú, ñ, ¿ ni ¡ (cada una saldría de otra fuente). He usado CMU Serif, que es la misma letra (Computer Modern) con todos los caracteres del español. Los controles y los números de los ejes siguen en la letra de sistema, que se lee mejor en pequeño (capturas `capturas/fuentes-*.png`, generadas con `node tools/comparar-fuentes.mjs`).
+- La vista paquete y la doble rendija ya **vuelven a empezar solas** al llegar al final (como pediste en el encargo R1); el punto de abajo sobre «ya no vuelva a empezar sola» queda resuelto.
 
 - **Fusionar la rama `claude/youthful-hawking-b5y2oe` en `main`** para que GitHub Pages publique las correcciones (panel de valores esperados, aviso de fin) y la doble rendija.
 - Decir si te parece bien que la vista paquete **ya no vuelva a empezar sola** al llegar al final (ahora se para con el aviso y el botón «Reiniciar»).
