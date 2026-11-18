@@ -204,6 +204,7 @@ for (const m of modules.filter(isPilot)) {
         assert.ok(g.summary.trim().length > 20, `gráfica "${g.id}": falta summary (una frase de qué muestra)`);
         const t = texts.get(g.id);
         assert.ok(t && t.title, `gráfica "${g.id}": falta su apartado en ficha.md («### Título {#${g.id}}» en «Qué estás viendo»)`);
+        assert.equal(t.title, g.title, `gráfica "${g.id}": el título de su apartado en la ficha debe ser el de la pantalla`);
         assert.ok(t.see && t.read && t.tryThis, `gráfica "${g.id}": su apartado de la ficha debe tener «Qué ves», «Cómo leerla» y «Prueba esto»`);
       }
       const ids = sim.graphs.map((g) => g.id);

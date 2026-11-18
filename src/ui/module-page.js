@@ -16,7 +16,8 @@ import { buildHash, createStore, stateFromQuery } from '../core/state.js';
 import { buildPresetList } from './preset-list.js';
 import { createTourBar } from './tour-bar.js';
 import { buildClockControls } from './clock-controls.js';
-import { createFichaPanel, renderMarkdownInto } from './ficha.js';
+import { createFichaPanel, loadFichaText, renderMarkdownInto } from './ficha.js';
+import { graphTexts } from '../core/ficha-sections.js';
 import { createClock } from '../core/clock.js';
 import { getTheme, onThemeChange, themeColors } from '../core/theme.js';
 import { refreshPlots } from './plot2d.js';
@@ -127,6 +128,16 @@ export async function createModulePage(root, module, query, shell) {
   const ficha = createFichaPanel(page, module.id);
   /** La vista ya está montada (antes no hay nada que redibujar). */
   let started = false;
+  // Explicación de cada gráfica: los apartados de la ficha (un solo texto en un solo sitio).
+  /** @type {Map<string, import('../core/ficha-sections.js').GraphText>} */
+  let texts = new Map();
+  if (pilot) {
+    try {
+      texts = graphTexts(await loadFichaText(module.id));
+    } catch (error) {
+      console.warn(`[${module.id}] No se pudo cargar ficha.md: las gráficas salen sin explicación`, error);
+    }
+  }
   const screens = simulation
     ? createScreens(stageFrame, {
         module,
@@ -137,6 +148,10 @@ export async function createModulePage(root, module, query, shell) {
         },
         onShow: () => {
           if (started) scheduleUpdate();
+        },
+        onCard: ({ id, explain }) => {
+          const text = texts.get(id);
+          if (text) fillExplanation(explain, text);
         },
       })
     : null;
@@ -473,6 +488,35 @@ export async function createModulePage(root, module, query, shell) {
       page.remove();
     },
   };
+}
+
+/**
+ * Pone bajo una gráfica su explicación: «Qué ves» abierto; «Cómo leerla», «Prueba esto» y
+ * «Más detalle» (las ecuaciones y los límites del modelo que le tocan) en desplegables.
+ * @param {HTMLElement} box
+ * @param {import('../core/ficha-sections.js').GraphText} text
+ */
+function fillExplanation(box, text) {
+  /** @param {string} markdown */
+  const prose = (markdown) => {
+    const div = el('div', { class: 'prose' });
+    renderMarkdownInto(div, markdown);
+    return div;
+  };
+  /** @param {string} label @param {...Node} content */
+  const fold = (label, ...content) => el('details', { class: 'explain-fold' }, el('summary', { text: label }), ...content);
+  const detail = [
+    text.equations && el('h4', { text: 'Ecuaciones' }),
+    text.equations && prose(text.equations),
+    text.limits && el('h4', { text: 'Límites del modelo' }),
+    text.limits && prose(text.limits),
+  ].filter((n) => n instanceof Node);
+  box.replaceChildren(
+    el('section', { class: 'explain-see' }, el('h3', { text: 'Qué ves' }), prose(text.see)),
+    fold('Cómo leerla', prose(text.read)),
+    fold('Prueba esto', prose(text.tryThis)),
+    ...(detail.length > 0 ? [fold('Más detalle', ...detail)] : []),
+  );
 }
 
 /**

@@ -11,6 +11,8 @@
 //   «### Título {#id}»: el título lleva id="ficha-id" (une el apartado a su gráfica)
 //   comentarios <!-- … --> en su línea o al final de una línea: no se muestran (marcas para
 //   src/core/ficha-sections.js)
+//   [[término]] o [[texto|id]]: término del glosario común (data/glosario.json); sale como un
+//   botón que abre su definición (src/ui/glossary.js)
 //
 // No es un Markdown completo: no hay tablas, imágenes, citas ni listas anidadas. Si una
 // ficha necesita algo más, se amplía aquí con su test.
@@ -51,6 +53,33 @@ function mathHtml(tex, kind) {
 }
 
 /**
+ * Identificador de un término del glosario a partir de su texto: minúsculas, sin tildes y
+ * con guiones ('Función de onda' → 'funcion-de-onda').
+ * @param {string} text
+ * @returns {string}
+ */
+export function termId(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/** Marca de término del glosario: [[texto]] o [[texto|id]]. */
+export const TERM_MARK = /\[\[([^\]|\n]+)(?:\|([a-z0-9-]+))?\]\]/g;
+
+/**
+ * Identificadores de los términos del glosario citados en un texto (para los tests).
+ * @param {string} markdown
+ * @returns {string[]}
+ */
+export function termsIn(markdown) {
+  return [...markdown.matchAll(TERM_MARK)].map((m) => m[2] ?? termId(m[1]));
+}
+
+/**
  * Solo se permiten enlaces web, anclas y rutas relativas (nada de "javascript:").
  * @param {string} url
  * @returns {boolean}
@@ -82,8 +111,9 @@ export function renderInline(text) {
   // 2) Se escapa el HTML del texto normal.
   work = escapeHtml(work);
 
-  // 3) Enlaces y énfasis.
+  // 3) Términos del glosario, enlaces y énfasis.
   work = work
+    .replace(TERM_MARK, (_m, label, id) => `<button type="button" class="term" data-term="${id ?? termId(label)}">${label}</button>`)
     .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (match, label, url) =>
       isSafeUrl(url) ? `<a href="${url}">${label}</a>` : match,
     )

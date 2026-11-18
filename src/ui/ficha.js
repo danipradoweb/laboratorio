@@ -58,6 +58,27 @@ export async function renderMarkdownInto(element, markdown) {
   }
 }
 
+/** Textos de las fichas ya descargados (una promesa por módulo). @type {Map<string, Promise<string>>} */
+const fichaTexts = new Map();
+
+/**
+ * Descarga el texto de la ficha de un módulo (una sola vez; si falla, se reintentará).
+ * @param {string} moduleId
+ * @returns {Promise<string>}
+ */
+export function loadFichaText(moduleId) {
+  let pending = fichaTexts.get(moduleId);
+  if (!pending) {
+    pending = fetch(`src/modules/${moduleId}/ficha.md`).then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    });
+    pending.catch(() => fichaTexts.delete(moduleId));
+    fichaTexts.set(moduleId, pending);
+  }
+  return pending;
+}
+
 /**
  * Panel con la ficha de un módulo (src/modules/<id>/ficha.md). El archivo se descarga
  * la primera vez que se abre el panel.
@@ -79,9 +100,7 @@ export function createFichaPanel(container, moduleId) {
     loaded = true;
     body.replaceChildren(el('p', { class: 'notice', text: 'Cargando la ficha…' }));
     try {
-      const response = await fetch(`src/modules/${moduleId}/ficha.md`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await renderMarkdownInto(body, await response.text());
+      await renderMarkdownInto(body, await loadFichaText(moduleId));
       element.dataset.loaded = 'true';
     } catch (error) {
       loaded = false; // se reintentará al volver a abrir

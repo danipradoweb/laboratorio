@@ -1266,6 +1266,9 @@ a.preset {
   display: grid;
   grid-row: span 3;
   grid-template-rows: subgrid;
+  /* Una columna que no crece con el contenido: una ecuación ancha se desplaza dentro de su
+     caja en vez de salirse de la tarjeta. */
+  grid-template-columns: minmax(0, 1fr);
   row-gap: 0;
   align-content: start;
   padding: 0.75rem 0.9rem 0.9rem;
@@ -1326,6 +1329,96 @@ a.preset {
 
 .graph-explain {
   margin-top: 0.9rem;
+}
+
+/* Explicación bajo cada gráfica (sacada de ficha.md): «Qué ves» abierto y tres desplegables. */
+.graph-explain {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.explain-see h3,
+.explain-fold summary {
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.explain-see h3 {
+  margin-bottom: 0.3rem;
+}
+
+.explain-fold {
+  border-top: 1px solid var(--border);
+  padding: 0.45rem 0;
+}
+
+.explain-fold summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.explain-fold[open] summary {
+  margin-bottom: 0.4rem;
+}
+
+.explain-fold h4 {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.graph-explain .prose p:last-child,
+.graph-explain .prose ul:last-child {
+  margin-bottom: 0;
+}
+
+.graph-explain .math-block {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Términos del glosario: subrayado de puntos; al pulsarlos se abre su definición. */
+.term {
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px dotted var(--accent);
+  cursor: help;
+}
+
+.term:hover,
+.term[aria-expanded='true'] {
+  color: var(--accent);
+}
+
+.term-popup {
+  position: absolute;
+  z-index: 50;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 0.4rem 1.5rem rgb(0 0 0 / 0.25);
+}
+
+.term-popup[hidden] {
+  display: none;
+}
+
+.term-popup-title {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.term-popup-text {
+  margin: 0;
 }
 
 /* Bloque «Estado» con fórmulas. */

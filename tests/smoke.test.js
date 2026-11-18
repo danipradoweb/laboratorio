@@ -966,6 +966,52 @@ test('función de onda: el enlace copiado restaura la pantalla, y otra pantalla 
   assert.deepEqual(errors, []);
 });
 
+// Explicaciones (encargo R1): debajo de cada gráfica, su apartado de la ficha: «Qué ves»
+// abierto y «Cómo leerla», «Prueba esto» y «Más detalle» (ecuaciones y límites que le tocan)
+// en desplegables, con las fórmulas dibujadas. Los términos del glosario abren su definición.
+test('función de onda: explicación bajo cada gráfica y glosario', { skip }, async () => {
+  const fo = /** @type {import('../src/modules/types.js').ModuleDescriptor} */ (modules.find((m) => m.id === 'funcion-onda'));
+  const { page, errors, close } = await openPage('#/funcion-onda', { width: 1366, height: 650 });
+  // En la página de entrada, el párrafo ya tiene términos del glosario.
+  const term = page.locator('.entry-intro .term').first();
+  await term.click();
+  await page.waitForSelector('.term-popup:not([hidden])');
+  assert.equal(await page.locator('.term-popup-title').textContent(), 'función de onda');
+  assert.ok(String(await page.locator('.term-popup-text').textContent()).length > 40);
+  await page.screenshot({ path: join(shots, 'funcion-onda-glosario.png') });
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.term-popup').isVisible(), false);
+  for (const sim of fo.simulations ?? []) {
+    await page.evaluate((/** @type {string} */ h) => (location.hash = `${h}&pantalla=juntas`), entryLink(fo, sim));
+    await page.waitForSelector('html[data-ready="true"][data-route="funcion-onda"]');
+    await page.waitForSelector('.screen .graph-card');
+    for (const g of sim.graphs) {
+      const explain = page.locator(`.graph-card[data-graph="${g.id}"] .graph-explain`);
+      assert.ok(String(await explain.locator('.explain-see').textContent()).length > 80, `${g.id}: falta «Qué ves»`);
+      const folds = await explain.locator('details summary').allTextContents();
+      assert.deepEqual(folds.slice(0, 2), ['Cómo leerla', 'Prueba esto'], `${g.id}: desplegables`);
+      assert.equal(folds[2], 'Más detalle', `${g.id}: falta «Más detalle» (ecuaciones y límites)`);
+      assert.equal(await explain.locator('details[open]').count(), 0, `${g.id}: los desplegables empiezan cerrados`);
+    }
+    assert.equal(await page.locator('.graph-explain .katex-error').count(), 0, `${sim.id}: KaTeX no entiende alguna fórmula`);
+  }
+  // Una pantalla normal con la explicación desplegada y un término del glosario.
+  await page.evaluate((/** @type {string} */ h) => (location.hash = h), entryLink(fo, /** @type {any} */ (fo.simulations?.[1])));
+  await page.waitForSelector('.screen .graph-card[data-graph="superposicion"] .graph-explain details');
+  const card = page.locator('.graph-card[data-graph="superposicion"]');
+  await card.locator('details summary', { hasText: 'Cómo leerla' }).click();
+  await card.locator('details summary', { hasText: 'Más detalle' }).click();
+  assert.ok((await card.locator('details[open] .katex').count()) > 0, 'las ecuaciones de «Más detalle» no se dibujan');
+  await card.locator('.graph-explain .term').first().click();
+  await page.waitForSelector('.term-popup:not([hidden])');
+  await card.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: join(shots, 'funcion-onda-explicacion.png'), fullPage: false });
+  await page.mouse.click(5, 300);
+  assert.equal(await page.locator('.term-popup').isVisible(), false);
+  await close();
+  assert.deepEqual(errors, []);
+});
+
 // Móvil (390 × 844): una gráfica por pantalla con su explicación debajo, la gráfica antes que
 // los controles, y los controles en una barra plegable arriba, cerrada al entrar.
 test('función de onda: en el móvil, una gráfica por pantalla y los controles plegados', { skip }, async () => {

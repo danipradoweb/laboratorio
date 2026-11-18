@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderMarkdown, renderInline, escapeHtml } from '../src/core/markdown.js';
+import { renderMarkdown, renderInline, escapeHtml, termId, termsIn } from '../src/core/markdown.js';
 
 test('títulos de nivel 1 a 3', () => {
   assert.equal(renderMarkdown('# Título'), '<h1>Título</h1>');
@@ -115,4 +115,14 @@ test('los comentarios <!-- … --> no se muestran ni cortan párrafos o listas',
   assert.equal(renderMarkdown('<!-- gráficas: psi -->\nTexto.'), '<p>Texto.</p>');
   assert.equal(renderMarkdown('Uno\n<!-- fin -->\ndos'), '<p>Uno dos</p>');
   assert.equal(renderMarkdown('- a <!-- gráficas: psi -->\n- b'), '<ul><li>a</li><li>b</li></ul>');
+});
+
+// Glosario común (encargo R1): los términos marcados salen como un botón con su identificador.
+test('términos del glosario: [[texto]] y [[texto|id]]', () => {
+  assert.equal(
+    renderInline('una [[Función de onda]] y [[ondas planas|onda-plana]]'),
+    'una <button type="button" class="term" data-term="funcion-de-onda">Función de onda</button> y <button type="button" class="term" data-term="onda-plana">ondas planas</button>',
+  );
+  assert.equal(termId('Longitud de onda de de Broglie'), 'longitud-de-onda-de-de-broglie');
+  assert.deepEqual(termsIn('[[efecto túnel]], [[fases|fase]]'), ['efecto-tunel', 'fase']);
 });

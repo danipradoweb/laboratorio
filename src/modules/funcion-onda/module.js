@@ -402,7 +402,7 @@ const descriptor = {
   ],
   // --- Formato con página de entrada y simulaciones (encargo R1) ---------------------
   intro:
-    'Una cuerda que vibra y la función de onda de un electrón obedecen ecuaciones parecidas: las dos son lineales, así que sus ondas se suman e interfieren, y al confinarlas solo sobreviven ciertos modos. Pero no son lo mismo: la función de onda es compleja, sus ondas viajan a velocidades distintas según su longitud de onda y lo que se observa de ella es una probabilidad, no un desplazamiento. Este módulo las pone lado a lado para ver qué comparten y en qué se diferencian. Es la base de lo que viene después: átomos, enlaces, bandas de energía y puntos cuánticos.',
+    'Una cuerda que vibra y la [[función de onda]] de un electrón obedecen ecuaciones parecidas: las dos son lineales, así que sus ondas se suman e [[interfieren|interferencia]], y al confinarlas solo sobreviven ciertos [[modos|modo]]. Pero no son lo mismo: la función de onda es compleja, sus ondas viajan a velocidades distintas según su longitud de onda y lo que se observa de ella es una probabilidad, no un desplazamiento. Este módulo las pone lado a lado para ver qué comparten y en qué se diferencian. Es la base de lo que viene después: átomos, enlaces, bandas de energía y puntos cuánticos.',
   simulationParam: 'part',
   simulations: [
     {
@@ -485,27 +485,27 @@ const descriptor = {
       steps: [
         {
           preset: 'cuerda-modos',
-          text: 'Una cuerda tensa obedece una ecuación **lineal**: si dos formas son solución, su suma también lo es. Aquí la cuerda es la suma del modo 1 y el modo 2. Cada modo es una onda estacionaria, $\\sin(n\\pi x/L)$, que oscila a su frecuencia $\\omega_n = n\\pi c/L$; la forma total cambia porque los dos van a ritmos distintos. Abajo, la energía pasa del movimiento al estiramiento y vuelve, y la total no cambia.',
+          text: 'Una cuerda tensa obedece una ecuación **lineal**: si dos formas son solución, su suma también lo es. Aquí la cuerda es la suma del modo 1 y el modo 2. Cada modo es una onda estacionaria, $\\sin(n\\pi x/L)$, que oscila a su frecuencia $\\omega_n = n\\pi c/L$; la forma total cambia porque los dos van a ritmos distintos. Al lado, la energía pasa del movimiento al estiramiento y vuelve, y la total no cambia.',
         },
         {
           preset: 'pozo-estados',
-          text: 'La ecuación de Schrödinger también es lineal, y al confinar aparece lo mismo. En una caja de paredes infinitas de anchura $L$ los estados permitidos son **exactamente** $\\sin(n\\pi x/L)$: los modos de la cuerda. Aquí está $\\varphi_2$, con un nodo en el centro como el segundo modo. Lo que cambia es el reloj: la frecuencia de la cuerda crece como $n$ y la energía del estado como $n^2$ (gráfica de la derecha en la vista «La cuerda clásica»).',
+          text: 'La ecuación de Schrödinger también es lineal, y al confinar aparece lo mismo. En una caja de paredes infinitas de anchura $L$ los estados permitidos son **exactamente** $\\sin(n\\pi x/L)$: los modos de la cuerda. Aquí está $\\varphi_2$, con un nodo en el centro como el segundo modo. Lo que cambia es el reloj: la frecuencia de la cuerda crece como $n$ y la energía del estado como $n^2$ (gráfica de las frecuencias, en la simulación de la cuerda).',
         },
         {
           preset: 'superposicion',
-          text: 'Como en la cuerda, los estados se pueden sumar. Con $\\varphi_1$ y $\\varphi_2$ a partes iguales, $|\\psi|^2$ deja de estar quieta: la probabilidad va de un lado a otro de la caja con periodo $h/(E_2 - E_1) = 2{,}35$ fs. Es **interferencia**: donde las fases de los dos términos coinciden, $|\\psi|^2$ crece; donde se oponen, se cancela. Las flechas de abajo a la derecha son los dos coeficientes: giran a ritmos distintos, y lo que se ve depende del ángulo entre ellas.',
+          text: 'Como en la cuerda, los estados se pueden sumar. Con $\\varphi_1$ y $\\varphi_2$ a partes iguales, $|\\psi|^2$ deja de estar quieta: la probabilidad va de un lado a otro de la caja con periodo $h/(E_2 - E_1) = 2{,}35$ fs. Es **interferencia**: donde las fases de los dos términos coinciden, $|\\psi|^2$ crece; donde se oponen, se cancela. Las flechas de la gráfica de al lado son los dos coeficientes: giran a ritmos distintos, y lo que se ve depende del ángulo entre ellas.',
         },
         {
           preset: 'tunel',
-          text: 'La interferencia de ondas explica lo que ninguna partícula clásica haría. Un paquete de energía media 0,2 eV llega a una barrera de 0,3 eV y 1 nm: una bola rebotaría siempre, pero la onda atraviesa en parte (el 13,7 %, dice la línea de arriba al final). Dentro de la barrera $\\psi$ no se corta de golpe: decae, y lo que queda al otro lado sigue viajando. En la gráfica de momentos, la curva verde es la transmisión de cada onda plana; el paquete es una suma de ellas.',
+          text: 'La interferencia de ondas explica lo que ninguna partícula clásica haría. Un paquete de energía media 0,2 eV llega a una barrera de 0,3 eV y 1 nm: una bola rebotaría siempre, pero la onda atraviesa en parte (el 13,7 %, dice al final la línea bajo el título de $\\psi$). Dentro de la barrera $\\psi$ no se corta de golpe: decae, y lo que queda al otro lado sigue viajando. En la gráfica de momentos, la curva verde es la transmisión de cada onda plana; el paquete es una suma de ellas.',
         },
         {
           preset: 'paquete-libre',
-          text: 'Pero no todo es igual. La cuerda lleva un pulso sin deformarlo porque todas sus ondas viajan a la misma velocidad ($\\omega = ck$). Para una partícula libre $\\omega = \\hbar k^2/2m$: las componentes con más momento van más deprisa y el paquete **se ensancha solo**, sin que nada lo empuje. Con $\\sigma_0 = 1$ nm, a los 100 fs mide 5,9 nm y a los 200 fs, 11,6 nm (título de abajo a la derecha). La cuerda de abajo, que salió con la misma forma, sigue igual.',
+          text: 'Pero no todo es igual. La cuerda lleva un pulso sin deformarlo porque todas sus ondas viajan a la misma velocidad ($\\omega = ck$). Para una partícula libre $\\omega = \\hbar k^2/2m$: las componentes con más momento van más deprisa y el paquete **se ensancha solo**, sin que nada lo empuje. Con $\\sigma_0 = 1$ nm, a los 100 fs mide 5,9 nm y a los 200 fs, 11,6 nm ($\\Delta x$, en la línea bajo el título de los valores esperados). La cuerda clásica de la pantalla siguiente, que salió con la misma forma, sigue igual.',
         },
         {
           preset: 'opuestos',
-          text: 'Y $\\psi$ no vibra en el espacio como la cuerda: es **compleja**, y su fase lleva información. Arriba y abajo, dos paquetes con la misma $|\\psi|^2$ inicial; solo cambia el sentido en que gira la fase a lo largo de $x$ (los colores se suceden en orden contrario). Uno va a la derecha y el otro a la izquierda: $|\\psi|^2$ dice dónde está la partícula y la fase, hacia dónde va. (Con $N$ partículas, $\\psi$ ni siquiera vive en nuestro espacio, sino en uno de $3N$ dimensiones.)',
+          text: 'Y $\\psi$ no vibra en el espacio como la cuerda: es **compleja**, y su fase lleva información. En la gráfica de $\\psi$, arriba y abajo, dos paquetes con la misma $|\\psi|^2$ inicial; solo cambia el sentido en que gira la fase a lo largo de $x$ (los colores se suceden en orden contrario). Uno va a la derecha y el otro a la izquierda: $|\\psi|^2$ dice dónde está la partícula y la fase, hacia dónde va. (Con $N$ partículas, $\\psi$ ni siquiera vive en nuestro espacio, sino en uno de $3N$ dimensiones.)',
         },
       ],
     },
@@ -515,7 +515,7 @@ const descriptor = {
       steps: [
         {
           preset: 'cuerda-modos',
-          text: 'La ecuación de la cuerda es de **segundo orden** en el tiempo: para saber cómo seguirá hay que dar la forma y además la velocidad de cada punto. Por eso un modo puede ser real, $\\sin(kx)\\cos(\\omega t)$: sube, se aplana y baja, y cuando pasa por la posición plana no ha perdido nada, porque toda su energía está en el movimiento. Aquí hay dos modos superpuestos: la energía va y viene entre movimiento y estiramiento (gráfica de abajo), y lo que la cuerda no tiene en forma lo tiene en velocidad.',
+          text: 'La ecuación de la cuerda es de **segundo orden** en el tiempo: para saber cómo seguirá hay que dar la forma y además la velocidad de cada punto. Por eso un modo puede ser real, $\\sin(kx)\\cos(\\omega t)$: sube, se aplana y baja, y cuando pasa por la posición plana no ha perdido nada, porque toda su energía está en el movimiento. Aquí hay dos modos superpuestos: la energía va y viene entre movimiento y estiramiento (gráfica de al lado), y lo que la cuerda no tiene en forma lo tiene en velocidad.',
         },
         {
           preset: 'pozo-estados',
@@ -545,7 +545,7 @@ const descriptor = {
         },
         {
           preset: 'superposicion',
-          text: 'En una superposición de dos estados la probabilidad se balancea: $\\langle x\\rangle$ oscila con frecuencia angular $(E_2 - E_1)/\\hbar$ (abajo a la izquierda). Una carga que oscila es una antena, un **dipolo**: radia luz de esa frecuencia y, al revés, la luz de esa frecuencia puede ponerla a oscilar. Aquí, un electrón en una caja de 0,8 nm: $E_2 - E_1 = 1{,}76$ eV, periodo 2,35 fs y un fotón de 703 nm, rojo.',
+          text: 'En una superposición de dos estados la probabilidad se balancea: $\\langle x\\rangle$ oscila con frecuencia angular $(E_2 - E_1)/\\hbar$ (gráfica del puente con la luz, en la segunda pantalla). Una carga que oscila es una antena, un **dipolo**: radia luz de esa frecuencia y, al revés, la luz de esa frecuencia puede ponerla a oscilar. Aquí, un electrón en una caja de 0,8 nm: $E_2 - E_1 = 1{,}76$ eV, periodo 2,35 fs y un fotón de 703 nm, rojo.',
         },
         {
           preset: 'superposicion',
