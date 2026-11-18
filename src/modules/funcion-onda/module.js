@@ -5,13 +5,15 @@
 // superposición, interferencia de fases, modos propios al confinar) y en qué se diferencian
 // (orden temporal y ψ compleja, dispersión, espacio en que vive, información de la fase).
 //
-// Tres vistas (parámetro `part`):
+// Cuatro vistas (parámetro `part`):
 //   paquete   un paquete de ondas que evoluciona con la ecuación de Schrödinger, con su
 //             espacio de momentos, la cuerda clásica que sale de la misma forma y los
 //             valores esperados                                          view-packet.js
 //   estados   estados propios sobre el potencial y superposición de dos de ellos; fase
 //             global frente a relativa; el puente con la luz             view-states.js
 //   cuerda    la cuerda clásica sola: pulsos, modos, extremos fijos o libres  view-string.js
+//   rendijas  doble rendija en 2D con control de coherencia entre los dos caminos
+//                                                                        view-slits.js
 //
 // Unidades: posiciones en nm, tiempos en fs, energías en eV, masas en masas del electrón.
 // La cuerda clásica de la vista «cuerda» usa unidades propias (x/L y periodos).
@@ -25,7 +27,7 @@ import { DRAW_COLUMNS, DRAW_RANGE } from './view-common.js';
 const inPart = (...parts) => (/** @type {State} */ state) => parts.includes(String(state.part));
 /** @param {...string} types */
 const withPotential = (...types) => (/** @type {State} */ state) =>
-  state.part !== 'cuerda' && types.includes(String(state.potential));
+  (state.part === 'paquete' || state.part === 'estados') && types.includes(String(state.potential));
 
 /** Columnas del potencial dibujado: parámetros ocultos d0…d15 que se cambian dibujando. */
 const drawnColumns = Array.from({ length: DRAW_COLUMNS }, (_, j) => ({
@@ -56,6 +58,7 @@ const descriptor = {
         { value: 'paquete', label: 'Un paquete de ondas en movimiento' },
         { value: 'estados', label: 'Estados propios y superposición' },
         { value: 'cuerda', label: 'La cuerda clásica' },
+        { value: 'rendijas', label: 'Doble rendija (2D) y coherencia' },
       ],
       default: 'paquete',
       help: 'Las dos primeras vistas comparten el potencial y la masa de la partícula.',
@@ -222,14 +225,14 @@ const descriptor = {
       label: 'Mostrar Re ψ',
       type: 'toggle',
       default: false,
-      visible: (state) => state.part !== 'cuerda' && !state.density,
+      visible: (state) => (state.part === 'paquete' || state.part === 'estados') && !state.density,
     },
     {
       key: 'showIm',
       label: 'Mostrar Im ψ',
       type: 'toggle',
       default: false,
-      visible: (state) => state.part !== 'cuerda' && !state.density,
+      visible: (state) => (state.part === 'paquete' || state.part === 'estados') && !state.density,
     },
     {
       key: 'rate',
@@ -240,8 +243,8 @@ const descriptor = {
       step: 1,
       default: 10,
       unit: 'fs/s',
-      help: 'Femtosegundos de simulación por segundo real (a velocidad 1×).',
-      visible: inPart('paquete'),
+      help: 'Femtosegundos de simulación por segundo real (a velocidad 1×). En la doble rendija el ordenador puede no llegar al ritmo pedido: entonces va más despacio.',
+      visible: inPart('paquete', 'rendijas'),
     },
     // --- Estados -------------------------------------------------------------------------
     {
@@ -344,6 +347,53 @@ const descriptor = {
       step: 1,
       default: 2,
       visible: (state) => state.part === 'cuerda' && state.shape === 'dos-modos',
+    },
+    // --- Doble rendija ---------------------------------------------------------------------
+    {
+      key: 'slitWavelength',
+      label: 'Longitud de onda de de Broglie λ',
+      type: 'range',
+      min: 0.8,
+      max: 1.6,
+      step: 0.05,
+      default: 1,
+      unit: 'nm',
+      help: 'λ = h/p del electrón que llega a las rendijas (1 nm ↔ 1,50 eV).',
+      visible: inPart('rendijas'),
+    },
+    {
+      key: 'slitSeparation',
+      label: 'Distancia entre las rendijas d',
+      type: 'range',
+      min: 2,
+      max: 6,
+      step: 0.25,
+      default: 4,
+      unit: 'nm',
+      help: 'Entre los centros de las dos rendijas.',
+      visible: inPart('rendijas'),
+    },
+    {
+      key: 'slitWidth',
+      label: 'Anchura de cada rendija w',
+      type: 'range',
+      min: 0.5,
+      max: 1.5,
+      step: 0.125,
+      default: 1,
+      unit: 'nm',
+      visible: inPart('rendijas'),
+    },
+    {
+      key: 'coherence',
+      label: 'Coherencia γ entre los dos caminos',
+      type: 'range',
+      min: 0,
+      max: 1,
+      step: 0.01,
+      default: 1,
+      help: '1: nada guarda por qué rendija pasó la partícula. 0: otro sistema lo ha registrado del todo. Cambia el dibujo al momento, sin repetir la simulación.',
+      visible: inPart('rendijas'),
     },
     ...drawnColumns,
   ],

@@ -1336,8 +1336,40 @@ h3 {
 }
 
 .fo-part {
+  position: relative;
   flex: 1;
   min-height: 0;
+}
+
+/* Aviso de fin de la simulación (createEndNotice en view-common.js): flota arriba, en el
+   centro, encima de los paneles. */
+.fo-end {
+  position: absolute;
+  top: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.5rem 0.6rem 0.5rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 0.3rem 1.2rem rgb(0 0 0 / 0.25);
+}
+
+.fo-end[hidden] {
+  display: none;
+}
+
+.fo-end-restart {
+  flex: none;
+  font-weight: 600;
 }
 
 /* Vista «paquete»: ψ arriba a la izquierda (ancha), momentos arriba a la derecha; la
@@ -1366,6 +1398,13 @@ h3 {
   grid-template-areas:
     'string freq'
     'energy energy';
+}
+
+/* Vista «rendijas»: el plano a la izquierda (cuadrado) y la pantalla a la derecha. */
+.fo-grid-slits {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'plane screen';
 }
 
 /* Muestra del color del fotón en el título del panel del puente con la luz. */
@@ -1418,6 +1457,12 @@ h3 {
 
 .fo-stack-tall {
   flex: 1.25;
+}
+
+/* Altura mínima de una gráfica apilada: con menos, los ejes no dejan sitio a los datos y la
+   gráfica sale vacía (incertidumbre del paquete en una ventana de 1280 × 600). */
+.fo-stack-min {
+  min-height: 5.5rem;
 }
 
 @media (max-width: 900px) {

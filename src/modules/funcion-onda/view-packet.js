@@ -42,6 +42,7 @@ import { createString, setFromSolution, setReleasedShape, stepString } from './p
 import {
   BOUND_POTENTIALS,
   DRAW_COLUMNS,
+  createEndNotice,
   DRAW_RANGE,
   DRAW_WIDTH,
   formatSig,
@@ -66,8 +67,6 @@ const V_CLIP = 20;
 /** Paso de tiempo máximo (fs) y pasos como mucho por fotograma. */
 const MAX_DT = 0.02;
 const MAX_STEPS_PER_FRAME = 90;
-/** Segundos reales que se mantiene el final antes de volver a empezar. */
-const HOLD_SECONDS = 1.5;
 /** Fracción que ha salido por los bordes a partir de la cual no se dibujan los valores esperados. */
 const ESCAPED_LIMIT = 0.01;
 /** Puntos de la cuerda clásica (Courant 1: exacta). */
@@ -132,19 +131,22 @@ export function mountPacket(container, ctx, setStatus) {
   const expPanel = addPanel(grid, 'Valores esperados', { area: 'expect' });
   const expStack = el('div', { class: 'fo-stack' });
   const meanBox = el('div', { class: 'fo-stack-item fo-stack-tall' });
-  const uncBox = el('div', { class: 'fo-stack-item' });
+  const uncBox = el('div', { class: 'fo-stack-item fo-stack-min' });
   expStack.append(meanBox, uncBox);
   expPanel.body.append(expStack);
-  const meanPlot = createPlot(meanBox, { xLabel: 'tiempo t (fs)', yLabel: '⟨x⟩ (nm)', exportName: 'funcion-onda-valores-esperados' });
-  const uncPlot = createPlot(uncBox, { xLabel: 'tiempo t (fs)', yLabel: 'Δx·Δp / ħ', exportName: 'funcion-onda-incertidumbre' });
+  // Las dos gráficas comparten el eje de tiempo: solo la de abajo lo rotula, y la de la
+  // incertidumbre no lleva leyenda (su eje y y la etiqueta de la línea ħ/2 ya lo dicen).
+  // Así caben en un panel bajo (portátil de 1366 × 768 con la barra del navegador).
+  const meanPlot = createPlot(meanBox, { yLabel: '⟨x⟩ (nm)', exportName: 'funcion-onda-valores-esperados' });
+  const uncPlot = createPlot(uncBox, { xLabel: 'tiempo t (fs)', yLabel: 'Δx·Δp / ħ', legend: false, exportName: 'funcion-onda-incertidumbre' });
 
   const simGrid = createGrid(POINTS, DOMAIN[0], DOMAIN[1]);
+  const endNotice = createEndNotice(container, ctx.clock);
 
   /** @type {ReturnType<typeof setup> | null} */
   let sim = null;
   /** @type {import('../types.js').State | null} */
   let lastState = null;
-  let holdUntil = -1;
 
   /** Clave de lo que define la simulación (lo demás solo cambia el dibujo). */
   const physicsKey = (/** @type {import('../types.js').State} */ s) =>
@@ -187,7 +189,7 @@ export function mountPacket(container, ctx, setStatus) {
     const vGroup = (2 * a * Math.abs(k0)) / HBAR_EV_FS;
     const vSpread = (2 * a) / (2 * sigma) / HBAR_EV_FS;
 
-    // Hasta cuándo se simula antes de volver a empezar.
+    // Hasta cuándo se simula (al llegar, la vista se para y avisa: createEndNotice).
     let tMax;
     if (potentialType === 'armonico') tMax = 2 * ((2 * Math.PI * HBAR_EV_FS) / Number(state.quantum));
     else if (bound) tMax = 150;
@@ -448,21 +450,23 @@ export function mountPacket(container, ctx, setStatus) {
     // --- (d) valores esperados --------------------------------------------------------
     const h = s.history;
     /** @type {import('../../ui/plot2d.js').Series[]} */
-    const meanSeries = [
-      { x: h.t, y: h.x, color: 0, label: '⟨x⟩ (eje izquierdo)' },
-      { x: h.t, y: h.k, color: 1, axis: 'y2', label: '⟨p⟩/ħ = ⟨k⟩ (eje derecho)' },
-    ];
-    if (s.twin) {
-      meanSeries.push({ x: h.t, y: h.xTwin, color: 0, dash: [5, 4], label: 'k₀ opuesto' });
-      meanSeries.push({ x: h.t, y: h.kTwin, color: 1, dash: [5, 4], axis: 'y2' });
-    }
-    // Trayectoria clásica (Ehrenfest) donde se conoce en forma cerrada.
+    const meanSeries = [];
+    // Trayectoria clásica (Ehrenfest) donde se conoce en forma cerrada. Va la primera para
+    // quedar debajo: ⟨x⟩ coincide con ella y, dibujada encima, la tapaba.
     if (s.potentialType === 'libre' || s.potentialType === 'armonico') {
       const ts = Array.from({ length: 121 }, (_, i) => (s.tMax * i) / 120);
       const v0 = (2 * kineticCoefficient(s.mass) * s.k0) / HBAR_EV_FS;
       const omega = s.quantum / HBAR_EV_FS;
       const xc = ts.map((t) => (s.potentialType === 'libre' ? s.x0 + v0 * t : s.x0 * Math.cos(omega * t) + (v0 / omega) * Math.sin(omega * t)));
-      meanSeries.push({ x: ts, y: xc, color: colors.textSoft, dash: [2, 3], label: 'partícula clásica' });
+      meanSeries.push({ x: ts, y: xc, color: colors.textSoft, dash: [2, 3], label: 'clásica' });
+    }
+    meanSeries.push(
+      { x: h.t, y: h.x, color: 0, width: 1.5, label: '⟨x⟩ (izq.)' },
+      { x: h.t, y: h.k, color: 1, width: 1.5, axis: 'y2', label: '⟨p⟩/ħ (der.)' },
+    );
+    if (s.twin) {
+      meanSeries.push({ x: h.t, y: h.xTwin, color: 0, dash: [5, 4], label: 'k₀ opuesto' });
+      meanSeries.push({ x: h.t, y: h.kTwin, color: 1, dash: [5, 4], axis: 'y2' });
     }
     const kSpan = Math.max(s.kAmp, 1 / (2 * s.sigma), ...h.k.map(Math.abs)) * 1.15;
     const xSpan = [Math.min(s.xView[0], ...h.x), Math.max(s.xView[1], ...h.x)];
@@ -475,7 +479,8 @@ export function mountPacket(container, ctx, setStatus) {
     });
     const uMax = Math.max(1, ...h.u) * 1.1;
     uncPlot.draw({
-      series: [{ x: h.t, y: h.u, color: 4, label: 'Δx·Δp / ħ' }],
+      // Más gruesa que la línea ħ/2: en el estado coherente van una encima de otra.
+      series: [{ x: h.t, y: h.u, color: 4, width: 2, label: 'Δx·Δp / ħ' }],
       hlines: [{ y: 0.5, dash: [6, 4], label: 'ħ/2: el mínimo' }],
       vlines: [{ x: s.t, color: colors.textSoft }],
       xRange: [0, s.tMax],
@@ -509,21 +514,21 @@ export function mountPacket(container, ctx, setStatus) {
 
   let statusText = '';
 
+  /** Vuelve a empezar desde t = 0 con el estado actual. */
+  function restart() {
+    if (!lastState) return;
+    sim = setup(lastState);
+    endNotice.hide();
+    record();
+  }
+
   const offTick = ctx.clock.onTick((time, dt) => {
     if (!sim || !lastState) return;
-    if (time === 0 && dt === 0) {
-      // Botón «Reiniciar» del reloj: vuelta a t = 0.
-      holdUntil = -1;
-      sim = setup(lastState);
-      record();
-    } else if (holdUntil >= 0) {
-      if (time < holdUntil) return;
-      holdUntil = -1;
-      sim = setup(lastState);
-      record();
-    } else {
+    if (time === 0 && dt === 0) restart(); // botón «Reiniciar» (del reloj o del aviso)
+    else if (sim.t >= sim.tMax) return; // terminada: se queda en el último instante, con el aviso
+    else {
       advance(dt * Number(lastState.rate));
-      if (sim.t >= sim.tMax) holdUntil = time + HOLD_SECONDS * ctx.clock.speed;
+      if (sim.t >= sim.tMax) endNotice.show(`Simulación terminada: ha llegado al tiempo final, t = ${formatEs(sim.tMax, 0)} fs.`);
     }
     render(lastState);
     setStatus(statusText);
@@ -532,16 +537,13 @@ export function mountPacket(container, ctx, setStatus) {
   return {
     update(state) {
       lastState = state;
-      if (!sim || sim.key !== physicsKey(state)) {
-        sim = setup(state);
-        holdUntil = -1;
-        record();
-      }
+      if (!sim || sim.key !== physicsKey(state)) restart();
       render(state);
       setStatus(statusText);
     },
     destroy() {
       offTick();
+      endNotice.destroy();
       wheel.destroy();
       for (const p of [mainPlot, twinPlot, momPlot, stringPlot, meanPlot, uncPlot]) p.destroy();
       grid.remove();

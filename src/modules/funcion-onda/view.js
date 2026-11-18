@@ -1,11 +1,12 @@
 // @ts-check
 // Ondas clásicas y función de onda: vista del módulo.
 //
-// Tres vistas, que se eligen con el parámetro `part`:
+// Cuatro vistas, que se eligen con el parámetro `part`:
 //
 //   paquete   un paquete de ondas con la ecuación de Schrödinger            view-packet.js
 //   estados   estados propios, superposición, fases y el puente con la luz   view-states.js
 //   cuerda    la cuerda clásica sola                                         view-string.js
+//   rendijas  doble rendija en 2D con control de coherencia                  view-slits.js
 //
 // Este archivo solo mantiene la línea de estado de arriba y monta la vista que toca. Cada
 // vista vive en su archivo y cumple { update(state), destroy() }.
@@ -14,6 +15,7 @@ import { el } from '../../ui/dom.js';
 import { mountPacket } from './view-packet.js';
 import { mountStates } from './view-states.js';
 import { mountString } from './view-string.js';
+import { mountSlits } from './view-slits.js';
 
 /**
  * @typedef {(container: HTMLElement, ctx: import('../types.js').ModuleContext, setStatus: (text: string) => void,
@@ -25,6 +27,7 @@ const PARTS = {
   paquete: mountPacket,
   estados: mountStates,
   cuerda: mountString,
+  rendijas: mountSlits,
 };
 
 /**

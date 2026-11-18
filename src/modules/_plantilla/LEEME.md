@@ -82,7 +82,15 @@ Comprueba: `npm test` (valida que cada preset usa claves y valores válidos y qu
 
 ## 7. Escribe la ficha: `ficha.md`
 
-Cinco secciones, con estos títulos exactos y en este orden: `## Qué estás viendo`, `## Qué es físico y qué es representación`, `## Ecuaciones`, `## Límites del modelo`, `## Referencias`. Breve: la ficha explica lo que se ve en pantalla, no es un libro de texto. Si algo no es observable (la fase global de ψ, por ejemplo), dilo.
+Cinco secciones, con estos títulos exactos y en este orden: `## Qué estás viendo`, `## Qué es físico y qué es representación`, `## Ecuaciones`, `## Límites del modelo`, `## Referencias`. Si algo no es observable (la fase global de ψ, por ejemplo), dilo.
+
+Dentro de `## Qué estás viendo`, después de una introducción corta, **un apartado por cada vista** (cada gráfica o panel), con un título `###` que la nombre como en pantalla y diga dónde está, y tres partes en este orden (copia la forma de `ficha.md` de esta carpeta):
+
+- `**Qué ves.**` Cada eje con su magnitud y sus unidades dichas en palabras («la frecuencia en terahercios», no solo «f (THz)»), y cada curva, zona, línea y color.
+- `**Cómo leerla.**` La idea física, a nivel de primero de carrera y **sin ecuaciones**.
+- `**Prueba esto.**` Una o dos acciones con el resultado que se ve. **Compruébalas en la pantalla** antes de escribirlas (abre el módulo con `npm run serve` y hazlas); si das un número, que sea el que sale.
+
+Las ecuaciones van solo en `## Ecuaciones`. La regla completa está en `docs/ARQUITECTURA.md`, sección «Fichas».
 
 Markdown admitido: títulos, párrafos, listas, `**negrita**`, `*cursiva*`, `` `código` ``, enlaces y fórmulas `$…$` y `$$…$$`. No hay tablas ni imágenes.
 

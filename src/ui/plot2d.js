@@ -174,6 +174,12 @@ function fixedTicks(positions, range) {
   return { ticks, step };
 }
 
+/** Altura mínima del área de datos, en tamaños de letra, para que quepa además la leyenda.
+ *  Por debajo se dibuja sin leyenda: con ella, en un panel bajo, el área de datos quedaba
+ *  por debajo de 20 px y la gráfica salía vacía (valores esperados de funcion-onda en un
+ *  portátil de 1366 × 768). */
+const MIN_PLOT_WITH_LEGEND = 3;
+
 /** Trazadores vivos, para poder redibujarlos todos (refreshPlots). @type {Set<() => void>} */
 const livePlots = new Set();
 
@@ -303,7 +309,10 @@ export function createPlot(container, options = {}) {
       fs * 0.9 +
       (colorbar ? fs * (colorbar.label ? 5.6 : 4.2) : 0) +
       (y2Ticks ? y2Ticks.width + fs * 0.5 + (y2?.label ? fs * 1.5 : 0) : 0);
-    const legend = options.legend !== false ? layoutLegend(fs, resolve, width - left - right) : null;
+    let legend = options.legend !== false ? layoutLegend(fs, resolve, width - left - right) : null;
+    // Si la leyenda no deja sitio a la gráfica (panel bajo, ventana pequeña), se quita:
+    // es mejor ver las curvas sin leyenda que no ver nada (ver MIN_PLOT_WITH_LEGEND).
+    if (legend && legend.rows > 0 && height - fs * 0.7 - legend.height - bottom < MIN_PLOT_WITH_LEGEND * fs) legend = null;
     const top = fs * 0.7 + (legend ? legend.height : 0);
     if (legend && legend.rows > 0) {
       // Con la leyenda la gráfica es más baja: se recalculan las marcas del eje y.
