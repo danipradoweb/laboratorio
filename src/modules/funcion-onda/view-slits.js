@@ -20,6 +20,7 @@ import { colormaps } from '../../ui/colormaps.js';
 import { formatEs } from '../../ui/format.js';
 import {
   EDGE_WIDTH,
+  PACKET_Y0,
   SCREEN_Y,
   WALL_THICKNESS,
   WALL_Y,
@@ -36,10 +37,11 @@ import { createEndNotice, formatSig } from './view-common.js';
 
 /** Pasos como mucho por fotograma: cada uno son dos FFT de 256 × 256 (unos 15 ms). */
 const MAX_STEPS_PER_FRAME = 3;
-/** Probabilidad que tiene que haber llegado a la pantalla para dibujar lo simulado: antes
- *  solo han llegado las colas más rápidas del paquete y, normalizadas a su máximo, su forma
- *  engaña (aparenta franjas aunque no haya coherencia). */
-const MIN_ARRIVED = 0.005;
+/* Lo simulado en la pantalla se dibuja desde que llega el centro del paquete (o al final):
+ * antes solo han llegado las colas más rápidas y, normalizadas a su máximo, su forma engaña
+ * (aparenta franjas aunque no haya coherencia). Es un criterio de tiempo y no de cantidad
+ * porque con rendijas estrechas y λ larga llega muy poco en total (revisión independiente:
+ * con un umbral del 0,5 % la curva no salía nunca). */
 
 /**
  * @param {HTMLElement} container
@@ -94,6 +96,8 @@ export function mountSlits(container, ctx, setStatus) {
       t: 0,
       pending: 0,
       screen: createScreen(n),
+      // Llegada del centro del paquete a la pantalla en línea recta.
+      centerArrival: (SCREEN_Y - PACKET_Y0) / exp.speed,
       shown,
       reach,
     };
@@ -132,19 +136,24 @@ export function mountSlits(container, ctx, setStatus) {
 
     // --- (a) el plano -------------------------------------------------------------------
     // Delante de la pared, la onda que llega (ψ₁ allí es la incidente: la rendija abierta no
-    // cambia lo que aún no ha llegado). Detrás, la densidad con coherencia γ entre ramas.
+    // cambia lo que aún no ha llegado). Dentro de la pared, cada rendija con su rama: ψ₁ en la
+    // de x > 0 y ψ₂ en la de x < 0 (sumarlas ahí daría hasta cuatro veces la densidad real,
+    // porque en la cara de entrada las dos ramas valen aún lo mismo que la onda incidente).
+    // Detrás, la densidad con coherencia γ entre ramas.
     const psi2 = mirrorX(g, s.psi);
     const mixed = mixedDensity(s.psi, psi2, gamma);
     const front = WALL_Y - WALL_THICKNESS / 2;
+    const back = WALL_Y + WALL_THICKNESS / 2;
     const m = s.shown.length;
     const values = new Float64Array(m * m);
     let vmax = 0;
     for (let a = 0; a < m; a++) {
       const iy = s.shown[a];
-      const behind = g.x[iy] >= front;
+      const y = g.x[iy];
       for (let b = 0; b < m; b++) {
         const i = iy * g.n + s.shown[b];
-        const rho = behind ? mixed[i] : s.psi.re[i] ** 2 + s.psi.im[i] ** 2;
+        const branch = y < front || g.x[s.shown[b]] >= 0 ? s.psi : psi2;
+        const rho = y >= back ? mixed[i] : branch.re[i] ** 2 + branch.im[i] ** 2;
         const v = Math.sqrt(Math.max(rho, 0));
         values[a * m + b] = v;
         if (v > vmax) vmax = v;
@@ -212,7 +221,7 @@ export function mountSlits(container, ctx, setStatus) {
       if (Math.abs(xm) < s.reach) orders.push({ x: xm, dash: [2, 3], color: colors.textSoft, label: order >= 0 ? `m = ${order}` : undefined });
     }
     const arrived = pattern.reduce((acc, v) => acc + v, 0) * g.dx;
-    const enough = arrived >= MIN_ARRIVED;
+    const enough = s.t >= s.centerArrival || s.t >= s.exp.tMax;
     const nothing = xs.map(() => NaN);
     screenPlot.draw({
       series: [
@@ -225,12 +234,12 @@ export function mountSlits(container, ctx, setStatus) {
     });
     screenPanel.title.textContent =
       `La pantalla, a ${formatSig(D, 3)} nm de la pared · líneas de puntos: d·sen θ = mλ` +
-      (enough ? '' : ' · aún no ha llegado casi nada: la curva simulada sale cuando llegue el 0,5 %');
+      (enough ? '' : ` · la curva simulada sale cuando llegue el centro del paquete (t ≈ ${formatEs(s.centerArrival, 0)} fs)`);
 
     statusText =
       `t = ${formatEs(s.t, 1)} de ${formatEs(s.exp.tMax, 0)} fs · λ = ${formatEs(wavelength, 2)} nm (electrón de ${formatEs(s.exp.energy, 2)} eV)` +
       ` · d = ${formatEs(separation, 2)} nm · w = ${formatEs(slitWidth, 3)} nm · primer máximo a θ = ${formatEs((Math.asin(Math.min(1, wavelength / separation)) * 180) / Math.PI, 1)}°` +
-      ` · probabilidad que ha llegado a la pantalla: ${formatEs(100 * arrived, 1)} %`;
+      ` · probabilidad que ha llegado a la pantalla: ${formatEs(Math.max(0, 100 * arrived), 1)} %`;
   }
 
   const offTick = ctx.clock.onTick((time, dt) => {

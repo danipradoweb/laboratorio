@@ -148,3 +148,11 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - Integración con la web personal (sección Laboratorio) cuando haya módulos terminados.
 - Dominio propio: GitHub Pages lo admite sin mover nada.
 - Ensayo interactivo "Determinismo sin predicción": autómata celular (regla 30), sistema caótico con trayectorias que divergen, "demonio" que pierde precisión. Usa el sistema de recorridos.
+
+## Pendientes de la revisión de la tarea de mantenimiento (2026-11-18)
+
+- Doble rendija: delante de la pared se ven rizos de la onda que refleja la pared absorbente; la ficha solo habla de «la onda que llega». Decirlo, o suavizar más el borde de la pared.
+- Aviso de fin: tapa el final del título del panel de la izquierda y la primera entrada de la leyenda de la pantalla. Moverlo (por ejemplo, a la línea de estado) o hacerlo más bajo.
+- Valores esperados del paquete en ventanas bajas: sin sitio, la leyenda se quita (previsto) y entonces ⟨x⟩ (azul) y ⟨k⟩ (naranja) solo se distinguen por los rótulos de los ejes; se podría colorear el rótulo de cada eje con el color de su curva.
+- Tema oscuro: `--series-1` y `--accent` son el mismo color (#6cb6ff); una línea de acento sobre una curva de la serie 1 no se distingue.
+

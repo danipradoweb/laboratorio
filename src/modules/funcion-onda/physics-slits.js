@@ -9,7 +9,7 @@
 // con el mismo paso partido de Fourier (Strang) que physics.js, ahora con la FFT 2D, y las
 // mismas unidades: nm, fs, eV y masas del electrón. Malla de 256 × 256 puntos.
 //
-// LA PARED es un potencial absorbente −iW(x, y): una franja de 1,5 nm de grosor donde W sube
+// LA PARED es un potencial absorbente −iW(x, y): una franja de 1 nm de grosor donde W sube
 // y baja con forma de cos² (sin saltos, para que refleje poco), con huecos en las rendijas
 // (en las celdas del borde de una rendija, W se reduce en la fracción de celda abierta).
 // Lo que entra en la pared se apaga: es una lámina negra. Los bordes de la malla llevan
@@ -67,8 +67,17 @@ export const SLIT_GRID_POINTS = 256;
 export const SLIT_GRID_HALF = 16;
 /** Pared: centro, grosor y altura de W (eV). */
 export const WALL_Y = -3;
-export const WALL_THICKNESS = 1.5;
-export const WALL_STRENGTH = 5;
+// Grosor y altura: compromiso entre dos exigencias que detectó la revisión independiente de
+// la tarea de mantenimiento. (1) Opaca: con 5 eV y 1,5 nm, en la esquina w = 0,5 nm,
+// λ = 0,8 nm, la onda que atravesaba la pared rizaba el patrón de una sola rendija (franjas
+// falsas con γ = 0). (2) Fina: en campo cercano el plano desde el que radian las rendijas
+// cuenta, y en una pared gruesa no está definido (con 1,5 nm y 20 eV los máximos quedaban
+// hasta 0,04 órdenes por dentro de lo previsto). Una pared más alta y fina no sirve: la malla
+// (Δx = 0,125 nm) no resuelve una absorción tan brusca y deja pasar más (0,5 nm y 40 eV:
+// fuga del 4 %). Con 1 nm (8 celdas) y 20 eV: fuga 9·10⁻⁵ de lo que deja una rendija y
+// órdenes 0,992, 1,983 y 2,987. Lo comprueban los tests.
+export const WALL_THICKNESS = 1;
+export const WALL_STRENGTH = 20;
 /** Pantalla: la recta y = SCREEN_Y (a 10 nm de la pared). */
 export const SCREEN_Y = 7;
 /** Franja absorbente de los bordes de la malla: anchura (nm) y altura (eV). */
@@ -375,43 +384,10 @@ export function fraunhoferPattern(sinTheta, { wavelength, separation, slitWidth,
 }
 
 /**
- * Número de onda medio, pesado con el flujo (|φ(k)|²·|k|), de la parte de ψ que está más
- * allá de y = yMin: el de la onda que ha pasado por las rendijas. No es exactamente k₀: la
- * pantalla cuenta flujo, que pesa más las componentes rápidas, y la pared absorbe algo más
- * las lentas, que pasan más tiempo junto a los bordes de las rendijas.
- * @param {Grid2D} grid
- * @param {Wave2D} psi
- * @param {number} yMin
- */
-export function transmittedWaveNumber(grid, psi, yMin) {
-  const { n, x, k } = grid;
-  const re = Float64Array.from(psi.re);
-  const im = Float64Array.from(psi.im);
-  for (let iy = 0; iy < n; iy++) {
-    if (x[iy] >= yMin) continue;
-    re.fill(0, iy * n, (iy + 1) * n);
-    im.fill(0, iy * n, (iy + 1) * n);
-  }
-  const f = fft2d(re, im, n, n);
-  let weight = 0;
-  let sum = 0;
-  for (let iy = 0; iy < n; iy++) {
-    for (let ix = 0; ix < n; ix++) {
-      const i = iy * n + ix;
-      const kk = Math.hypot(k[ix], k[iy]);
-      const p = (f.re[i] * f.re[i] + f.im[i] * f.im[i]) * kk;
-      weight += p;
-      sum += p * kk;
-    }
-  }
-  return sum / weight;
-}
-
-/**
  * Prepara una simulación de la doble rendija: malla, propagador de la rama ψ₁ (solo la
  * rendija de x > 0 abierta, u otra combinación con `open`), paquete inicial, fila de la
  * pantalla y tiempo final.
- * @param {SlitGeometry & { open?: 'both' | 'right' | 'left', dt?: number }} geometry
+ * @param {SlitGeometry & { open?: 'both' | 'right' | 'left' | 'none', dt?: number }} geometry
  */
 export function createSlitExperiment(geometry) {
   const mass = geometry.mass ?? 1;
