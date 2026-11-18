@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer } from '../tools/serve.mjs';
 import { modules } from '../src/modules/registry.js';
-import { buildHash, defaultState } from '../src/core/state.js';
+import { buildHash, defaultState, optionValues } from '../src/core/state.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shots = join(root, 'capturas');
@@ -927,32 +927,27 @@ for (const [width, height, presentation] of /** @type {[number, number, boolean]
   });
 }
 
-// Al llegar al tiempo final, la vista paquete se para en el último instante y lo dice con
-// un aviso que tiene un botón para volver a empezar (antes se quedaba quieta sin avisar y
-// parecía colgada). El oscilador armónico se simula dos periodos: 2·h/ħω = 82,7 fs con
-// ħω = 0,1 eV; a 100 fs por segundo llega al final en menos de un segundo.
-test('función de onda: aviso de fin de la simulación con botón para reiniciar', { skip }, async () => {
+// Al llegar al tiempo final la simulación vuelve a empezar sola, sin aviso encima de las
+// gráficas (encargo R1: Daniel prefiere el bucle; para detenerla está la pausa). El oscilador
+// armónico se simula dos periodos: 2·h/ħω = 82,7 fs con ħω = 0,1 eV; a 50 fs por segundo
+// (el máximo) llega al final en menos de dos segundos, espera 1,5 s en el último instante y
+// empieza otra vez.
+test('función de onda: al llegar al tiempo final la simulación vuelve a empezar sola', { skip }, async () => {
   const { page, errors, close } = await openPage(
-    '#/funcion-onda?part=paquete&potential=armonico&quantum=0.1&x0=4&sigma=0.62&energy=0&rate=100',
+    '#/funcion-onda?part=paquete&potential=armonico&quantum=0.1&x0=4&sigma=0.62&energy=0&rate=50',
     { width: 1366, height: 650 },
   );
-  const notice = page.locator('.fo-end');
-  await page.waitForSelector('.fo-end:not([hidden])', { timeout: 10000 });
-  assert.match(String(await notice.textContent()), /Simulación terminada: ha llegado al tiempo final, t = 83 fs/);
-  // Parada de verdad: el tiempo no avanza mientras se ve el aviso.
-  const at = String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1];
+  const status = async () => String(await page.locator('.fo-status').textContent());
+  await page.waitForFunction(() => /^t = 8\d,\d de 83 fs \(final: vuelve a empezar\)/.test(document.querySelector('.fo-status')?.textContent ?? ''), null, { timeout: 10000 });
+  assert.equal(await page.locator('.fo-end').count(), 0, 'no debe quedar ningún aviso de fin');
+  // Sin tocar nada, vuelve a t pequeño y sigue avanzando.
+  await page.waitForFunction(() => /^t = [0-9],\d de 83 fs/.test(document.querySelector('.fo-status')?.textContent ?? ''), null, { timeout: 10000 });
+  await page.waitForFunction(() => /^t = [1-9]\d,\d de 83 fs/.test(document.querySelector('.fo-status')?.textContent ?? ''), null, { timeout: 10000 });
+  // Con la pausa se queda quieta.
+  await page.locator('.clock-controls button').first().click();
+  const at = (await status()).match(/^t = ([\d,]+)/)?.[1];
   await page.waitForTimeout(800);
-  assert.equal(String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1], at);
-  assert.equal(await notice.isVisible(), true);
-  await page.screenshot({ path: join(shots, 'funcion-onda-fin.png') });
-  // El botón vuelve a t = 0 y pone el reloj en marcha, aunque estuviera en pausa.
-  await page.locator('.clock-controls button').first().click(); // pausa
-  await notice.locator('button').click();
-  await page.waitForFunction(() => /^t = [0-9],/.test(document.querySelector('.fo-status')?.textContent ?? ''));
-  assert.equal(await notice.isVisible(), false);
-  assert.equal(await page.locator('.clock-controls button').first().textContent(), 'Pausa');
-  // Y vuelve a avisar cuando llega otra vez al final.
-  await page.waitForSelector('.fo-end:not([hidden])', { timeout: 10000 });
+  assert.equal((await status()).match(/^t = ([\d,]+)/)?.[1], at);
   await close();
   assert.deepEqual(errors, []);
 });
@@ -971,8 +966,9 @@ test('función de onda: doble rendija con control de coherencia', { skip }, asyn
   await page.waitForFunction(() => /primer máximo a θ = 14,5°/.test(document.querySelector('.fo-status')?.textContent ?? ''));
   const title = async (/** @type {number} */ i) => String(await page.locator('.fo-part .panel-title').nth(i).textContent());
   assert.match(await title(0), /\|ψ₁ \+ ψ₂\|²/);
-  await page.waitForSelector('.fo-end:not([hidden])', { timeout: 120000 });
-  assert.match(String(await page.locator('.fo-end').textContent()), /Simulación terminada/);
+  await page.waitForFunction(() => /\(final: vuelve a empezar\)/.test(document.querySelector('.fo-status')?.textContent ?? ''), null, { timeout: 120000 });
+  // En pausa, para que no vuelva a empezar sola mientras se mira la pantalla.
+  await page.locator('.clock-controls button').first().click();
   await page.screenshot({ path: join(shots, 'funcion-onda-rendijas.png') });
   // La pantalla dibuja la simulación (serie 1), la suma sin interferencia y Fraunhofer (serie 3).
   const screen = page.locator('.fo-part .panel').nth(1).locator('canvas');
@@ -983,12 +979,12 @@ test('función de onda: doble rendija con control de coherencia', { skip }, asyn
   await page.locator('[data-key="coherence"] input[type="range"]').fill('0');
   await page.waitForFunction(() => /sin interferencia/.test(document.querySelectorAll('.fo-part .panel-title')[0]?.textContent ?? ''));
   assert.equal(String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1], at);
-  assert.equal(await page.locator('.fo-end').isVisible(), true);
   await page.screenshot({ path: join(shots, 'funcion-onda-rendijas-sin-coherencia.png') });
-  // Cambiar d sí repite la simulación: se quita el aviso y vuelve a t ≈ 0.
+  // Cambiar d sí repite la simulación: vuelve a t = 0.
   await page.locator('[data-key="slitSeparation"] input[type="range"]').fill('2');
   await page.waitForFunction(() => /primer máximo a θ = 30,0°/.test(document.querySelector('.fo-status')?.textContent ?? ''));
-  assert.equal(await page.locator('.fo-end').isVisible(), false);
+  assert.match(String(await page.locator('.fo-status').textContent()), /^t = 0,0 de/);
+  await page.locator('.clock-controls button').first().click();
   // Tema oscuro y modo presentación.
   await page.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
   await page.keyboard.press('p');
@@ -1048,6 +1044,89 @@ test('navegación entre portada y módulos sin errores ni restos', { skip }, asy
   await close();
   assert.deepEqual(errors, []);
 });
+
+// Maqueta: en ningún módulo (migrado o no) se superponen los paneles, a los cuatro tamaños
+// de referencia del encargo R1 (pantalla 1080p, portátil con la barra del navegador,
+// tableta vertical y móvil). Antes, a 900 px o menos, funcion-onda apilaba sus paneles en la
+// misma celda de la rejilla y en el móvil solo se veía el último; las pruebas de humo no lo
+// detectaban porque solo buscaban errores. Se recorren todas las vistas (parámetro `part`).
+const LAYOUT_SIZES = /** @type {const} */ ([
+  [1920, 1080],
+  [1366, 650],
+  [820, 1180],
+  [390, 844],
+]);
+
+/**
+ * Cajas (en coordenadas de la página) de los paneles y tarjetas de gráfica visibles, y de
+ * los lienzos de las gráficas.
+ * @param {any} page
+ * @returns {Promise<{ panels: { name: string, x: number, y: number, w: number, h: number }[], plots: { name: string, w: number, h: number }[] }>}
+ */
+export async function layoutBoxes(page) {
+  return page.evaluate(() => {
+    /** @param {Element} e */
+    const visible = (e) => {
+      const b = e.getBoundingClientRect();
+      return b.width > 0 && b.height > 0 && getComputedStyle(e).visibility !== 'hidden';
+    };
+    /** @param {Element} e */
+    const box = (e) => {
+      const b = e.getBoundingClientRect();
+      return { x: b.x + scrollX, y: b.y + scrollY, w: b.width, h: b.height };
+    };
+    /** @param {Element} e */
+    const nameOf = (e) => {
+      const card = e.closest('.panel, .graph-card');
+      return String(card?.getAttribute('data-graph') ?? card?.querySelector('.panel-title, .graph-title')?.textContent ?? '?').slice(0, 40);
+    };
+    const panels = [...document.querySelectorAll('.panel, .graph-card')].filter(visible).map((e) => ({ name: nameOf(e), ...box(e) }));
+    const plots = [...document.querySelectorAll('.panel canvas.plot-canvas, .graph-card canvas.plot-canvas')]
+      .filter(visible)
+      .map((c) => ({ name: nameOf(c), w: box(c).w, h: box(c).h }));
+    return { panels, plots };
+  });
+}
+
+/**
+ * Parejas de paneles que se superponen (más de 2 px en cada dirección).
+ * @param {{ name: string, x: number, y: number, w: number, h: number }[]} panels
+ */
+export function overlappingPairs(panels) {
+  /** @type {string[]} */
+  const pairs = [];
+  for (let i = 0; i < panels.length; i++) {
+    for (let j = i + 1; j < panels.length; j++) {
+      const a = panels[i];
+      const b = panels[j];
+      const ix = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+      const iy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+      if (ix > 2 && iy > 2) pairs.push(`«${a.name}» y «${b.name}»`);
+    }
+  }
+  return pairs;
+}
+
+for (const m of modules) {
+  const partParam = m.params.find((p) => p.key === 'part' && p.type === 'select');
+  const views = partParam && partParam.type === 'select' ? optionValues(partParam).map((v) => `?part=${v}`) : [''];
+  for (const [width, height] of LAYOUT_SIZES) {
+    test(`[${m.id}] ningún panel se superpone a otro (${width} × ${height})`, { skip }, async () => {
+      const { page, errors, close } = await openPage(`#/${m.id}${views[0]}`, { width, height });
+      for (const view of views) {
+        await page.evaluate((/** @type {string} */ hash) => (location.hash = hash), `#/${m.id}${view}`);
+        await page.waitForSelector('html[data-ready="true"]');
+        await page.waitForTimeout(350);
+        const { panels, plots } = await layoutBoxes(page);
+        assert.ok(panels.length > 0, `${view}: no hay paneles`);
+        assert.deepEqual(overlappingPairs(panels), [], `${view || m.id}: paneles superpuestos`);
+        for (const plot of plots) assert.ok(plot.w > 0 && plot.h > 0, `${view}: la gráfica «${plot.name}» no tiene tamaño`);
+      }
+      await close();
+      assert.deepEqual(errors, []);
+    });
+  }
+}
 
 // Pantalla estrecha (móvil): todo se apila en una columna, sin errores y sin que la
 // página se desborde hacia los lados.

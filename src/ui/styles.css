@@ -896,6 +896,18 @@ h3 {
   font-size: 0.85rem;
 }
 
+/* En pantallas estrechas los paneles se apilan (sección 5): el visor 3D suelta su área,
+   que si no se queda en una celda implícita encima de otro panel. */
+@media (max-width: 760px) {
+  .galeria-grid {
+    grid-template-areas: none;
+  }
+
+  .galeria-grid > * {
+    grid-area: auto !important;
+  }
+}
+
 /* ------------------------------------------------------------------- 7. Modo presentación */
 
 /* Se activa con data-presentation="true" en <html> (src/core/presentation.js).
@@ -1341,37 +1353,6 @@ h3 {
   min-height: 0;
 }
 
-/* Aviso de fin de la simulación (createEndNotice en view-common.js): flota arriba, en el
-   centro, encima de los paneles. */
-.fo-end {
-  position: absolute;
-  top: 0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  max-width: calc(100% - 2rem);
-  padding: 0.5rem 0.6rem 0.5rem 0.9rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface);
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
-  box-shadow: 0 0.3rem 1.2rem rgb(0 0 0 / 0.25);
-}
-
-.fo-end[hidden] {
-  display: none;
-}
-
-.fo-end-restart {
-  flex: none;
-  font-weight: 600;
-}
-
 /* Vista «paquete»: ψ arriba a la izquierda (ancha), momentos arriba a la derecha; la
    cuerda abajo a la izquierda y los valores esperados abajo a la derecha. */
 .fo-grid-packet {
@@ -1473,5 +1454,11 @@ h3 {
   .fo-part .panel-grid {
     grid-template-areas: none;
     grid-template-rows: none;
+  }
+
+  /* Sin áreas en la rejilla, cada panel debe soltar la suya: si conserva un grid-area con
+     nombre, todos caen en la misma celda implícita y se superponen (solo se veía el último). */
+  .fo-part .panel-grid > * {
+    grid-area: auto !important;
   }
 }

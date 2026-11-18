@@ -4,7 +4,6 @@
 // Aquí no se calcula física: se traduce el estado de la interfaz a la descripción del
 // potencial que entiende physics.js, y se preparan imágenes para dibujar ψ con su fase.
 
-import { el } from '../../ui/dom.js';
 import { phaseColor, themeBackground } from '../../ui/colormaps.js';
 import { formatEs } from '../../ui/format.js';
 
@@ -25,44 +24,12 @@ export const BOUND_POTENTIALS = ['pozo-infinito', 'armonico'];
  */
 
 /**
- * Aviso de fin de la simulación, encima de las vistas, con un botón para volver a empezar.
- * Antes, al llegar al tiempo final la vista se quedaba quieta sin decir nada y parecía
- * colgada. El botón hace lo mismo que «Reiniciar» del reloj (t = 0) y además lo pone en
- * marcha si estaba en pausa.
- * @param {HTMLElement} container caja de la vista (.fo-part), que hace de referencia
- * @param {import('../../core/clock.js').Clock} clock
- * @returns {{ show: (text: string) => void, hide: () => void, readonly visible: boolean, destroy: () => void }}
+ * Segundos (de reloj, a velocidad 1×) que una simulación con tiempo final se queda en su
+ * último instante antes de volver a empezar sola. Daniel prefiere el bucle a un aviso de
+ * fin (encargo R1); la breve espera deja ver el resultado (lo que ha pasado la barrera, el
+ * patrón de la pantalla) antes de que se borre. Para detenerla está la pausa.
  */
-export function createEndNotice(container, clock) {
-  const text = el('span', { class: 'fo-end-text' });
-  const button = el('button', {
-    class: 'btn fo-end-restart',
-    type: 'button',
-    text: 'Reiniciar',
-    title: 'Vuelve a t = 0 y pone el reloj en marcha',
-    onclick: () => {
-      clock.reset();
-      clock.play();
-    },
-  });
-  const box = el('div', { class: 'fo-end', role: 'status', hidden: true }, text, button);
-  container.append(box);
-  return {
-    show(message) {
-      if (text.textContent !== message) text.textContent = message;
-      box.hidden = false;
-    },
-    hide() {
-      box.hidden = true;
-    },
-    get visible() {
-      return !box.hidden;
-    },
-    destroy() {
-      box.remove();
-    },
-  };
-}
+export const END_HOLD_SECONDS = 1.5;
 
 /**
  * Descripción del potencial (physics.js) a partir del estado de la interfaz.

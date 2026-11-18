@@ -11,16 +11,30 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 02 Luz y materia | **terminado** (2026-11-13), revisado y fusionado en `main` (pull request #3) |
 | 03 Ondas clásicas y función de onda | **terminado** (2026-11-16), revisado. Rama `claude/sweet-clarke-70f1i8`, sin fusionar en `main` |
 | Mantenimiento 2026-11-18 (valores esperados, aviso de fin, doble rendija, regla de fichas) | **terminado**, revisado. Rama `claude/youthful-hawking-b5y2oe`, sin fusionar en `main` |
-| 04 Cristales y Bragg | pendiente |
+| R1 Rediseño: página de entrada, pantallas, explicaciones y tipografía (piloto en funcion-onda) | **en curso** (2026-11-18). Rama `claude/determined-fermi-y2edai` |
+| 04 Cristales y Bragg | pendiente (se construirá con el formato de R1, cuando Daniel lo valide) |
 
 ## Sesión en curso
-- **Tarea de mantenimiento terminada** (2026-11-18): los cinco puntos hechos, revisados y subidos. Siguiente paso: encargo 04 (`docs/encargos/04-cristales-bragg.md`), en una sesión nueva.
-- Tarea de mantenimiento pedida por Daniel (2026-11-18), sin encargo nuevo. Rama `claude/youthful-hawking-b5y2oe` (sale de `main` con el encargo 03 fusionado, pull request #4). Lista cerrada, sin ampliar alcance:
-  1. Vista Paquete: el panel «Valores esperados» salía vacío (solo el título). Diagnosticar, corregir y prueba de humo que falle si queda vacío.
-  2. Al llegar al tiempo final la simulación se paraba sin avisar: aviso claro con acceso directo a reiniciar.
-  3. Doble rendija 2D con control de coherencia (del backlog) en `funcion-onda`, con tests físicos y su apartado en `ficha.md`.
-  4. `docs/ARQUITECTURA.md`, sección Fichas: la regla de los apartados por vista («Qué ves», «Cómo leerla», «Prueba esto») en lugar de «Las fichas no son un libro de texto»; también `src/modules/_plantilla/` y su `LEEME.md`.
-  5. Revisión independiente de una ronda solo sobre lo nuevo.
+- **Encargo R1** (`docs/encargos/R1-rediseno.md`), empezado el 2026-11-18 en la rama `claude/determined-fermi-y2edai` (sale de `main` en 2eb34ac más el commit del encargo). Base: `npm test` 440 en verde.
+- Siguiente paso: el que figure como «pendiente» en la tabla de abajo.
+
+### Plan del encargo R1 (pasos y estado)
+
+| # | Paso | Estado |
+|---|---|---|
+| 1 | Correcciones independientes de la maqueta: test de solapes en todos los módulos (4 tamaños), corrección de funcion-onda y galería, bucle en lugar del aviso de fin | hecho |
+| 2 | Contrato nuevo (simulaciones, gráficas, combinaciones, estado inicial), página de entrada y estado inicial por simulación | pendiente |
+| 3 | Pantallas, navegación (ubicación, pestañas, flechas), selección en la URL, «Ver juntas», móvil, barra lateral con bloque «Estado», títulos en palabras y líneas secundarias | pendiente |
+| 4 | Explicaciones bajo cada gráfica desde `ficha.md` (identificadores estables), «Más detalle», glosario común | pendiente |
+| 5 | Tipografía: fuente del texto, KaTeX en títulos, líneas secundarias y leyendas (leyenda HTML en `plot2d.js`), rótulos de ejes con cursivas y ⟨ ⟩, capturas comparativas | pendiente |
+| 6 | ARQUITECTURA, revisión independiente (una ronda), correcciones y cierre | pendiente |
+
+### Evidencia y decisiones del encargo R1
+
+- Paso 1. **Solapes**: test nuevo en `smoke.test.js` («ningún panel se superpone a otro»), para todos los módulos registrados, todas sus vistas (parámetro `part`) y los cuatro tamaños del encargo (1920 × 1080, 1366 × 650, 820 × 1180, 390 × 844): mide las cajas de `.panel` (y de `.graph-card`, la tarjeta del formato nuevo) y falla si dos se cruzan más de 2 px. Con el CSS anterior falla en funcion-onda a 820 y 390 px (6 parejas superpuestas en paquete y en estados, 3 en cuerda, 1 en rendijas); la causa era la sospechada: la regla `@media (max-width: 900px)` quitaba `grid-template-areas`, pero cada panel conservaba su `grid-area` con nombre y todos caían en la misma celda implícita. Corrección: `grid-area: auto !important` para los paneles de `.fo-part` en esa regla (como ya hacían plasmón y luz y materia). Medido además: la galería (oculta) tenía el mismo defecto con su visor 3D a 390 px; corregido igual. El tamaño mínimo de cada gráfica se exigirá a las del formato nuevo (paso 3); en los módulos sin migrar solo se comprueba que no se superponen y que tienen tamaño (a 820 px la de las láminas de luz y materia mide 124 px de ancho: va al backlog con la migración).
+- Paso 1. `npm test` 464 en verde (24 pruebas de solapes nuevas), `npm run check` limpio.
+- Paso 1. **Bucle**: fuera `createEndNotice` (y su CSS) de las vistas paquete y rendijas. Al llegar al tiempo final la simulación se queda 1,5 s de reloj en el último instante (`END_HOLD_SECONDS` en `view-common.js`, para ver el resultado: lo que ha pasado la barrera, el patrón de la pantalla) y vuelve a empezar sola; con la pausa se queda quieta. Durante esa espera la línea de estado dice «(final: vuelve a empezar)»; no hay nada encima de las gráficas. La prueba de humo del aviso se sustituye por una del bucle (llega al final, vuelve a t < 10 fs y sigue avanzando sin tocar nada; en pausa no avanza); la de la doble rendija pausa al final para mirar la pantalla. (La prueba anterior usaba `rate=100`, fuera del rango 1–50: se ignoraba con un aviso y corría a 10 fs/s; ahora usa 50.)
+- Fuente del texto (para el paso 5, comprobado al planificar): **`KaTeX_Main` no tiene letras acentuadas** (faltan á é í ó ú ñ ü, ¿ ¡ « » y el punto medio; tampoco las combina, porque no trae los acentos combinantes). Con ella cada vocal acentuada saldría de otra fuente del sistema. La familia Computer Modern Unicode (CMU Serif, la misma letra que KaTeX_Main, licencia SIL OFL, paquete npm `computer-modern` 0.1.3) sí los tiene todos, salvo ⟨ ⟩, que están en KaTeX_Main. Plan: texto en CMU Serif con KaTeX_Main de respaldo para ⟨ ⟩, y comparar en capturas en el paso 5.
 
 ### Plan de la tarea de mantenimiento (pasos y estado)
 

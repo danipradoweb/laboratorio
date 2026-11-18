@@ -33,7 +33,7 @@ import {
   screenPattern,
   step2D,
 } from './physics-slits.js';
-import { createEndNotice, formatSig } from './view-common.js';
+import { END_HOLD_SECONDS, formatSig } from './view-common.js';
 
 /** Pasos como mucho por fotograma: cada uno son dos FFT de 256 × 256 (unos 15 ms). */
 const MAX_STEPS_PER_FRAME = 3;
@@ -65,7 +65,6 @@ export function mountSlits(container, ctx, setStatus) {
     yRange: [0, 1.12],
     exportName: 'funcion-onda-rendijas-pantalla',
   });
-  const endNotice = createEndNotice(container, ctx.clock);
 
   /** @type {ReturnType<typeof setup> | null} */
   let sim = null;
@@ -103,10 +102,13 @@ export function mountSlits(container, ctx, setStatus) {
     };
   }
 
+  /** Tiempo de reloj que lleva parada en el último instante (ver END_HOLD_SECONDS). */
+  let held = 0;
+
   function restart() {
     if (!lastState) return;
     sim = setup(lastState);
-    endNotice.hide();
+    held = 0;
   }
 
   /** @param {number} dtSim tiempo de simulación (fs) que toca avanzar */
@@ -237,7 +239,9 @@ export function mountSlits(container, ctx, setStatus) {
       (enough ? '' : ` · la curva simulada sale cuando llegue el centro del paquete (t ≈ ${formatEs(s.centerArrival, 0)} fs)`);
 
     statusText =
-      `t = ${formatEs(s.t, 1)} de ${formatEs(s.exp.tMax, 0)} fs · λ = ${formatEs(wavelength, 2)} nm (electrón de ${formatEs(s.exp.energy, 2)} eV)` +
+      `t = ${formatEs(s.t, 1)} de ${formatEs(s.exp.tMax, 0)} fs` +
+      (s.t >= s.exp.tMax ? ' (final: vuelve a empezar)' : '') +
+      ` · λ = ${formatEs(wavelength, 2)} nm (electrón de ${formatEs(s.exp.energy, 2)} eV)` +
       ` · d = ${formatEs(separation, 2)} nm · w = ${formatEs(slitWidth, 3)} nm · primer máximo a θ = ${formatEs((Math.asin(Math.min(1, wavelength / separation)) * 180) / Math.PI, 1)}°` +
       ` · probabilidad que ha llegado a la pantalla: ${formatEs(Math.max(0, 100 * arrived), 1)} %`;
   }
@@ -245,11 +249,12 @@ export function mountSlits(container, ctx, setStatus) {
   const offTick = ctx.clock.onTick((time, dt) => {
     if (!sim || !lastState) return;
     if (time === 0 && dt === 0) restart();
-    else if (sim.t >= sim.exp.tMax) return;
-    else {
-      advance(dt * Number(lastState.rate));
-      if (sim.t >= sim.exp.tMax) endNotice.show(`Simulación terminada: ha llegado al tiempo final, t = ${formatEs(sim.exp.tMax, 0)} fs.`);
-    }
+    else if (sim.t >= sim.exp.tMax) {
+      // Final: se queda un momento con el patrón completo y vuelve a empezar sola.
+      held += dt;
+      if (held < END_HOLD_SECONDS) return;
+      restart();
+    } else advance(dt * Number(lastState.rate));
     render(lastState);
     setStatus(statusText);
   });
@@ -263,7 +268,6 @@ export function mountSlits(container, ctx, setStatus) {
     },
     destroy() {
       offTick();
-      endNotice.destroy();
       planePlot.destroy();
       screenPlot.destroy();
       grid.remove();

@@ -42,9 +42,9 @@ import { createString, setFromSolution, setReleasedShape, stepString } from './p
 import {
   BOUND_POTENTIALS,
   DRAW_COLUMNS,
-  createEndNotice,
   DRAW_RANGE,
   DRAW_WIDTH,
+  END_HOLD_SECONDS,
   formatSig,
   phaseFillImage,
   potentialSpecFromState,
@@ -141,7 +141,6 @@ export function mountPacket(container, ctx, setStatus) {
   const uncPlot = createPlot(uncBox, { xLabel: 'tiempo t (fs)', yLabel: 'Δx·Δp / ħ', legend: false, exportName: 'funcion-onda-incertidumbre' });
 
   const simGrid = createGrid(POINTS, DOMAIN[0], DOMAIN[1]);
-  const endNotice = createEndNotice(container, ctx.clock);
 
   /** @type {ReturnType<typeof setup> | null} */
   let sim = null;
@@ -189,7 +188,7 @@ export function mountPacket(container, ctx, setStatus) {
     const vGroup = (2 * a * Math.abs(k0)) / HBAR_EV_FS;
     const vSpread = (2 * a) / (2 * sigma) / HBAR_EV_FS;
 
-    // Hasta cuándo se simula (al llegar, la vista se para y avisa: createEndNotice).
+    // Hasta cuándo se simula (al llegar, vuelve a empezar sola: END_HOLD_SECONDS).
     let tMax;
     if (potentialType === 'armonico') tMax = 2 * ((2 * Math.PI * HBAR_EV_FS) / Number(state.quantum));
     else if (bound) tMax = 150;
@@ -506,30 +505,36 @@ export function mountPacket(container, ctx, setStatus) {
     }
     const absorbed = s.losses.left + s.losses.right;
     statusText =
-      `t = ${formatEs(s.t, 1)} de ${formatEs(s.tMax, 0)} fs · probabilidad dentro ${formatEs(norm, 3)}` +
+      `t = ${formatEs(s.t, 1)} de ${formatEs(s.tMax, 0)} fs` +
+      (s.t >= s.tMax ? ' (final: vuelve a empezar)' : '') +
+      ` · probabilidad dentro ${formatEs(norm, 3)}` +
       (absorbed > 5e-4 ? ` (${formatEs(absorbed, 3)} ya ha salido por los bordes)` : '') +
       ` · ⟨E⟩ = ${formatEs(energy.total, 3)} eV (cinética ${formatEs(energy.kinetic, 3)})` +
       transmitted;
   }
 
   let statusText = '';
+  /** Tiempo de reloj que lleva parada en el último instante (ver END_HOLD_SECONDS). */
+  let held = 0;
 
   /** Vuelve a empezar desde t = 0 con el estado actual. */
   function restart() {
     if (!lastState) return;
     sim = setup(lastState);
-    endNotice.hide();
+    held = 0;
     record();
   }
 
   const offTick = ctx.clock.onTick((time, dt) => {
     if (!sim || !lastState) return;
-    if (time === 0 && dt === 0) restart(); // botón «Reiniciar» (del reloj o del aviso)
-    else if (sim.t >= sim.tMax) return; // terminada: se queda en el último instante, con el aviso
-    else {
-      advance(dt * Number(lastState.rate));
-      if (sim.t >= sim.tMax) endNotice.show(`Simulación terminada: ha llegado al tiempo final, t = ${formatEs(sim.tMax, 0)} fs.`);
-    }
+    if (time === 0 && dt === 0) restart(); // botón «Reiniciar» del reloj
+    else if (sim.t >= sim.tMax) {
+      // Al llegar al tiempo final se queda un momento en el último instante y vuelve a
+      // empezar sola (con la pausa, dt = 0 y se queda quieta).
+      held += dt;
+      if (held < END_HOLD_SECONDS) return;
+      restart();
+    } else advance(dt * Number(lastState.rate));
     render(lastState);
     setStatus(statusText);
   });
@@ -543,7 +548,6 @@ export function mountPacket(container, ctx, setStatus) {
     },
     destroy() {
       offTick();
-      endNotice.destroy();
       wheel.destroy();
       for (const p of [mainPlot, twinPlot, momPlot, stringPlot, meanPlot, uncPlot]) p.destroy();
       grid.remove();

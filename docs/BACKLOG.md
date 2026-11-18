@@ -156,3 +156,7 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - Valores esperados del paquete en ventanas bajas: sin sitio, la leyenda se quita (previsto) y entonces ⟨x⟩ (azul) y ⟨k⟩ (naranja) solo se distinguen por los rótulos de los ejes; se podría colorear el rótulo de cada eje con el color de su curva.
 - Tema oscuro: `--series-1` y `--accent` son el mismo color (#6cb6ff); una línea de acento sobre una curva de la serie 1 no se distingue.
 
+
+## Del encargo R1 (rediseño, piloto en funcion-onda)
+
+- Luz y materia, vista de las láminas, a 820 px de ancho (tableta vertical): una de sus gráficas queda en 124 px de ancho. Se resolverá al migrar el módulo al formato nuevo.
