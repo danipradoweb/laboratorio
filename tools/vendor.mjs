@@ -1,5 +1,6 @@
 // @ts-check
-// Copia a vendor/ las dependencias de ejecución (three.js y KaTeX) desde node_modules.
+// Copia a vendor/ las dependencias de ejecución (three.js, KaTeX y la fuente CMU Serif)
+// desde node_modules.
 //
 // Uso:  npm install && npm run vendor
 //
@@ -32,6 +33,7 @@ function copy(from, to) {
 
 rmSync(join(vendor, 'three'), { recursive: true, force: true });
 rmSync(join(vendor, 'katex'), { recursive: true, force: true });
+rmSync(join(vendor, 'cmu'), { recursive: true, force: true });
 
 // --- three.js: núcleo + control orbital -------------------------------------------
 copy('three/build/three.module.js', 'three/three.module.js');
@@ -49,6 +51,14 @@ for (const f of readdirSync(join(nm, 'katex/dist/fonts'))) {
   if (f.endsWith('.woff2')) copy(`katex/dist/fonts/${f}`, `katex/fonts/${f}`);
 }
 
+// --- CMU Serif (Computer Modern Unicode): la letra del texto (encargo R1) -----------
+// Es la misma letra que KaTeX_Main (Computer Modern), pero con todos los caracteres del
+// español: KaTeX_Main no tiene á, é, í, ó, ú, ñ, ¿ ni ¡. Redonda, cursiva y negrita.
+for (const f of ['cmu-serif-500-roman.woff2', 'cmu-serif-500-italic.woff2', 'cmu-serif-700-roman.woff2']) {
+  copy(`computer-modern/fonts/${f}`, `cmu/${f}`);
+}
+copy('computer-modern/OFL.txt', 'cmu/OFL.txt');
+
 const readme = `# vendor/
 
 Dependencias de ejecución copiadas al repositorio (sin CDN). **No editar a mano**:
@@ -59,8 +69,9 @@ exactas fijadas en \`package.json\`.
 |---|---|---|---|
 | three.js | ${version('three')} | MIT | \`three/three.module.js\`, \`three/three.core.js\`, \`three/addons/controls/OrbitControls.js\` |
 | KaTeX | ${version('katex')} | MIT | \`katex/katex.mjs\`, \`katex/katex.min.css\`, \`katex/fonts/*.woff2\` |
+| CMU Serif (paquete npm \`computer-modern\`) | ${version('computer-modern')} | SIL Open Font License 1.1 (fuentes Computer Modern Unicode, A. Panov) | \`cmu/cmu-serif-500-roman.woff2\`, \`cmu/cmu-serif-500-italic.woff2\`, \`cmu/cmu-serif-700-roman.woff2\`, \`cmu/OFL.txt\` |
 
-Se cargan desde el mapa de importación de \`index.html\` (\`three\`, \`three/addons/\`, \`katex\`).
+Se cargan desde el mapa de importación de \`index.html\` (\`three\`, \`three/addons/\`, \`katex\`). La fuente CMU Serif, desde \`src/ui/styles.css\` (\`@font-face\`).
 `;
 writeFileSync(join(vendor, 'README.md'), readme);
-console.log(`vendor/ actualizado: three ${version('three')}, katex ${version('katex')}`);
+console.log(`vendor/ actualizado: three ${version('three')}, katex ${version('katex')}, computer-modern ${version('computer-modern')}`);

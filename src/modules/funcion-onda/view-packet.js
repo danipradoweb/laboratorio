@@ -16,7 +16,6 @@
 // física: todo sale de physics.js y physics-string.js.
 
 import { el } from '../../ui/dom.js';
-import { addPanel, createPanelGrid } from '../../ui/panels.js';
 import { createPlot } from '../../ui/plot2d.js';
 import { createPhaseWheel } from '../../ui/colormaps.js';
 import { formatEs } from '../../ui/format.js';
@@ -42,12 +41,14 @@ import { createString, setFromSolution, setReleasedShape, stepString } from './p
 import {
   BOUND_POTENTIALS,
   DRAW_COLUMNS,
-  createEndNotice,
   DRAW_RANGE,
   DRAW_WIDTH,
-  formatSig,
+  END_HOLD_SECONDS,
   phaseFillImage,
   potentialSpecFromState,
+  quantity,
+  texNum,
+  texSig,
   visibleIndices,
 } from './view-common.js';
 
@@ -73,22 +74,18 @@ const ESCAPED_LIMIT = 0.01;
 const STRING_CELLS = 4096;
 
 /**
- * @param {HTMLElement} container
- * @param {import('../types.js').ModuleContext} ctx
- * @param {(text: string) => void} setStatus escribe la línea de estado de encima de las vistas
+ * @param {import('./view-common.js').PartContext} ctx
  * @returns {import('./view-common.js').PartView}
  */
-export function mountPacket(container, ctx, setStatus) {
-  const grid = createPanelGrid(container, 'fo-grid-packet');
-
+export function mountPacket(ctx) {
   // (a) ψ(x) y el potencial, con la rueda de fase al lado.
-  const psiPanel = addPanel(grid, 'ψ(x)', { area: 'psi' });
+  const psiSlot = ctx.graph('psi');
   const psiPlots = el('div', { class: 'fo-stack' });
   const mainBox = el('div', { class: 'fo-stack-item' });
   const twinBox = el('div', { class: 'fo-stack-item', hidden: true });
   psiPlots.append(mainBox, twinBox);
   const psiBody = el('div', { class: 'fo-with-wheel' }, psiPlots);
-  psiPanel.body.append(psiBody);
+  psiSlot.body.append(psiBody);
   const wheel = createPhaseWheel(psiBody, { label: 'tono: fase de ψ · altura: |ψ| (o |ψ|²)' });
 
   /** Clic en ψ: dibuja el potencial (si es el dibujado) o coloca el paquete. */
@@ -102,15 +99,17 @@ export function mountPacket(container, ctx, setStatus) {
       ctx.setState({ x0: Math.round(x * 10) / 10 });
     }
   };
-  const mainPlot = createPlot(mainBox, { xLabel: 'posición x (nm)', exportName: 'funcion-onda-psi', onPick: pickPsi });
-  const twinPlot = createPlot(twinBox, { xLabel: 'posición x (nm)', exportName: 'funcion-onda-psi-opuesto' });
+  const mainPlot = createPlot(mainBox, { xLabel: 'posición $x$ (nm)', exportName: 'funcion-onda-psi', onPick: pickPsi, htmlLegend: psiSlot.legend });
+  // Misma leyenda que la de arriba: no se repite.
+  const twinPlot = createPlot(twinBox, { xLabel: 'posición $x$ (nm)', exportName: 'funcion-onda-psi-opuesto', legend: false });
 
   // (b) Espacio de momentos.
-  const momPanel = addPanel(grid, 'Espacio de momentos', { area: 'momentum' });
-  const momPlot = createPlot(momPanel.body, {
-    xLabel: 'número de onda k = p/ħ (nm⁻¹)',
-    yLabel: '|φ(k)|² (nm)',
+  const momSlot = ctx.graph('momentos');
+  const momPlot = createPlot(momSlot.body, {
+    xLabel: 'número de onda $k = p/\\hbar$ (nm$^{-1}$)',
+    yLabel: '$|\\varphi(k)|^2$ (nm)',
     exportName: 'funcion-onda-momentos',
+    htmlLegend: momSlot.legend,
     onPick: (k) => {
       const mass = Number(ctx.getState().mass);
       const energy = Math.min(3, kineticCoefficient(mass) * k * k);
@@ -119,29 +118,28 @@ export function mountPacket(container, ctx, setStatus) {
   });
 
   // (c) La cuerda clásica.
-  const stringPanel = addPanel(grid, 'La cuerda clásica', { area: 'string' });
-  const stringPlot = createPlot(stringPanel.body, {
-    xLabel: 'posición x (nm)',
+  const stringSlot = ctx.graph('cuerda-comparada');
+  const stringPlot = createPlot(stringSlot.body, {
+    xLabel: 'posición $x$ (nm)',
     yLabel: 'desplazamiento (relativo)',
     yRange: [-1.25, 1.25],
     exportName: 'funcion-onda-cuerda-comparada',
+    htmlLegend: stringSlot.legend,
   });
 
   // (d) Valores esperados e incertidumbre.
-  const expPanel = addPanel(grid, 'Valores esperados', { area: 'expect' });
+  const expSlot = ctx.graph('valores-esperados');
   const expStack = el('div', { class: 'fo-stack' });
   const meanBox = el('div', { class: 'fo-stack-item fo-stack-tall' });
   const uncBox = el('div', { class: 'fo-stack-item fo-stack-min' });
   expStack.append(meanBox, uncBox);
-  expPanel.body.append(expStack);
+  expSlot.body.append(expStack);
   // Las dos gráficas comparten el eje de tiempo: solo la de abajo lo rotula, y la de la
   // incertidumbre no lleva leyenda (su eje y y la etiqueta de la línea ħ/2 ya lo dicen).
-  // Así caben en un panel bajo (portátil de 1366 × 768 con la barra del navegador).
-  const meanPlot = createPlot(meanBox, { yLabel: '⟨x⟩ (nm)', exportName: 'funcion-onda-valores-esperados' });
-  const uncPlot = createPlot(uncBox, { xLabel: 'tiempo t (fs)', yLabel: 'Δx·Δp / ħ', legend: false, exportName: 'funcion-onda-incertidumbre' });
+  const meanPlot = createPlot(meanBox, { yLabel: '$\\langle x\\rangle$ (nm)', exportName: 'funcion-onda-valores-esperados', htmlLegend: expSlot.legend });
+  const uncPlot = createPlot(uncBox, { xLabel: 'tiempo $t$ (fs)', yLabel: '$\\Delta x\\,\\Delta p/\\hbar$', legend: false, exportName: 'funcion-onda-incertidumbre' });
 
   const simGrid = createGrid(POINTS, DOMAIN[0], DOMAIN[1]);
-  const endNotice = createEndNotice(container, ctx.clock);
 
   /** @type {ReturnType<typeof setup> | null} */
   let sim = null;
@@ -189,7 +187,7 @@ export function mountPacket(container, ctx, setStatus) {
     const vGroup = (2 * a * Math.abs(k0)) / HBAR_EV_FS;
     const vSpread = (2 * a) / (2 * sigma) / HBAR_EV_FS;
 
-    // Hasta cuándo se simula (al llegar, la vista se para y avisa: createEndNotice).
+    // Hasta cuándo se simula (al llegar, vuelve a empezar sola: END_HOLD_SECONDS).
     let tMax;
     if (potentialType === 'armonico') tMax = 2 * ((2 * Math.PI * HBAR_EV_FS) / Number(state.quantum));
     else if (bound) tMax = 150;
@@ -370,7 +368,7 @@ export function mountPacket(container, ctx, setStatus) {
     const potentialY = idx.map((j) => s.V[j]);
     const ev = expectationValues(simGrid, s.psi);
     const energy = meanEnergy(simGrid, s.psi, s.V, s.mass);
-    const yLabel = squared ? '|ψ|² (nm⁻¹)' : 'ψ (1/√nm)';
+    const yLabel = squared ? '$|\\psi|^2$ (nm$^{-1}$)' : '$\\psi$ (nm$^{-1/2}$)';
     const y2 = { range: s.energyRange, label: 'energía (eV)' };
 
     /**
@@ -385,30 +383,49 @@ export function mountPacket(container, ctx, setStatus) {
       const evw = expectationValues(simGrid, wave);
       /** @type {import('../../ui/plot2d.js').Series[]} */
       const series = [
-        { x: potentialX, y: potentialY, axis: 'y2', color: colors.textSoft, width: 1.2, label: 'potencial V(x) (eje derecho)' },
+        { x: potentialX, y: potentialY, axis: 'y2', color: colors.textSoft, width: 1.2, label: 'potencial $V(x)$ (eje derecho)' },
       ];
-      if (showRe) series.push({ x: xs, y: re, color: 0, label: 'Re ψ' });
-      if (showIm) series.push({ x: xs, y: im, color: 1, label: 'Im ψ' });
+      if (showRe) series.push({ x: xs, y: re, color: 0, label: '$\\mathrm{Re}\\,\\psi$' });
+      if (showIm) series.push({ x: xs, y: im, color: 1, label: '$\\mathrm{Im}\\,\\psi$' });
       plot.draw({
         image: phaseFillImage(re, im, { xRange: xEdges, yRange, squared }),
         series,
         areas: [{ x: potentialX, y: potentialY, y0: s.energyRange[0], axis: 'y2', color: colors.textSoft, opacity: 0.12 }],
-        hlines: [{ y: energy.total, axis: 'y2', dash: [6, 4], label: `⟨E⟩ = ${formatEs(energy.total, 3)} eV` }],
-        vlines: [{ x: evw.x, dash: [2, 3], label: `⟨x⟩ ${name}` }],
+        hlines: [{ y: energy.total, axis: 'y2', dash: [6, 4], label: `$\\langle E\\rangle = ${texNum(energy.total, 3)}$ eV` }],
+        vlines: [{ x: evw.x, dash: [2, 3], label: `$\\langle x\\rangle$ ${name}` }],
         xRange: xEdges,
         yRange,
         yLabel,
         y2,
       });
     };
-    drawPsi(s.psi, mainPlot, '');
-    twinBox.hidden = !s.twin;
-    if (s.twin) drawPsi(s.twin, twinPlot, '(k₀ opuesto)');
-    psiPanel.title.textContent =
-      `ψ(x) en t = ${formatEs(s.t, 1)} fs · relleno: altura ${squared ? '|ψ|²' : '|ψ|'}, color = fase` +
-      (s.twin ? ' · debajo, el mismo paquete con k₀ cambiado de signo' : '');
+    // Al otro lado del potencial (si el paquete va hacia él): lo simulado frente a lo que
+    // dicen las ondas planas.
+    let transmitted = '';
+    if (Number.isFinite(s.expectedT)) {
+      let beyond = 0;
+      for (let j = 0; j < simGrid.n; j++) {
+        const x = simGrid.x[j];
+        if (s.k0 > 0 ? x > s.barrierEdges[1] : x < s.barrierEdges[0]) beyond += s.psi.re[j] ** 2 + s.psi.im[j] ** 2;
+      }
+      // Lo que ya ha salido por el borde de ese lado también ha pasado.
+      beyond = beyond * simGrid.dx + (s.k0 > 0 ? s.losses.right : s.losses.left);
+      transmitted = `al otro lado del potencial: ${formatEs(100 * beyond, 1)} % (esperado con ondas planas: ${formatEs(100 * s.expectedT, 1)} %)`;
+    }
+    if (psiSlot.visible) {
+      drawPsi(s.psi, mainPlot, '');
+      twinBox.hidden = !s.twin;
+      if (s.twin) drawPsi(s.twin, twinPlot, '($k_0$ opuesto)');
+      psiSlot.setInfo([
+        quantity('en', 't', texNum(s.t, 1), 'fs'),
+        quantity('energía media', '\\langle E\\rangle', texNum(energy.total, 3), 'eV'),
+        transmitted,
+        s.twin ? 'debajo, el mismo paquete con $k_0$ cambiado de signo' : '',
+      ]);
+    }
 
     // --- (b) momentos -----------------------------------------------------------------
+    if (momSlot.visible) {
     const mom = momentumWave(simGrid, applyGlobalPhase(s.psi, phi));
     const kIdx = visibleIndices(mom.k, -s.kHalf, s.kHalf, 700);
     const ks = kIdx.map((j) => mom.k[j]);
@@ -419,35 +436,42 @@ export function mountPacket(container, ctx, setStatus) {
     const momRange = [0, 1.15 * s.momPeak];
     /** @type {import('../../ui/plot2d.js').Series[]} */
     const momSeries = [];
-    if (s.tCurve) momSeries.push({ x: s.tCurve.k, y: s.tCurve.T, axis: 'y2', color: 2, label: 'T(E) de una onda plana con ese k (eje derecho)' });
+    if (s.tCurve) momSeries.push({ x: s.tCurve.k, y: s.tCurve.T, axis: 'y2', color: 2, label: '$T(E)$ de una onda plana con ese $k$ (eje derecho)' });
     if (s.twin) {
       const tw = momentumWave(simGrid, s.twin);
-      momSeries.push({ x: ks, y: kIdx.map((j) => tw.density[j]), color: colors.textSoft, dash: [5, 4], label: '|φ|² del paquete con k₀ opuesto' });
+      momSeries.push({ x: ks, y: kIdx.map((j) => tw.density[j]), color: colors.textSoft, dash: [5, 4], label: '$|\\varphi|^2$ del paquete con $k_0$ opuesto' });
     }
     momPlot.draw({
       image: phaseFillImage(Float64Array.from(kIdx, (j) => mom.re[j]), Float64Array.from(kIdx, (j) => mom.im[j]), { xRange: kEdges, yRange: momRange, squared: true }),
       series: momSeries,
-      vlines: [{ x: ev.k, dash: [2, 3], label: '⟨k⟩' }],
+      vlines: [{ x: ev.k, dash: [2, 3], label: '$\\langle k\\rangle$' }],
       xRange: kEdges,
       yRange: momRange,
-      y2: s.tCurve ? { range: [0, 1.05], label: 'transmisión T' } : undefined,
+      y2: s.tCurve ? { range: [0, 1.05], label: 'transmisión $T$' } : undefined,
     });
-    momPanel.title.textContent = `Espacio de momentos · ⟨p⟩/ħ = ${formatEs(ev.k, 2)} nm⁻¹ · Δk = ${formatEs(ev.sigmaK, 3)} nm⁻¹`;
+    momSlot.setInfo([
+      quantity('momento medio', '\\langle p\\rangle/\\hbar', texNum(ev.k, 2), 'nm^{-1}'),
+      quantity('anchura', '\\Delta k', texNum(ev.sigmaK, 3), 'nm^{-1}'),
+    ]);
+    }
 
     // --- (c) cuerda -------------------------------------------------------------------
+    if (stringSlot.visible) {
     const sIdx = visibleIndices(s.stringX, s.xView[0], s.xView[1], 1200);
     const envelope = idx.map((j) => Math.hypot(s.psi.re[j], s.psi.im[j]) / s.peak);
     stringPlot.draw({
       series: [
-        { x: sIdx.map((i) => s.stringX[i]), y: sIdx.map((i) => s.string.u[i]), color: 0, label: 'cuerda: desplazamiento u(x, t)' },
-        { x: xs, y: envelope, color: 3, dash: [5, 4], label: '±|ψ(x, t)| del paquete cuántico (misma escala al empezar)' },
+        { x: sIdx.map((i) => s.stringX[i]), y: sIdx.map((i) => s.string.u[i]), color: 0, label: 'cuerda: desplazamiento $u(x,t)$' },
+        { x: xs, y: envelope, color: 3, dash: [5, 4], label: '$\\pm|\\psi(x,t)|$ del paquete cuántico (misma escala al empezar)' },
         { x: xs, y: envelope.map((v) => -v), color: 3, dash: [5, 4] },
       ],
       xRange: xEdges,
     });
-    stringPanel.title.textContent = `La cuerda clásica con la misma forma inicial · c = ${formatSig(s.c, 3)} nm/fs (la velocidad de grupo del paquete), sin potencial`;
+    stringSlot.setInfo([quantity('velocidad de la cuerda, la de grupo del paquete:', 'c', texSig(s.c, 3), 'nm/fs'), 'la cuerda no siente el potencial']);
+    }
 
     // --- (d) valores esperados --------------------------------------------------------
+    if (expSlot.visible) {
     const h = s.history;
     /** @type {import('../../ui/plot2d.js').Series[]} */
     const meanSeries = [];
@@ -461,11 +485,11 @@ export function mountPacket(container, ctx, setStatus) {
       meanSeries.push({ x: ts, y: xc, color: colors.textSoft, dash: [2, 3], label: 'clásica' });
     }
     meanSeries.push(
-      { x: h.t, y: h.x, color: 0, width: 1.5, label: '⟨x⟩ (izq.)' },
-      { x: h.t, y: h.k, color: 1, width: 1.5, axis: 'y2', label: '⟨p⟩/ħ (der.)' },
+      { x: h.t, y: h.x, color: 0, width: 1.5, label: '$\\langle x\\rangle$ (izq.)' },
+      { x: h.t, y: h.k, color: 1, width: 1.5, axis: 'y2', label: '$\\langle p\\rangle/\\hbar$ (der.)' },
     );
     if (s.twin) {
-      meanSeries.push({ x: h.t, y: h.xTwin, color: 0, dash: [5, 4], label: 'k₀ opuesto' });
+      meanSeries.push({ x: h.t, y: h.xTwin, color: 0, dash: [5, 4], label: '$k_0$ opuesto' });
       meanSeries.push({ x: h.t, y: h.kTwin, color: 1, dash: [5, 4], axis: 'y2' });
     }
     const kSpan = Math.max(s.kAmp, 1 / (2 * s.sigma), ...h.k.map(Math.abs)) * 1.15;
@@ -475,63 +499,63 @@ export function mountPacket(container, ctx, setStatus) {
       vlines: [{ x: s.t, color: colors.textSoft }],
       xRange: [0, s.tMax],
       yRange: /** @type {[number, number]} */ (xSpan),
-      y2: { range: [-kSpan, kSpan], label: '⟨k⟩ (nm⁻¹)' },
+      y2: { range: [-kSpan, kSpan], label: '$\\langle k\\rangle$ (nm$^{-1}$)' },
     });
     const uMax = Math.max(1, ...h.u) * 1.1;
     uncPlot.draw({
       // Más gruesa que la línea ħ/2: en el estado coherente van una encima de otra.
-      series: [{ x: h.t, y: h.u, color: 4, width: 2, label: 'Δx·Δp / ħ' }],
-      hlines: [{ y: 0.5, dash: [6, 4], label: 'ħ/2: el mínimo' }],
+      series: [{ x: h.t, y: h.u, color: 4, width: 2, label: '$\\Delta x\\,\\Delta p/\\hbar$' }],
+      hlines: [{ y: 0.5, dash: [6, 4], label: '$1/2$: el mínimo ($\\hbar/2$)' }],
       vlines: [{ x: s.t, color: colors.textSoft }],
       xRange: [0, s.tMax],
       yRange: [0, uMax],
     });
-    expPanel.title.textContent =
+    expSlot.setInfo(
       s.losses.left + s.losses.right > ESCAPED_LIMIT
-        ? 'Valores esperados · el paquete ya sale por los bordes: las curvas se paran aquí'
-        : `Valores esperados · ⟨x⟩ = ${formatEs(ev.x, 1)} nm · Δx = ${formatEs(ev.sigmaX, 2)} nm · Δx·Δp/ħ = ${formatEs(ev.uncertainty, 3)}`;
-
-    // --- Línea de estado --------------------------------------------------------------
-    const norm = normOf(simGrid, s.psi);
-    let transmitted = '';
-    if (Number.isFinite(s.expectedT)) {
-      let beyond = 0;
-      for (let j = 0; j < simGrid.n; j++) {
-        const x = simGrid.x[j];
-        if (s.k0 > 0 ? x > s.barrierEdges[1] : x < s.barrierEdges[0]) beyond += s.psi.re[j] ** 2 + s.psi.im[j] ** 2;
-      }
-      // Lo que ya ha salido por el borde de ese lado también ha pasado.
-      beyond = beyond * simGrid.dx + (s.k0 > 0 ? s.losses.right : s.losses.left);
-      transmitted = ` · al otro lado del potencial: ${formatEs(100 * beyond, 1)} % (esperado con ondas planas: ${formatEs(100 * s.expectedT, 1)} %)`;
+        ? ['el paquete ya sale por los bordes: las curvas se paran aquí']
+        : [
+            quantity('posición media', '\\langle x\\rangle', texNum(ev.x, 1), 'nm'),
+            quantity('anchura', '\\Delta x', texNum(ev.sigmaX, 2), 'nm'),
+            quantity('incertidumbre', '\\Delta x\\,\\Delta p/\\hbar', texNum(ev.uncertainty, 3)),
+          ],
+    );
     }
+
+    // --- Bloque «Estado» de la barra lateral ------------------------------------------
+    const norm = normOf(simGrid, s.psi);
     const absorbed = s.losses.left + s.losses.right;
-    statusText =
-      `t = ${formatEs(s.t, 1)} de ${formatEs(s.tMax, 0)} fs · probabilidad dentro ${formatEs(norm, 3)}` +
-      (absorbed > 5e-4 ? ` (${formatEs(absorbed, 3)} ya ha salido por los bordes)` : '') +
-      ` · ⟨E⟩ = ${formatEs(energy.total, 3)} eV (cinética ${formatEs(energy.kinetic, 3)})` +
-      transmitted;
+    statusParts = [
+      `tiempo $t = ${texNum(s.t, 1)}$ de ${formatEs(s.tMax, 0)} fs` + (s.t >= s.tMax ? ' (final: vuelve a empezar)' : ''),
+      `probabilidad dentro de la región simulada: ${formatEs(norm, 3)}` + (absorbed > 5e-4 ? ` (${formatEs(absorbed, 3)} ya ha salido por los bordes)` : ''),
+      quantity('energía cinética media', 'E_c', texNum(energy.kinetic, 3), 'eV'),
+    ];
   }
 
-  let statusText = '';
+  /** @type {string[]} */
+  let statusParts = [];
+  /** Tiempo de reloj que lleva parada en el último instante (ver END_HOLD_SECONDS). */
+  let held = 0;
 
   /** Vuelve a empezar desde t = 0 con el estado actual. */
   function restart() {
     if (!lastState) return;
     sim = setup(lastState);
-    endNotice.hide();
+    held = 0;
     record();
   }
 
   const offTick = ctx.clock.onTick((time, dt) => {
     if (!sim || !lastState) return;
-    if (time === 0 && dt === 0) restart(); // botón «Reiniciar» (del reloj o del aviso)
-    else if (sim.t >= sim.tMax) return; // terminada: se queda en el último instante, con el aviso
-    else {
-      advance(dt * Number(lastState.rate));
-      if (sim.t >= sim.tMax) endNotice.show(`Simulación terminada: ha llegado al tiempo final, t = ${formatEs(sim.tMax, 0)} fs.`);
-    }
+    if (time === 0 && dt === 0) restart(); // botón «Reiniciar» del reloj
+    else if (sim.t >= sim.tMax) {
+      // Al llegar al tiempo final se queda un momento en el último instante y vuelve a
+      // empezar sola (con la pausa, dt = 0 y se queda quieta).
+      held += dt;
+      if (held < END_HOLD_SECONDS) return;
+      restart();
+    } else advance(dt * Number(lastState.rate));
     render(lastState);
-    setStatus(statusText);
+    ctx.setStatus(statusParts);
   });
 
   return {
@@ -539,14 +563,14 @@ export function mountPacket(container, ctx, setStatus) {
       lastState = state;
       if (!sim || sim.key !== physicsKey(state)) restart();
       render(state);
-      setStatus(statusText);
+      ctx.setStatus(statusParts);
     },
     destroy() {
       offTick();
-      endNotice.destroy();
       wheel.destroy();
       for (const p of [mainPlot, twinPlot, momPlot, stringPlot, meanPlot, uncPlot]) p.destroy();
-      grid.remove();
+      psiBody.remove();
+      expStack.remove();
     },
   };
 }

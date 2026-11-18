@@ -15,6 +15,33 @@
 
 /* ---------------------------------------------------------------- 1. Variables y temas */
 
+/* Letra del texto (encargo R1): CMU Serif, la familia Computer Modern de KaTeX con todos los
+   caracteres del español (KaTeX_Main no tiene á, é, ñ, ¿…). Así el texto y las fórmulas
+   comparten letra en todos los sistemas. ⟨ ⟩ no están en CMU Serif: salen de KaTeX_Main. */
+@font-face {
+  font-family: 'CMU Serif';
+  src: url('../../vendor/cmu/cmu-serif-500-roman.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CMU Serif';
+  src: url('../../vendor/cmu/cmu-serif-500-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CMU Serif';
+  src: url('../../vendor/cmu/cmu-serif-700-roman.woff2') format('woff2');
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #f4f5f7;
   --surface: #ffffff;
@@ -39,7 +66,13 @@
   --radius: 8px;
   --gap: 0.75rem;
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* --font-ui: barras, botones y controles; --font-text: textos para leer (página de
+     entrada, títulos de las gráficas, explicaciones, glosario, ficha); --font-plot: números
+     y rótulos de las gráficas (los lee plot2d.js del CSS). */
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-text: 'CMU Serif', 'KaTeX_Main', serif;
+  --font-plot: var(--font-ui);
+  font-family: var(--font-ui);
   font-size: 16px;
   line-height: 1.5;
   color-scheme: light;
@@ -866,6 +899,699 @@ h3 {
   }
 }
 
+/* ------------------------------------- Página de entrada (formato con simulaciones, R1) */
+
+/* #/<id> en un módulo con simulaciones (src/ui/entry-page.js): de qué va el módulo, sus
+   simulaciones con la lista de gráficas para elegir, combinaciones, presets y recorridos.
+   Con la ficha abierta, la ficha va a la derecha. */
+.entry-page {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.entry-page[data-ficha='open'] {
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 28rem);
+}
+
+.entry-inner {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 1.75rem clamp(1rem, 4vw, 3rem) 3rem;
+}
+
+.entry-header,
+.entry-section {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.entry-header h1 {
+  font-size: 1.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.entry-intro {
+  max-width: 46rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.entry-section {
+  margin-top: 2rem;
+}
+
+.entry-section > h2 {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.entry-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.entry-sims {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+  gap: 1rem;
+}
+
+.entry-sim {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.15rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.entry-sim h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.entry-sim-summary {
+  margin: 0 0 0.9rem;
+}
+
+.graph-choice {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.graph-choice label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.graph-choice label:hover {
+  border-color: var(--accent);
+}
+
+.graph-choice input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0.2rem 0 0;
+  accent-color: var(--accent);
+}
+
+.graph-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.graph-choice-text span {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.entry-actions {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+a.btn {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-primary {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.entry-combo-group h3 {
+  margin: 1rem 0 0.4rem;
+  font-size: 1rem;
+}
+
+.entry-combos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.entry-combos li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  align-items: baseline;
+}
+
+.entry-combos a {
+  font-weight: 600;
+}
+
+.entry-combos span {
+  color: var(--text-soft);
+}
+
+.entry-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+}
+
+a.preset {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.preset-sim {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  text-align: right;
+}
+
+.entry-section .tour-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.entry-section .tour-start {
+  width: auto;
+}
+
+.preset[hidden] {
+  display: none;
+}
+
+/* Bloque «Estado» de la barra lateral: los números que no son de ninguna gráfica. */
+.side-status {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+@media (max-width: 760px) {
+  .entry-page,
+  .entry-page[data-ficha='open'] {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+  }
+
+  .entry-inner {
+    overflow: visible;
+    padding-top: 1.1rem;
+  }
+
+  .entry-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* --------------------------------- Pantallas de una simulación (formato con simulaciones) */
+
+/* src/ui/screens.js. El escenario es una columna: la barra de navegación (siempre visible)
+   y debajo la zona de las pantallas, que es la que se desplaza. */
+.sim-frame {
+  padding: 0;
+  overflow: hidden;
+}
+
+.sim-nav {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.55rem 1.25rem 0.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.sim-crumbs {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.45rem;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.sim-crumbs .crumb-screen {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.crumb-sep {
+  color: var(--text-soft);
+}
+
+.sim-nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+}
+
+.sim-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.sim-tab {
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.7rem;
+  color: var(--text-soft);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.sim-tab:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.sim-tab[aria-selected='true'] {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.sim-nav-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sim-arrow {
+  min-width: 2.2rem;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.sim-together[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.sim-together[hidden] {
+  display: none;
+}
+
+/* «Cambiar gráficas»: la lista de casillas, flotando bajo la barra. */
+.sim-chooser {
+  position: absolute;
+  z-index: 20;
+  top: 5.5rem;
+  right: 1.25rem;
+  width: min(32rem, calc(100% - 2.5rem));
+  max-height: calc(100% - 7rem);
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.25);
+}
+
+.sim-chooser[hidden] {
+  display: none;
+}
+
+.sim-chooser h2 {
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.sim-frame {
+  position: relative;
+}
+
+.screen-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+/* Una pantalla: como mucho dos gráficas lado a lado (o una encima de otra si no caben),
+   con márgenes generosos entre ellas. */
+.screen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 2rem 2.5rem;
+  align-items: start;
+}
+
+.graph-explain {
+  align-self: start;
+}
+
+.screen[data-count='1'] {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 70rem;
+  margin: 0 auto;
+}
+
+/* Ver juntas: todas las elegidas, sin explicaciones, con un tamaño mínimo cada una. */
+.screen-area[data-mode='together'] .screen {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1.25rem 1.5rem;
+  max-width: none;
+}
+
+.screen-area[data-mode='together'] .graph-explain {
+  display: none;
+}
+
+/* Cada tarjeta ocupa tres filas de la rejilla (cabecera, gráfica, explicación) y las comparte
+   con su vecina (subgrid): las cabeceras de una misma fila miden lo mismo y las dos gráficas
+   empiezan y acaban a la misma altura. */
+.graph-card {
+  min-width: 0;
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  /* Una columna que no crece con el contenido: una ecuación ancha se desplaza dentro de su
+     caja en vez de salirse de la tarjeta. */
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0;
+  align-content: start;
+  padding: 0.75rem 0.9rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.graph-head {
+  flex: none;
+}
+
+.graph-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.graph-title-extra:empty {
+  display: none;
+}
+
+.graph-info {
+  margin: 0.15rem 0 0;
+  min-height: 1.4em;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+}
+
+.info-sep {
+  color: var(--border);
+}
+
+/* KaTeX dibuja a 1,21 veces la letra del texto: en las líneas de información, casi igual. */
+.graph-info .katex,
+.side-status .katex {
+  font-size: 1.08em;
+}
+
+.graph-legend:empty {
+  display: none;
+}
+
+/* Leyenda en HTML (opción htmlLegend de plot2d.js), encima de la gráfica, con KaTeX. */
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.1rem;
+  margin-top: 0.35rem;
+  font-family: var(--font-text);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-sample {
+  flex: none;
+  width: 1.7em;
+  height: 0.85em;
+}
+
+.legend-label .katex {
+  font-size: 1.05em;
+}
+
+.graph-body {
+  position: relative;
+  flex: none;
+  height: 18rem;
+  min-height: 16rem;
+  margin-top: 0.4rem;
+}
+
+.graph-explain:empty {
+  display: none;
+}
+
+.graph-explain {
+  margin-top: 0.9rem;
+}
+
+/* Explicación bajo cada gráfica (sacada de ficha.md): «Qué ves» abierto y tres desplegables. */
+.graph-explain {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.explain-see h3,
+.explain-fold summary {
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.explain-see h3 {
+  margin-bottom: 0.3rem;
+}
+
+.explain-fold {
+  border-top: 1px solid var(--border);
+  padding: 0.45rem 0;
+}
+
+.explain-fold summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.explain-fold[open] summary {
+  margin-bottom: 0.4rem;
+}
+
+.explain-fold h4 {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.graph-explain .prose p:last-child,
+.graph-explain .prose ul:last-child {
+  margin-bottom: 0;
+}
+
+.graph-explain .math-block {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Términos del glosario: subrayado de puntos; al pulsarlos se abre su definición. */
+.term {
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px dotted var(--accent);
+  cursor: help;
+}
+
+.term:hover,
+.term[aria-expanded='true'] {
+  color: var(--accent);
+}
+
+.term-popup {
+  position: absolute;
+  z-index: 50;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 0.4rem 1.5rem rgb(0 0 0 / 0.25);
+}
+
+.term-popup[hidden] {
+  display: none;
+}
+
+.term-popup-title {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.term-popup-text {
+  margin: 0;
+}
+
+/* Letra del texto (encargo R1), en todo lo que se lee. Computer Modern es más pequeña a
+   igual tamaño nominal que la letra de sistema: se agranda un poco. */
+.entry-header,
+.entry-sim h3,
+.entry-sim-summary,
+.graph-choice-text,
+.entry-combos,
+.graph-title,
+.graph-info,
+.graph-explain .prose,
+.term-popup,
+.ficha-panel .prose,
+.side-status {
+  font-family: var(--font-text);
+}
+
+.entry-header,
+.entry-sim-summary,
+.graph-choice-text,
+.entry-combos,
+.graph-explain .prose,
+.term-popup,
+.ficha-panel .prose {
+  font-size: 1.06em;
+}
+
+.graph-title {
+  font-size: 1.2rem;
+}
+
+.graph-info {
+  font-size: 0.95rem;
+}
+
+.plot {
+  font-family: var(--font-plot);
+}
+
+/* En las gráficas del formato con simulaciones, los rótulos van en la letra del texto, como
+   las fórmulas (los números de los ejes, en --font-plot). */
+.graph-card .plot {
+  --font-plot-label: var(--font-text);
+}
+
+/* Bloque «Estado» con fórmulas. */
+.side-status .info-part {
+  display: block;
+}
+
+.side-status .info-sep {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sim-frame {
+    overflow: visible;
+  }
+
+  .sim-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 0.45rem 0.75rem;
+  }
+
+  .screen-area {
+    overflow: visible;
+    padding: 0.75rem 0.5rem 2rem;
+  }
+
+  .graph-card {
+    padding: 0.6rem 0.6rem 0.8rem;
+  }
+
+  /* Las pestañas, en una sola fila que se desplaza de lado. */
+  .sim-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    padding-bottom: 0.1rem;
+  }
+
+  .sim-tab {
+    flex: none;
+  }
+
+  /* La rueda de fase, más pequeña: en el móvil le quitaba media gráfica a ψ. */
+  .fo-with-wheel .phase-wheel {
+    width: 5em;
+    font-size: 0.65em;
+  }
+
+  /* Controles: una barra plegable arriba, cerrada al entrar (la gráfica va primero). */
+  .module-page[data-format='simulaciones'] .panel-toggle {
+    height: auto;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.9rem;
+    text-align: left;
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .module-page[data-format='simulaciones'][data-panel='closed'] .panel-toggle::before {
+    content: 'Controles, presets y animación ▾';
+  }
+
+  .module-page[data-format='simulaciones'][data-panel='open'] .panel-toggle::before {
+    content: 'Ocultar los controles ▴';
+  }
+}
+
 /* ----------------------------------------------------------------- Galería de componentes */
 
 .galeria-grid {
@@ -894,6 +1620,18 @@ h3 {
   margin: 0;
   overflow: auto;
   font-size: 0.85rem;
+}
+
+/* En pantallas estrechas los paneles se apilan (sección 5): el visor 3D suelta su área,
+   que si no se queda en una celda implícita encima de otro panel. */
+@media (max-width: 760px) {
+  .galeria-grid {
+    grid-template-areas: none;
+  }
+
+  .galeria-grid > * {
+    grid-area: auto !important;
+  }
 }
 
 /* ------------------------------------------------------------------- 7. Modo presentación */
@@ -936,6 +1674,17 @@ h3 {
   padding: 0.8rem;
   font-size: 1.1rem;
   background: var(--bg);
+}
+
+:root[data-presentation='true'] .sim-nav,
+:root[data-presentation='true'] .sim-chooser,
+:root[data-presentation='true'] .graph-explain {
+  display: none;
+}
+
+:root[data-presentation='true'] .screen-area {
+  overflow: hidden;
+  padding: 0;
 }
 
 :root[data-presentation='true'] .panel-title {
@@ -1316,97 +2065,6 @@ h3 {
 
 /* ------------------------------------------------- Ondas clásicas y función de onda */
 
-.fo-root {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-}
-
-.fo-status {
-  flex: none;
-  margin: 0;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.85rem;
-  color: var(--text-soft);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  min-height: 1.6em;
-}
-
-.fo-part {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
-
-/* Aviso de fin de la simulación (createEndNotice en view-common.js): flota arriba, en el
-   centro, encima de los paneles. */
-.fo-end {
-  position: absolute;
-  top: 0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  max-width: calc(100% - 2rem);
-  padding: 0.5rem 0.6rem 0.5rem 0.9rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface);
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
-  box-shadow: 0 0.3rem 1.2rem rgb(0 0 0 / 0.25);
-}
-
-.fo-end[hidden] {
-  display: none;
-}
-
-.fo-end-restart {
-  flex: none;
-  font-weight: 600;
-}
-
-/* Vista «paquete»: ψ arriba a la izquierda (ancha), momentos arriba a la derecha; la
-   cuerda abajo a la izquierda y los valores esperados abajo a la derecha. */
-.fo-grid-packet {
-  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr);
-  grid-template-areas:
-    'psi momentum'
-    'string expect';
-}
-
-/* Vista «estados»: niveles y ψ arriba; el puente con la luz y los coeficientes abajo. */
-.fo-grid-states {
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr);
-  grid-template-areas:
-    'levels psi'
-    'bridge phasors';
-}
-
-/* Vista «cuerda»: la cuerda y las frecuencias arriba; la energía abajo, a todo lo ancho. */
-.fo-grid-string {
-  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr);
-  grid-template-areas:
-    'string freq'
-    'energy energy';
-}
-
-/* Vista «rendijas»: el plano a la izquierda (cuadrado) y la pantalla a la derecha. */
-.fo-grid-slits {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
-  grid-template-areas: 'plane screen';
-}
-
 /* Muestra del color del fotón en el título del panel del puente con la luz. */
 .fo-swatch {
   display: inline-block;
@@ -1465,13 +2123,3 @@ h3 {
   min-height: 5.5rem;
 }
 
-@media (max-width: 900px) {
-  .fo-root {
-    height: auto;
-  }
-
-  .fo-part .panel-grid {
-    grid-template-areas: none;
-    grid-template-rows: none;
-  }
-}

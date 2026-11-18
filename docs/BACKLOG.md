@@ -156,3 +156,15 @@ Observaciones del revisor independiente que no afectan a la corrección física 
 - Valores esperados del paquete en ventanas bajas: sin sitio, la leyenda se quita (previsto) y entonces ⟨x⟩ (azul) y ⟨k⟩ (naranja) solo se distinguen por los rótulos de los ejes; se podría colorear el rótulo de cada eje con el color de su curva.
 - Tema oscuro: `--series-1` y `--accent` son el mismo color (#6cb6ff); una línea de acento sobre una curva de la serie 1 no se distingue.
 
+
+## Del encargo R1 (rediseño, piloto en funcion-onda)
+
+- Luz y materia, vista de las láminas, a 820 px de ancho (tableta vertical): una de sus gráficas queda en 124 px de ancho. Se resolverá al migrar el módulo al formato nuevo.
+- (Revisión del encargo R1) En el móvil no valen las indicaciones de posición entre pantallas: «(segunda pantalla)» del puente con la luz es la tercera de cuatro con el preset; los recorridos dicen «la gráfica de al lado»; la frase de la simulación del paquete dice «al lado, una cuerda clásica», que en «Ver todas» va en la segunda pantalla. Decir el nombre de la pestaña en lugar de la posición.
+- Glosario: «estado propio» define solo el estado propio de la energía (mejor «estado propio (de la energía)»); «número de onda» dice «cuántas veces gira la fase (en radianes)», que mezcla vueltas y radianes; «dispersión» es término del glosario (velocidad según la longitud de onda) y aparece con el sentido de anchura en la definición de «incertidumbre».
+- La línea de ψ en la simulación de estados escribe los coeficientes en t = 0 junto a un t que avanza («cada término girando a su ritmo» lo aclara a medias).
+- La ayuda del control «Fase global φ» es un `title` nativo: ⟨x⟩ y ⟨p⟩ salen ahí en la letra del sistema.
+- «Ver juntas» de la cuerda a 1366 × 650: la tercera gráfica queda bajo el pliegue (cumple el tamaño mínimo; el encargo no lo prohíbe).
+- Las capturas que cita PROGRESO.md (`capturas/`) no se versionan: las de la comparación de fuentes se regeneran con `node tools/comparar-fuentes.mjs`.
+- Miniatura de la portada de funcion-onda: es la del formato anterior (cuatro paneles).
+

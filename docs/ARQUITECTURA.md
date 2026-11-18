@@ -20,14 +20,14 @@ El usuario destaca en razonamiento verbal y tiene dificultad con la visión espa
 
 - JavaScript moderno con módulos ES nativos, sin empaquetador. Cada archivo lleva `// @ts-check` y tipos en JSDoc. Se permite `typescript` como dependencia de desarrollo solo para `tsc --noEmit` (comprobación de tipos), nunca para compilar.
 - Tests con el ejecutor nativo de Node (`node --test`), sin frameworks. Un solo comando ejecuta todos: `npm test`.
-- Dependencias de ejecución vendorizadas en `vendor/` (copiadas al repositorio, nada de CDN): three.js para 3D y KaTeX para fórmulas en las fichas. Nada más salvo necesidad justificada en PROGRESO.md.
+- Dependencias de ejecución vendorizadas en `vendor/` (copiadas al repositorio, nada de CDN): three.js para 3D, KaTeX para fórmulas y la fuente CMU Serif para el texto (ver «Tipografía»). Nada más salvo necesidad justificada en PROGRESO.md.
 - Gráficas 2D con un trazador propio y sencillo sobre Canvas 2D (ejes, líneas, mapas de color, leyenda, exportable a PNG). Debe verse bien en el modo presentación.
 - Herramientas de generación de datos y referencias en `tools/` (Python permitido: `numpy`, `scipy`, `miepython`, `colour-science`, etc.). Lo que generan se guarda en `data/` o `tests/fixtures/` y se versiona. La web nunca depende de Python.
 - Idioma: interfaz, fichas y comentarios en español; identificadores en inglés.
 
 ## Estructura del repositorio
 
-Los archivos marcados con (01), (02) y (03) llegaron con esos encargos; el resto existe desde el encargo 00.
+Los archivos marcados con (01), (02), (03) y (R1) llegaron con esos encargos; el resto existe desde el encargo 00.
 
 ```
 index.html                 página única: barra superior, mapa de importación de vendor/
@@ -47,8 +47,10 @@ src/
     clock.js               reloj de animación: pausa y velocidad
     presentation.js        modo presentación y atajos de teclado
     theme.js               temas claro y oscuro
-    markdown.js            conversor mínimo de Markdown (fichas y recorridos)
+    markdown.js            conversor mínimo de Markdown (fichas, recorridos, glosario)
     load-json.js           (01) carga de archivos de data/ en el navegador y en Node
+    simulations.js         (R1) formato con simulaciones: selección, pantallas, URL (puro)
+    ficha-sections.js      (R1) qué trozo de la ficha va bajo cada gráfica (puro)
   ui/
     module-page.js         página de un módulo: conecta estado, URL, controles y vistas
     cover.js               portada con las tarjetas de los módulos
@@ -66,6 +68,11 @@ src/
     format.js              números con coma decimal
     dom.js                 ayudante el() para crear elementos
     styles.css             todos los estilos; temas con variables CSS
+    entry-page.js          (R1) página de entrada de un módulo con simulaciones
+    screens.js             (R1) pantallas, tarjetas de gráfica, navegación, «ver juntas»
+    info-line.js           (R1) líneas secundarias y bloque «Estado» con KaTeX
+    plot-tex.js            (R1) rótulos con fórmulas sencillas para el lienzo (puro)
+    glossary.js            (R1) ventana del glosario común
   color/                   (01) motor espectro -> color; guía de uso en LEEME.md
     cie.js                 funciones de igualación CIE 1931 2°, iluminantes
     spectrum.js            espectro -> XYZ -> sRGB, CIELAB, aviso de fuera de gama
@@ -94,6 +101,7 @@ src/
                            rendija 2D y coherencia); view-packet.js, view-states.js,
                            view-string.js, view-slits.js
 data/                      (01) fuentes y licencias en data/README.md
+  glosario.json            (R1) glosario común a todos los módulos (escrito a mano)
   cie/                     CMF y iluminantes (JSON)
   materials/               un JSON por material + index.json (generados)
     catalogo.json          lista de materiales y metadatos: lo único que se edita a mano
@@ -109,13 +117,14 @@ tools/                     scripts de generación (no se sirven)
   serve.mjs                servidor local bajo /laboratorio/, como GitHub Pages
   vendor.mjs               copia three.js y KaTeX a vendor/
   miniaturas.mjs           genera las miniaturas de la portada
+  comparar-fuentes.mjs     (R1) capturas para comparar la letra de controles y ejes
   codata.py, linalg_fixture.py, colormaps.py, oklab-fixture.mjs   datos y referencias
   cie.py                   (01) datos CIE y referencia del motor de color (colour-science)
   refractiveindex-yaml.mjs (01) importador del formato de refractiveindex.info
   materials.mjs            (01) genera data/materials/ a partir de catalogo.json
   materials_fixture.py     (01) referencia del importador (PyYAML)
   mie_fixture.py           (01) referencia de Mie (miepython y mpmath)
-vendor/                    three.js, KaTeX (copiados; ver vendor/README.md)
+vendor/                    three.js, KaTeX, CMU Serif (R1) (copiados; ver vendor/README.md)
 docs/                      arquitectura, encargos, temario, backlog
 ```
 
@@ -143,6 +152,30 @@ Un parámetro puede llevar `visible: (state) => boolean`: su control solo se mue
 `ctx` da acceso al tema, al modo presentación, a la biblioteca de materiales (`ctx.materials.load(id)`) y al motor de color (`ctx.color.load()`); estos dos descargan datos y devuelven promesas, así que el `mount` que los use es asíncrono. El núcleo genera los controles a partir de `params`, sincroniza el estado con la URL y llama a `update(state)` en cada cambio.
 
 La definición exacta del contrato (campos opcionales `hidden`, `animated` y `thumbnail`, contenido de `ctx`) está en `src/modules/types.js`, y la guía para crear un módulo, en `src/modules/_plantilla/LEEME.md`. Un módulo se da de alta en `src/modules/registry.js` y en ningún otro sitio. `module.js` y `view.js` no pueden usar `document` fuera de sus funciones, porque los tests los importan en Node.
+
+## Formato con página de entrada y simulaciones (en piloto, encargo R1)
+
+Piloto en `funcion-onda`. Los demás módulos siguen con el formato anterior (una página con todas sus vistas) hasta que Daniel valide el piloto; el núcleo admite los dos: un módulo usa el nuevo si su descriptor declara `simulations` (`isPilot` en `src/core/simulations.js`). La plantilla (`_plantilla/` y su `LEEME.md`) se actualizará al extender el formato.
+
+**Contrato** (`src/modules/types.js`). El descriptor añade `intro` (párrafo de la página de entrada), `simulationParam` (el parámetro select cuyas opciones son las simulaciones; su control se oculta) y `simulations`. Cada simulación declara `id` (valor de ese parámetro), `title`, `summary` (una frase), `initial` (su estado inicial), `graphs` y `combos`. Cada gráfica: `id` (único en el módulo; es el del apartado de la ficha y el de la URL), `title` (qué es, en palabras), `short` (nombre corto para pestañas y ubicación) y `summary`. Cada combinación sugerida: dos gráficas de la misma simulación, que se explican la una a la otra, con título y frase. Un preset puede declarar `graphs` (las que abre). `tests/modulos.test.js` comprueba todo esto, y que cada gráfica tenga su apartado en la ficha con sus tres partes y el mismo título.
+
+**Página de entrada.** `#/<id>` sin nada más no carga ninguna simulación (`src/ui/entry-page.js`): título, párrafo, las simulaciones (frase, casillas con cada gráfica, «Ver las elegidas», «Ver todas»), combinaciones sugeridas, presets y recorridos. Todo son enlaces; al entrar en una simulación se aplica su estado inicial. Un recorrido empezado aquí abre la simulación de su primer paso.
+
+**Pantallas** (`src/ui/screens.js`). Varias pantallas cortas en vez de una página larga. Cada gráfica es una tarjeta: título en palabras, línea secundaria con sus números y su significado, leyenda, la gráfica y su explicación. Una pantalla tiene como mucho dos gráficas (una en el móvil, ≤ 760 px): primero las combinaciones sugeridas que estén elegidas enteras, en su orden; luego el resto, en el orden de la simulación (`planScreens`). En escritorio, el alto de la gráfica se ajusta para que las de una pantalla se vean enteras sin desplazarse; la explicación empieza debajo. Arriba, siempre visible, la línea de ubicación (módulo › simulación › pantalla, con enlace a la página de entrada), pestañas, flechas ‹ › (y ← → del teclado cuando no hay un recorrido en marcha), «Ver juntas» (todas las elegidas en una pantalla, sin explicaciones, con un tamaño mínimo) y «Cambiar gráficas» (las mismas casillas de la página de entrada). En el móvil, los controles van en una barra plegable arriba, cerrada al entrar.
+
+**Selección en la URL.** `#/funcion-onda?part=estados&…&ver=superposicion,coeficientes&pantalla=2`: además de todos los parámetros, `ver` (gráficas elegidas; ausente, todas) y `pantalla` (número desde 1, o `juntas`; ausente, la 1). Un enlace copiado abre la misma simulación, gráficas, pantalla y parámetros. `ver` y `pantalla` no pueden ser claves de parámetros.
+
+**Vista del módulo.** `mount` recibe en `ctx.graph(id)` el hueco de cada gráfica de la simulación abierta (`body` con altura definida, `setInfo(trozos)` para la línea secundaria, `legend` para la leyenda HTML, `titleExtra`, `visible`) y en `ctx.setStatus(trozos)` el bloque «Estado» de la barra lateral, para lo que no es de ninguna gráfica. No hay línea de estado encima de las gráficas. Hay un solo reloj y un solo estado por simulación; las gráficas que no se ven no hace falta dibujarlas, y al cambiar de pantalla se llama a `update`. Los trozos de texto llevan fórmulas `$…$` (KaTeX, `src/ui/info-line.js`, que repinta cada línea como mucho cada 150 ms).
+
+**Explicaciones desde la ficha.** Un solo texto en un solo sitio: bajo cada gráfica sale su apartado de `ficha.md` («Qué ves» abierto; «Cómo leerla», «Prueba esto» y «Más detalle» en desplegables). «Más detalle» reúne las ecuaciones y los límites del modelo marcados para esa gráfica (ver «Fichas»). El botón «Ficha» sigue mostrando la ficha entera.
+
+**Glosario común** (`data/glosario.json`, `src/ui/glossary.js`). Términos técnicos del primer nivel, con definiciones de una o dos frases y sin ecuaciones. En cualquier texto Markdown se marcan con `[[término]]` o `[[texto|id]]` y se abren en una ventana pequeña al pulsarlos. `tests/glosario.test.js` comprueba que todo término marcado existe.
+
+**Simulaciones en bucle.** Una simulación con tiempo final vuelve a empezar sola al llegar a él, tras quedarse 1,5 s en el último instante para que se vea el resultado; no hay avisos encima de las gráficas. Para detenerla está la pausa. Mismo criterio en los demás módulos animados al extender el formato.
+
+**Modo presentación.** Sin cambios de diseño: muestra las gráficas de la pantalla actual (o todas, con «ver juntas») en el lienzo 16:9, sin navegación, explicaciones ni barra lateral. Las teclas 1–9 saltan a los presets y abren su simulación si es otra.
+
+**Tipografía.** Ver la sección del mismo nombre.
 
 ## Servicios comunes
 
@@ -178,16 +211,23 @@ Cada material es un JSON con `λ` (nm), `n`, `k`, fuente bibliográfica, licenci
 ## Fichas
 
 Cada módulo tiene `ficha.md` con estas secciones, en este orden y con estos títulos (la prueba de humo los comprueba):
-- **Qué estás viendo.** Una introducción corta (vistas, unidades, convenios de color comunes) y, después, **un apartado por cada vista** (por cada gráfica o panel), con un título `###` que la nombre como en pantalla y diga dónde está, y estas tres partes, en negrita y en este orden:
+- **Qué estás viendo.** Una introducción corta (vistas, unidades, convenios de color comunes) y, después, **un apartado por cada vista** (por cada gráfica o panel), con un título `###` que la nombre como en pantalla, y estas tres partes, en negrita y en este orden. En el formato con simulaciones el título es exactamente el de la gráfica y lleva su identificador, `### Superposición de dos estados {#superposicion}`, sin decir dónde está (las posiciones ya no existen); en el formato anterior dice además dónde está:
   - **Qué ves.** Cada eje con su magnitud y sus unidades dichas en palabras («la posición x en nanómetros», no solo «x (nm)»), y cada curva, zona, línea y color: qué representa y de qué color es.
   - **Cómo leerla.** La idea física que enseña la vista, al nivel de primero de carrera y **sin ecuaciones**: qué relación hay que mirar y por qué sale así.
   - **Prueba esto.** Una o dos acciones concretas en los controles o en la gráfica, cada una con el resultado que se observa (números incluidos cuando los haya). **Cada acción se comprueba contra la pantalla** (a mano o con la prueba de humo) antes de escribirla.
 - **Qué es físico y qué es representación.**
-- **Ecuaciones.** Las que implementa el módulo, en KaTeX y con notación coherente con la bibliografía de la carrera. Es el único sitio de la ficha con ecuaciones desarrolladas.
-- **Límites del modelo.** Qué deja fuera y cuándo deja de valer.
+- **Ecuaciones.** Las que implementa el módulo, en KaTeX y con notación coherente con la bibliografía de la carrera. Es el único sitio de la ficha con ecuaciones desarrolladas. En el formato con simulaciones, una línea `<!-- gráficas: psi momentos -->` manda lo que sigue (hasta la próxima marca, `<!-- fin -->` o el próximo título) al desplegable «Más detalle» de esas gráficas; los comentarios no se ven en la ficha completa.
+- **Límites del modelo.** Qué deja fuera y cuándo deja de valer. Con simulaciones, cada elemento de lista puede acabar en `<!-- gráficas: … -->` para salir en el «Más detalle» de esas gráficas.
 - **Referencias.** Libro y sección concretos: Griffiths (Electrodynamics), Born & Wolf, Bohren & Huffman, Feynman Lectures, Kittel, Ashcroft-Mermin, Levine, Nielsen & Chuang, Gaponenko.
 
 Ejemplos completos: `src/modules/_plantilla/ficha.md` (dos vistas) y `src/modules/funcion-onda/ficha.md` (cuatro vistas con varias gráficas cada una).
+
+## Tipografía (encargo R1)
+
+- **Texto para leer** (`--font-text`): CMU Serif (Computer Modern Unicode, en `vendor/cmu/`), la misma letra que las fórmulas de KaTeX. Se eligió en lugar de `KaTeX_Main` porque esta no tiene letras acentuadas ni ¿ ¡ (cada vocal acentuada saldría de otra fuente del sistema); `KaTeX_Main` queda de respaldo para ⟨ ⟩. Se usa en la página de entrada, títulos y líneas secundarias de las gráficas, explicaciones, glosario, ficha, bloque «Estado» y leyendas.
+- **Controles y números de los ejes** (`--font-ui`, `--font-plot`): la letra de sistema, que a 12–13 px se lee mejor (comparación con capturas: `tools/comparar-fuentes.mjs`).
+- **Fórmulas**: KaTeX en títulos, líneas secundarias, explicaciones, glosario y leyendas. Las leyendas pueden salir del lienzo a HTML (opción `htmlLegend` de `plot2d.js`); la exportación a PNG las sigue dibujando en el lienzo.
+- **Rótulos dentro del lienzo** (ejes, líneas marcadas): un rótulo con trozos `$…$` se dibuja con las variables en cursiva, ⟨ ⟩ de verdad y superíndices y subíndices (`src/ui/plot-tex.js`, un TeX reducido; `tests/plot-tex.test.js` comprueba que los rótulos de los módulos no usan órdenes que no conoce). Sin `$…$`, como siempre. En las gráficas del formato con simulaciones los rótulos usan la letra del texto (`--font-plot-label`).
 
 ## Accesibilidad y rendimiento
 

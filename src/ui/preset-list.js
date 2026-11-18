@@ -8,7 +8,7 @@ import { el } from './dom.js';
  * @param {HTMLElement} container
  * @param {readonly import('../modules/types.js').Preset[]} presets
  * @param {(preset: import('../modules/types.js').Preset) => void} onSelect
- * @returns {{ setActive: (id: string | null) => void, destroy: () => void }}
+ * @returns {{ setActive: (id: string | null) => void, setVisible: (show: (preset: import('../modules/types.js').Preset) => boolean) => void, destroy: () => void }}
  */
 export function buildPresetList(container, presets, onSelect) {
   const buttons = presets.map((preset, i) =>
@@ -33,6 +33,12 @@ export function buildPresetList(container, presets, onSelect) {
       for (const button of buttons) {
         button.setAttribute('aria-pressed', String(button.dataset.preset === id));
       }
+    },
+    /** Enseña solo los presets para los que `show` devuelve true (conservan su número). */
+    setVisible(show) {
+      presets.forEach((preset, i) => {
+        buttons[i].hidden = !show(preset);
+      });
     },
     destroy() {
       list.remove();

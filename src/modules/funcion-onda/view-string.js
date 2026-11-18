@@ -12,10 +12,9 @@
 // Unidades propias: posición en fracciones de la longitud (x/L) y tiempo en periodos del
 // modo fundamental con extremos fijos, T₁ = 2L/c. La física está en physics-string.js.
 
-import { addPanel, createPanelGrid } from '../../ui/panels.js';
 import { createPlot } from '../../ui/plot2d.js';
-import { formatEs } from '../../ui/format.js';
 import { createString, modeFrequency, modeShape, setFromSolution, setReleasedShape, stepString, stringEnergy } from './physics-string.js';
+import { quantity, texNum } from './view-common.js';
 
 /** Cuerda de longitud 1 con c = 1 y 800 intervalos (Courant 1: el esquema es exacto). */
 const LENGTH = 1;
@@ -31,34 +30,34 @@ const PULSE_CENTER = 0.3;
 const PULSE_WIDTH = 0.04;
 
 /**
- * @param {HTMLElement} container
- * @param {import('../types.js').ModuleContext} ctx
- * @param {(text: string) => void} setStatus
+ * @param {import('./view-common.js').PartContext} ctx
  * @returns {import('./view-common.js').PartView}
  */
-export function mountString(container, ctx, setStatus) {
-  const grid = createPanelGrid(container, 'fo-grid-string');
-  const stringPanel = addPanel(grid, 'La cuerda', { area: 'string' });
-  const stringPlot = createPlot(stringPanel.body, {
-    xLabel: 'posición a lo largo de la cuerda, x/L',
-    yLabel: 'desplazamiento u (relativo)',
+export function mountString(ctx) {
+  const stringSlot = ctx.graph('cuerda');
+  const stringPlot = createPlot(stringSlot.body, {
+    xLabel: 'posición a lo largo de la cuerda, $x/L$',
+    yLabel: 'desplazamiento $u$ (relativo)',
+    htmlLegend: stringSlot.legend,
     xRange: [0, 1],
     yRange: [-1.35, 1.35],
     exportName: 'funcion-onda-cuerda',
   });
-  const freqPanel = addPanel(grid, 'Misma forma, distinto reloj', { area: 'freq' });
-  const freqPlot = createPlot(freqPanel.body, {
-    xLabel: 'modo n',
+  const freqSlot = ctx.graph('frecuencias');
+  const freqPlot = createPlot(freqSlot.body, {
+    xLabel: 'modo $n$',
     yLabel: 'frecuencia / la del modo 1',
+    htmlLegend: freqSlot.legend,
     xRange: [0.5, 8.5],
     yRange: [0, 68],
     xTicks: [1, 2, 3, 4, 5, 6, 7, 8],
     exportName: 'funcion-onda-frecuencias',
     onPick: (x) => ctx.setState({ mode: Math.min(8, Math.max(1, Math.round(x))) }),
   });
-  const energyPanel = addPanel(grid, 'Energía de la cuerda', { area: 'energy' });
-  const energyPlot = createPlot(energyPanel.body, {
-    xLabel: 'tiempo (periodos del modo fundamental, T₁ = 2L/c)',
+  const energySlot = ctx.graph('energia-cuerda');
+  const energyPlot = createPlot(energySlot.body, {
+    xLabel: 'tiempo (periodos del modo fundamental, $T_1 = 2L/c$)',
+    htmlLegend: energySlot.legend,
     yLabel: 'energía / energía total',
     yRange: [-0.05, 1.15],
     exportName: 'funcion-onda-energia-cuerda',
@@ -126,7 +125,7 @@ export function mountString(container, ctx, setStatus) {
     const vlines = [];
     if (sm.shape === 'modo') {
       const env = Array.from(xs, (x) => Math.abs(modeShape(sm.n, x, LENGTH, sm.boundary)));
-      series.push({ x: xs, y: env, color: 3, dash: [5, 4], label: `±envolvente del modo ${sm.n}: la misma función que el estado ${sm.n} de una caja cuántica` });
+      series.push({ x: xs, y: env, color: 3, dash: [5, 4], label: `$\\pm$envolvente del modo ${sm.n}: la misma función que el estado ${sm.n} de una caja cuántica` });
       series.push({ x: xs, y: env.map((v) => -v), color: 3, dash: [5, 4] });
       for (let j = 0; j <= sm.n; j++) {
         const xNode = sm.boundary === 'fixed' ? j / sm.n : (j + 0.5) / sm.n;
@@ -138,8 +137,8 @@ export function mountString(container, ctx, setStatus) {
       series.push({ x: xs, y: Array.from(xs, (x) => 0.6 * modeShape(sm.n, x, LENGTH, sm.boundary) * Math.cos(wn * sm.s.time)), color: 2, width: 0.8, dash: [4, 3], label: `modo ${sm.n}` });
       series.push({ x: xs, y: Array.from(xs, (x) => 0.6 * modeShape(sm.m, x, LENGTH, sm.boundary) * Math.cos(wm * sm.s.time)), color: 4, width: 0.8, dash: [4, 3], label: `modo ${sm.m}` });
     }
-    series.push({ x: xs, y: sm.s.u, color: 0, width: 1.3, label: sm.shape === 'dos-modos' ? 'cuerda = suma de los dos modos' : 'cuerda u(x, t)' });
-    stringPlot.draw({ series, vlines });
+    series.push({ x: xs, y: sm.s.u, color: 0, width: 1.3, label: sm.shape === 'dos-modos' ? 'cuerda = suma de los dos modos' : 'cuerda $u(x,t)$' });
+    if (stringSlot.visible) stringPlot.draw({ series, vlines });
     const ends = sm.boundary === 'fixed' ? 'extremos fijos' : 'extremos libres';
     const what = {
       pulso: 'un pulso soltado en reposo se parte en dos que viajan sin deformarse',
@@ -147,23 +146,23 @@ export function mountString(container, ctx, setStatus) {
       modo: `modo ${sm.n}: onda estacionaria con ${sm.boundary === 'fixed' ? sm.n - 1 : sm.n} nodos en el interior`,
       'dos-modos': `superposición de los modos ${sm.n} y ${sm.m}: la forma cambia porque cada modo oscila a su frecuencia`,
     }[sm.shape] ?? '';
-    stringPanel.title.textContent = `La cuerda (${ends}) · ${what}`;
+    stringSlot.setInfo([ends, what]);
 
     // --- Frecuencias ------------------------------------------------------------------------
     const ns = [1, 2, 3, 4, 5, 6, 7, 8];
     const marks = sm.shape === 'modo' ? [sm.n] : sm.shape === 'dos-modos' ? [sm.n, sm.m] : [];
-    freqPlot.draw({
+    if (freqSlot.visible) freqPlot.draw({
       series: [
-        { x: ns, y: ns, color: 0, points: true, label: 'cuerda: ωₙ = nπc/L (∝ n)' },
-        { x: ns, y: ns.map((n) => n * n), color: 1, points: true, label: 'partícula en una caja: Eₙ/ħ (∝ n²)' },
+        { x: ns, y: ns, color: 0, points: true, label: 'cuerda: $\\omega_n = n\\pi c/L$ ($\\propto n$)' },
+        { x: ns, y: ns.map((n) => n * n), color: 1, points: true, label: 'partícula en una caja: $E_n/\\hbar$ ($\\propto n^2$)' },
       ],
-      vlines: marks.map((n) => ({ x: n, dash: [3, 3], label: `n = ${n}` })),
+      vlines: marks.map((n) => ({ x: n, dash: [3, 3], label: `$n = ${n}$` })),
     });
 
     // --- Energía ------------------------------------------------------------------------------
     const h = sm.history;
     const t0 = Math.max(0, tPeriods - ENERGY_WINDOW);
-    energyPlot.draw({
+    if (energySlot.visible) energyPlot.draw({
       series: [
         { x: h.t, y: h.kin, color: 0, label: 'cinética (movimiento)' },
         { x: h.t, y: h.pot, color: 1, label: 'potencial (estiramiento)' },
@@ -172,9 +171,14 @@ export function mountString(container, ctx, setStatus) {
       xRange: [t0, t0 + ENERGY_WINDOW],
     });
     const drift = Math.max(0, ...h.tot.map((v) => Math.abs(v - 1)));
-    energyPanel.title.textContent = `Energía de la cuerda · la total se conserva (variación relativa ${drift < 1e-12 ? '< 10⁻¹²' : formatEs(drift, 12)})`;
+    energySlot.setInfo([`la total se conserva: variación relativa ${drift < 1e-12 ? '$< 10^{-12}$' : `$${texNum(drift, 12)}$`}`]);
+    freqSlot.setInfo(marks.length > 0 ? [`modo elegido: $n = ${marks.join('$ y $n = ')}$`] : ['con un pulso, la cuerda mezcla todos los modos']);
 
-    setStatus(`t = ${formatEs(tPeriods, 2)} periodos del modo fundamental (T₁ = 2L/c) · ${ends} · ω₁ = πc/L`);
+    ctx.setStatus([
+      `tiempo $t = ${texNum(tPeriods, 2)}$ periodos del modo fundamental ($T_1 = 2L/c$)`,
+      ends,
+      'frecuencia fundamental $\\omega_1 = \\pi c/L$',
+    ]);
   }
 
   const offTick = ctx.clock.onTick((time, dt) => {
@@ -206,7 +210,6 @@ export function mountString(container, ctx, setStatus) {
     destroy() {
       offTick();
       for (const p of [stringPlot, freqPlot, energyPlot]) p.destroy();
-      grid.remove();
     },
   };
 }

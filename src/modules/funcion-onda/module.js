@@ -62,6 +62,9 @@ const descriptor = {
       ],
       default: 'paquete',
       help: 'Las dos primeras vistas comparten el potencial y la masa de la partícula.',
+      // La simulación se elige en la página de entrada del módulo (formato con
+      // simulaciones), no con un control.
+      visible: () => false,
     },
     // --- Potencial y partícula (paquete y estados) ------------------------------------
     {
@@ -397,16 +400,83 @@ const descriptor = {
     },
     ...drawnColumns,
   ],
+  // --- Formato con página de entrada y simulaciones (encargo R1) ---------------------
+  intro:
+    'Una cuerda que vibra y la [[función de onda]] de un electrón obedecen ecuaciones parecidas: las dos son lineales, así que sus ondas se suman e [[interfieren|interferencia]], y al confinarlas solo sobreviven ciertos [[modos|modo]]. Pero no son lo mismo: la función de onda es compleja, sus ondas viajan a velocidades distintas según su longitud de onda y lo que se observa de ella es una probabilidad, no un desplazamiento. Este módulo las pone lado a lado para ver qué comparten y en qué se diferencian. Es la base de lo que viene después: átomos, enlaces, bandas de energía y puntos cuánticos.',
+  simulationParam: 'part',
+  simulations: [
+    {
+      id: 'paquete',
+      title: 'Un paquete de ondas en movimiento',
+      summary: 'Un electrón localizado avanza, se ensancha y choca con barreras, escalones o pozos; al lado, una cuerda clásica que sale con la misma forma.',
+      initial: {},
+      graphs: [
+        { id: 'psi', title: 'Dónde está el electrón: la función de onda', short: 'ψ(x)', summary: 'La altura dice dónde es probable encontrarlo; el color, la fase de ψ. Detrás, el potencial que encuentra.' },
+        { id: 'momentos', title: 'Cuánto del paquete hay en cada número de onda', short: 'espacio de momentos', summary: 'El mismo paquete escrito como suma de ondas planas, junto a la probabilidad de que cada una atraviese el potencial.' },
+        { id: 'cuerda-comparada', title: 'Una cuerda clásica que sale con la misma forma', short: 'la cuerda clásica', summary: 'La cuerda conserva la forma del pulso; el paquete cuántico, no.' },
+        { id: 'valores-esperados', title: 'Posición y momento medios, e incertidumbre', short: 'valores esperados', summary: 'Cómo se mueven ⟨x⟩ y ⟨p⟩ con el tiempo, comparados con una partícula clásica, y el producto de incertidumbres Δx·Δp.' },
+      ],
+      combos: [
+        { id: 'barrera', title: 'Qué parte del paquete atraviesa la barrera', summary: 'Las componentes de momento que la curva de transmisión deja pasar son las que acaban al otro lado.', graphs: ['psi', 'momentos'] },
+        { id: 'incertidumbre', title: 'La incertidumbre mientras el paquete se mueve', summary: 'Mientras el paquete avanza, se ensancha o se parte, Δx·Δp crece; con el potencial libre o el armónico, las medias siguen a la partícula clásica.', graphs: ['psi', 'valores-esperados'] },
+        { id: 'onda', title: 'Qué tiene de onda y qué no', summary: 'Con la misma forma inicial, la cuerda lleva el pulso intacto y el paquete se dispersa.', graphs: ['psi', 'cuerda-comparada'] },
+      ],
+    },
+    {
+      id: 'estados',
+      title: 'Estados propios y superposición',
+      summary: 'Los estados de energía definida de un pozo o de un oscilador, y lo que pasa al sumar dos: la probabilidad se balancea y aparece la frecuencia de la luz que se absorbe o se emite.',
+      // Los valores del preset «Superposición 1 + 2 oscilando»: al entrar se ve algo que se mueve.
+      initial: { potential: 'pozo-infinito', wellWidth: 0.8, n1: 1, n2: 2, weight: 0.5 },
+      graphs: [
+        { id: 'niveles', title: 'Niveles de energía y sus estados', short: 'niveles de energía', summary: 'El potencial, las energías permitidas y la forma de cada estado propio.' },
+        { id: 'superposicion', title: 'Superposición de dos estados', short: 'ψ(x, t)', summary: 'La suma de los dos estados elegidos, que cambia de forma porque cada uno gira a su ritmo.' },
+        { id: 'puente-luz', title: 'La carga oscila: el puente con la luz', short: 'puente con la luz', summary: 'La posición media oscila con la frecuencia del fotón que la transición absorbe o emite.' },
+        { id: 'coeficientes', title: 'Los dos coeficientes en el plano complejo', short: 'coeficientes', summary: 'Cada coeficiente es una flecha que gira; lo que se observa es el ángulo entre ellas.' },
+      ],
+      combos: [
+        { id: 'se-mueve', title: 'Por qué una superposición se mueve', summary: 'Las flechas giran a ritmos distintos: cuando cambia el ángulo entre ellas, cambia la forma de la probabilidad.', graphs: ['superposicion', 'coeficientes'] },
+        { id: 'color', title: 'De dónde sale el color de una transición', summary: 'La separación entre dos niveles fija la frecuencia con que oscila la carga, y esa es la del fotón.', graphs: ['niveles', 'puente-luz'] },
+      ],
+    },
+    {
+      id: 'cuerda',
+      title: 'La cuerda clásica',
+      summary: 'Pulsos que viajan y se reflejan, modos estacionarios y la energía que va y viene, para compararlos con la partícula en una caja.',
+      initial: {},
+      graphs: [
+        { id: 'cuerda', title: 'La cuerda que vibra', short: 'la cuerda', summary: 'El desplazamiento de una cuerda tensa: pulsos, modos o la suma de dos modos.' },
+        { id: 'frecuencias', title: 'Frecuencias de la cuerda y de la partícula en una caja', short: 'frecuencias', summary: 'Las mismas formas con distinto reloj: la cuerda crece como n y la partícula como n².' },
+        { id: 'energia-cuerda', title: 'La energía de la cuerda', short: 'energía', summary: 'La energía pasa del movimiento al estiramiento y vuelve, y la total no cambia.' },
+      ],
+      combos: [
+        { id: 'reloj', title: 'Misma forma, distinto reloj', summary: 'Cada modo de la cuerda tiene la forma de un estado de la caja, pero su frecuencia crece de otra manera.', graphs: ['cuerda', 'frecuencias'] },
+      ],
+    },
+    {
+      id: 'rendijas',
+      title: 'Doble rendija (2D) y coherencia',
+      summary: 'Un electrón pasa por dos rendijas y las dos maneras de llegar a la pantalla interfieren, salvo que algo registre por dónde pasó.',
+      initial: {},
+      graphs: [
+        { id: 'plano', title: 'El plano visto desde arriba', short: 'el plano', summary: 'La probabilidad de encontrar al electrón en cada punto mientras pasa por las rendijas.' },
+        { id: 'pantalla', title: 'Lo que llega a la pantalla', short: 'la pantalla', summary: 'Cuánta probabilidad llega a cada punto, frente a la fórmula de libro y a la suma sin interferencia.' },
+      ],
+      combos: [
+        { id: 'rendijas', title: 'El plano y la pantalla', summary: 'Los radios brillantes que salen de las rendijas son las franjas que se acumulan en la pantalla.', graphs: ['plano', 'pantalla'] },
+      ],
+    },
+  ],
   presets: [
-    { id: 'paquete-libre', label: 'Paquete libre que se ensancha', state: { part: 'paquete', potential: 'libre', x0: -30, sigma: 1, energy: 0.1, rate: 20 } },
-    { id: 'tunel', label: 'Efecto túnel por debajo de la barrera', state: { part: 'paquete', potential: 'barrera', height: 0.3, width: 1, energy: 0.2, sigma: 3, x0: -25, rate: 30 } },
-    { id: 'resonancia', label: 'Resonancia en una doble barrera', state: { part: 'paquete', potential: 'doble-barrera', height: 0.5, width: 0.3, separation: 3, energy: 0.113, sigma: 10, x0: -35, rate: 40 } },
-    { id: 'escalon', label: 'Escalón por encima de su altura', state: { part: 'paquete', potential: 'escalon', height: 0.3, energy: 0.4, sigma: 3, x0: -25, rate: 30 } },
-    { id: 'pozo-estados', label: 'Estados del pozo', state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 1, n1: 2, n2: 3, weight: 0, showRe: true } },
-    { id: 'superposicion', label: 'Superposición 1 + 2 oscilando', state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 0.8, n1: 1, n2: 2, weight: 0.5 } },
-    { id: 'coherente', label: 'Estado coherente en el oscilador armónico', state: { part: 'paquete', potential: 'armonico', quantum: 0.1, x0: 4, sigma: 0.62, energy: 0, rate: 20 } },
-    { id: 'opuestos', label: 'Misma |ψ|² con momentos opuestos', state: { part: 'paquete', potential: 'libre', twin: true, x0: 0, sigma: 2, energy: 0.05, rate: 20 } },
-    { id: 'cuerda-modos', label: 'La cuerda: dos modos superpuestos', state: { part: 'cuerda', shape: 'dos-modos', mode: 1, mode2: 2 } },
+    { id: 'paquete-libre', label: 'Paquete libre que se ensancha', graphs: ['psi', 'cuerda-comparada', 'valores-esperados'], state: { part: 'paquete', potential: 'libre', x0: -30, sigma: 1, energy: 0.1, rate: 20 } },
+    { id: 'tunel', label: 'Efecto túnel por debajo de la barrera', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'barrera', height: 0.3, width: 1, energy: 0.2, sigma: 3, x0: -25, rate: 30 } },
+    { id: 'resonancia', label: 'Resonancia en una doble barrera', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'doble-barrera', height: 0.5, width: 0.3, separation: 3, energy: 0.113, sigma: 10, x0: -35, rate: 40 } },
+    { id: 'escalon', label: 'Escalón por encima de su altura', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'escalon', height: 0.3, energy: 0.4, sigma: 3, x0: -25, rate: 30 } },
+    { id: 'pozo-estados', label: 'Estados del pozo', graphs: ['niveles', 'superposicion'], state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 1, n1: 2, n2: 3, weight: 0, showRe: true } },
+    { id: 'superposicion', label: 'Superposición 1 + 2 oscilando', graphs: ['superposicion', 'coeficientes', 'niveles', 'puente-luz'], state: { part: 'estados', potential: 'pozo-infinito', wellWidth: 0.8, n1: 1, n2: 2, weight: 0.5 } },
+    { id: 'coherente', label: 'Estado coherente en el oscilador armónico', graphs: ['psi', 'valores-esperados'], state: { part: 'paquete', potential: 'armonico', quantum: 0.1, x0: 4, sigma: 0.62, energy: 0, rate: 20 } },
+    { id: 'opuestos', label: 'Misma |ψ|² con momentos opuestos', graphs: ['psi', 'momentos'], state: { part: 'paquete', potential: 'libre', twin: true, x0: 0, sigma: 2, energy: 0.05, rate: 20 } },
+    { id: 'cuerda-modos', label: 'La cuerda: dos modos superpuestos', graphs: ['cuerda', 'energia-cuerda'], state: { part: 'cuerda', shape: 'dos-modos', mode: 1, mode2: 2 } },
   ],
   tours: [
     {
@@ -415,27 +485,27 @@ const descriptor = {
       steps: [
         {
           preset: 'cuerda-modos',
-          text: 'Una cuerda tensa obedece una ecuación **lineal**: si dos formas son solución, su suma también lo es. Aquí la cuerda es la suma del modo 1 y el modo 2. Cada modo es una onda estacionaria, $\\sin(n\\pi x/L)$, que oscila a su frecuencia $\\omega_n = n\\pi c/L$; la forma total cambia porque los dos van a ritmos distintos. Abajo, la energía pasa del movimiento al estiramiento y vuelve, y la total no cambia.',
+          text: 'Una cuerda tensa obedece una ecuación **lineal**: si dos formas son solución, su suma también lo es. Aquí la cuerda es la suma del modo 1 y el modo 2. Cada modo es una onda estacionaria, $\\sin(n\\pi x/L)$, que oscila a su frecuencia $\\omega_n = n\\pi c/L$; la forma total cambia porque los dos van a ritmos distintos. Al lado, la energía pasa del movimiento al estiramiento y vuelve, y la total no cambia.',
         },
         {
           preset: 'pozo-estados',
-          text: 'La ecuación de Schrödinger también es lineal, y al confinar aparece lo mismo. En una caja de paredes infinitas de anchura $L$ los estados permitidos son **exactamente** $\\sin(n\\pi x/L)$: los modos de la cuerda. Aquí está $\\varphi_2$, con un nodo en el centro como el segundo modo. Lo que cambia es el reloj: la frecuencia de la cuerda crece como $n$ y la energía del estado como $n^2$ (gráfica de la derecha en la vista «La cuerda clásica»).',
+          text: 'La ecuación de Schrödinger también es lineal, y al confinar aparece lo mismo. En una caja de paredes infinitas de anchura $L$ los estados permitidos son **exactamente** $\\sin(n\\pi x/L)$: los modos de la cuerda. Aquí está $\\varphi_2$, con un nodo en el centro como el segundo modo. Lo que cambia es el reloj: la frecuencia de la cuerda crece como $n$ y la energía del estado como $n^2$ (gráfica de las frecuencias, en la simulación de la cuerda).',
         },
         {
           preset: 'superposicion',
-          text: 'Como en la cuerda, los estados se pueden sumar. Con $\\varphi_1$ y $\\varphi_2$ a partes iguales, $|\\psi|^2$ deja de estar quieta: la probabilidad va de un lado a otro de la caja con periodo $h/(E_2 - E_1) = 2{,}35$ fs. Es **interferencia**: donde las fases de los dos términos coinciden, $|\\psi|^2$ crece; donde se oponen, se cancela. Las flechas de abajo a la derecha son los dos coeficientes: giran a ritmos distintos, y lo que se ve depende del ángulo entre ellas.',
+          text: 'Como en la cuerda, los estados se pueden sumar. Con $\\varphi_1$ y $\\varphi_2$ a partes iguales, $|\\psi|^2$ deja de estar quieta: la probabilidad va de un lado a otro de la caja con periodo $h/(E_2 - E_1) = 2{,}35$ fs. Es **interferencia**: donde las fases de los dos términos coinciden, $|\\psi|^2$ crece; donde se oponen, se cancela. Las flechas de la gráfica de al lado son los dos coeficientes: giran a ritmos distintos, y lo que se ve depende del ángulo entre ellas.',
         },
         {
           preset: 'tunel',
-          text: 'La interferencia de ondas explica lo que ninguna partícula clásica haría. Un paquete de energía media 0,2 eV llega a una barrera de 0,3 eV y 1 nm: una bola rebotaría siempre, pero la onda atraviesa en parte (el 13,7 %, dice la línea de arriba al final). Dentro de la barrera $\\psi$ no se corta de golpe: decae, y lo que queda al otro lado sigue viajando. En la gráfica de momentos, la curva verde es la transmisión de cada onda plana; el paquete es una suma de ellas.',
+          text: 'La interferencia de ondas explica lo que ninguna partícula clásica haría. Un paquete de energía media 0,2 eV llega a una barrera de 0,3 eV y 1 nm: una bola rebotaría siempre, pero la onda atraviesa en parte (el 13,7 %, dice al final la línea bajo el título de $\\psi$). Dentro de la barrera $\\psi$ no se corta de golpe: decae, y lo que queda al otro lado sigue viajando. En la gráfica de momentos, la curva verde es la transmisión de cada onda plana; el paquete es una suma de ellas.',
         },
         {
           preset: 'paquete-libre',
-          text: 'Pero no todo es igual. La cuerda lleva un pulso sin deformarlo porque todas sus ondas viajan a la misma velocidad ($\\omega = ck$). Para una partícula libre $\\omega = \\hbar k^2/2m$: las componentes con más momento van más deprisa y el paquete **se ensancha solo**, sin que nada lo empuje. Con $\\sigma_0 = 1$ nm, a los 100 fs mide 5,9 nm y a los 200 fs, 11,6 nm (título de abajo a la derecha). La cuerda de abajo, que salió con la misma forma, sigue igual.',
+          text: 'Pero no todo es igual. La cuerda lleva un pulso sin deformarlo porque todas sus ondas viajan a la misma velocidad ($\\omega = ck$). Para una partícula libre $\\omega = \\hbar k^2/2m$: las componentes con más momento van más deprisa y el paquete **se ensancha solo**, sin que nada lo empuje. Con $\\sigma_0 = 1$ nm, a los 100 fs mide 5,9 nm y a los 200 fs, 11,6 nm ($\\Delta x$, en la línea bajo el título de los valores esperados). La cuerda clásica de la pantalla siguiente, que salió con la misma forma, sigue igual.',
         },
         {
           preset: 'opuestos',
-          text: 'Y $\\psi$ no vibra en el espacio como la cuerda: es **compleja**, y su fase lleva información. Arriba y abajo, dos paquetes con la misma $|\\psi|^2$ inicial; solo cambia el sentido en que gira la fase a lo largo de $x$ (los colores se suceden en orden contrario). Uno va a la derecha y el otro a la izquierda: $|\\psi|^2$ dice dónde está la partícula y la fase, hacia dónde va. (Con $N$ partículas, $\\psi$ ni siquiera vive en nuestro espacio, sino en uno de $3N$ dimensiones.)',
+          text: 'Y $\\psi$ no vibra en el espacio como la cuerda: es **compleja**, y su fase lleva información. En la gráfica de $\\psi$, arriba y abajo, dos paquetes con la misma $|\\psi|^2$ inicial; solo cambia el sentido en que gira la fase a lo largo de $x$ (los colores se suceden en orden contrario). Uno va a la derecha y el otro a la izquierda: $|\\psi|^2$ dice dónde está la partícula y la fase, hacia dónde va. (Con $N$ partículas, $\\psi$ ni siquiera vive en nuestro espacio, sino en uno de $3N$ dimensiones.)',
         },
       ],
     },
@@ -445,7 +515,7 @@ const descriptor = {
       steps: [
         {
           preset: 'cuerda-modos',
-          text: 'La ecuación de la cuerda es de **segundo orden** en el tiempo: para saber cómo seguirá hay que dar la forma y además la velocidad de cada punto. Por eso un modo puede ser real, $\\sin(kx)\\cos(\\omega t)$: sube, se aplana y baja, y cuando pasa por la posición plana no ha perdido nada, porque toda su energía está en el movimiento. Aquí hay dos modos superpuestos: la energía va y viene entre movimiento y estiramiento (gráfica de abajo), y lo que la cuerda no tiene en forma lo tiene en velocidad.',
+          text: 'La ecuación de la cuerda es de **segundo orden** en el tiempo: para saber cómo seguirá hay que dar la forma y además la velocidad de cada punto. Por eso un modo puede ser real, $\\sin(kx)\\cos(\\omega t)$: sube, se aplana y baja, y cuando pasa por la posición plana no ha perdido nada, porque toda su energía está en el movimiento. Aquí hay dos modos superpuestos: la energía va y viene entre movimiento y estiramiento (gráfica de al lado), y lo que la cuerda no tiene en forma lo tiene en velocidad.',
         },
         {
           preset: 'pozo-estados',
@@ -475,7 +545,7 @@ const descriptor = {
         },
         {
           preset: 'superposicion',
-          text: 'En una superposición de dos estados la probabilidad se balancea: $\\langle x\\rangle$ oscila con frecuencia angular $(E_2 - E_1)/\\hbar$ (abajo a la izquierda). Una carga que oscila es una antena, un **dipolo**: radia luz de esa frecuencia y, al revés, la luz de esa frecuencia puede ponerla a oscilar. Aquí, un electrón en una caja de 0,8 nm: $E_2 - E_1 = 1{,}76$ eV, periodo 2,35 fs y un fotón de 703 nm, rojo.',
+          text: 'En una superposición de dos estados la probabilidad se balancea: $\\langle x\\rangle$ oscila con frecuencia angular $(E_2 - E_1)/\\hbar$ (gráfica del puente con la luz, en la segunda pantalla). Una carga que oscila es una antena, un **dipolo**: radia luz de esa frecuencia y, al revés, la luz de esa frecuencia puede ponerla a oscilar. Aquí, un electrón en una caja de 0,8 nm: $E_2 - E_1 = 1{,}76$ eV, periodo 2,35 fs y un fotón de 703 nm, rojo.',
         },
         {
           preset: 'superposicion',

@@ -61,6 +61,8 @@ test('el mapa de importación apunta a archivos existentes de vendor/', () => {
   assert.ok(existsSync(join(root, 'vendor/three/addons/controls/OrbitControls.js')));
   assert.ok(existsSync(join(root, 'vendor/katex/katex.min.css')));
   assert.ok(existsSync(join(root, 'vendor/katex/fonts/KaTeX_Main-Regular.woff2')));
+  // Letra del texto (encargo R1), declarada con @font-face en src/ui/styles.css.
+  for (const f of ['cmu-serif-500-roman', 'cmu-serif-500-italic', 'cmu-serif-700-roman']) assert.ok(existsSync(join(root, `vendor/cmu/${f}.woff2`)));
 });
 
 // Las versiones vendorizadas deben coincidir con las fijadas en package.json
@@ -70,4 +72,5 @@ test('vendor/README.md refleja las versiones de package.json', () => {
   const readme = readFileSync(join(root, 'vendor/README.md'), 'utf8');
   assert.ok(readme.includes(`| three.js | ${pkg.devDependencies.three} |`));
   assert.ok(readme.includes(`| KaTeX | ${pkg.devDependencies.katex} |`));
+  assert.ok(readme.includes(`| CMU Serif (paquete npm \`computer-modern\`) | ${pkg.devDependencies['computer-modern']} |`));
 });

@@ -20,10 +20,18 @@
 // El contenedor debe tener una altura definida (por ejemplo, un .panel-body).
 // El tamaño de la letra sale del font-size del contenedor: en modo presentación crece
 // con él sin tocar nada aquí.
+//
+// Rótulos con fórmulas (encargo R1): un rótulo de eje, de línea marcada o de la leyenda que
+// lleve trozos $…$ se dibuja con las variables en cursiva, ⟨ ⟩ de verdad y superíndices y
+// subíndices (src/ui/plot-tex.js), en la letra del texto (--font-text). Sin $…$, como antes.
+// Con la opción `htmlLegend`, la leyenda sale en HTML (con KaTeX) encima de la gráfica, lo
+// que deja más área de datos; la exportación a PNG la sigue dibujando en el lienzo.
 
 import { el } from './dom.js';
 import { extent, formatTicks, linearScale, niceTicks, padRange } from './plot-math.js';
 import { onThemeChange, themeColors } from '../core/theme.js';
+import { texRuns, plainLabel } from './plot-tex.js';
+import { partHtml } from './info-line.js';
 
 /**
  * Color de un elemento: un número n usa el color n de la paleta de series del tema
@@ -156,6 +164,8 @@ import { onThemeChange, themeColors } from '../core/theme.js';
  * @property {(x: number, y: number, y2: number) => void} [onPick] se llama al hacer clic o
  *   arrastrar sobre la gráfica, con las coordenadas de datos del puntero (vistas enlazadas);
  *   y2 es la coordenada en el eje derecho, si lo hay (si no, igual a y)
+ * @property {HTMLElement} [htmlLegend] caja donde poner la leyenda en HTML (con KaTeX), en
+ *   lugar de dibujarla en el lienzo; la exportación a PNG la sigue dibujando en el lienzo
  */
 
 /**
@@ -180,6 +190,24 @@ function fixedTicks(positions, range) {
  *  portátil de 1366 × 768). */
 const MIN_PLOT_WITH_LEGEND = 3;
 
+/** Reducción del tamaño de letra por cada nivel de superíndice o subíndice. */
+const SCRIPT_SCALE = 0.72;
+
+/**
+ * Fuente de un trozo de rótulo con fórmulas.
+ * @param {import('./plot-tex.js').TextRun} run
+ * @param {number} size tamaño de la letra normal (px)
+ * @param {string} textFamily familia del texto (--font-text)
+ */
+function runFont(run, size, textFamily) {
+  const s = size * SCRIPT_SCALE ** Math.abs(run.level);
+  return run.italic ? `italic ${s}px KaTeX_Math, ${textFamily}` : `${s}px ${textFamily}`;
+}
+
+/** Desplazamiento vertical de un trozo (superíndice hacia arriba, subíndice hacia abajo). */
+const runShift = (/** @type {import('./plot-tex.js').TextRun} */ run, /** @type {number} */ size) =>
+  run.level > 0 ? -0.36 * size * run.level : run.level < 0 ? 0.2 * size * -run.level : 0;
+
 /** Trazadores vivos, para poder redibujarlos todos (refreshPlots). @type {Set<() => void>} */
 const livePlots = new Set();
 
@@ -200,7 +228,7 @@ export function createPlot(container, options = {}) {
   const wrap = el('div', { class: 'plot' }, canvas);
   canvas.setAttribute(
     'aria-label',
-    `Gráfica: ${options.yLabel ?? ''}${options.xLabel ? ` frente a ${options.xLabel}` : ''}`,
+    `Gráfica: ${plainLabel(options.yLabel ?? '')}${options.xLabel ? ` frente a ${plainLabel(options.xLabel)}` : ''}`,
   );
   if (options.exportButton !== false) {
     wrap.append(
@@ -224,6 +252,10 @@ export function createPlot(container, options = {}) {
   /** Lienzo auxiliar para los mapas de color. @type {HTMLCanvasElement | null} */
   let offscreen = null;
   let destroyed = false;
+  /** Al exportar a PNG, la leyenda va en el lienzo aunque haya leyenda HTML. */
+  let exporting = false;
+  /** Firma de la leyenda HTML pintada (para no rehacerla si no cambia). */
+  let htmlLegendKey = '';
 
   // --- Dibujo ---------------------------------------------------------------------------
 
@@ -243,8 +275,63 @@ export function createPlot(container, options = {}) {
     const style = getComputedStyle(wrap);
     const fs = parseFloat(style.fontSize) || 14;
     const family = style.fontFamily || 'sans-serif';
+    // Rótulos (títulos de los ejes, etiquetas de las líneas, leyenda): la letra de
+    // --font-plot-label si la hay (el formato con simulaciones usa la del texto); los números
+    // de los ejes, siempre la de la gráfica.
+    const textFamily = style.getPropertyValue('--font-plot-label').trim() || family;
     const tickFont = `${fs * 0.85}px ${family}`;
-    const labelFont = `${fs * 0.95}px ${family}`;
+    const labelFont = `${fs * 0.95}px ${textFamily}`;
+    const markFont = `${fs * 0.85}px ${textFamily}`;
+
+    /**
+     * Anchura de un rótulo (con fórmulas $…$ o sin ellas) en la letra `font`.
+     * @param {string} label
+     * @param {string} font
+     * @param {number} size
+     */
+    const labelWidth = (label, font, size) => {
+      if (!label.includes('$')) {
+        g.font = font;
+        return g.measureText(label).width;
+      }
+      let w = 0;
+      for (const run of texRuns(label)) {
+        g.font = runFont(run, size, textFamily);
+        w += g.measureText(run.text).width;
+      }
+      return w;
+    };
+    /**
+     * Dibuja un rótulo. Sin $…$, como siempre (g.font = font); con fórmulas, trozo a trozo
+     * sobre la línea base. halo: trazo del color del fondo debajo, para leerlo sobre curvas.
+     * @param {string} label
+     * @param {number} x
+     * @param {number} y
+     * @param {{ font: string, size: number, align: CanvasTextAlign, baseline: CanvasTextBaseline, halo?: number }} o
+     */
+    const drawLabel = (label, x, y, o) => {
+      if (!label.includes('$')) {
+        g.font = o.font;
+        g.textAlign = o.align;
+        g.textBaseline = o.baseline;
+        if (o.halo) g.strokeText(label, x, y);
+        g.fillText(label, x, y);
+        return;
+      }
+      const width = labelWidth(label, o.font, o.size);
+      let px = o.align === 'center' ? x - width / 2 : o.align === 'right' || o.align === 'end' ? x - width : x;
+      const base = { top: 0.78, hanging: 0.78, middle: 0.32, bottom: -0.22, alphabetic: 0, ideographic: -0.22 }[o.baseline] ?? 0;
+      const py = y + base * o.size;
+      g.textAlign = 'left';
+      g.textBaseline = 'alphabetic';
+      for (const run of texRuns(label)) {
+        g.font = runFont(run, o.size, textFamily);
+        const dy = runShift(run, o.size);
+        if (o.halo) g.strokeText(run.text, px, py + dy);
+        g.fillText(run.text, px, py + dy);
+        px += g.measureText(run.text).width;
+      }
+    };
     /** @param {PlotColor | undefined} color @param {number} fallbackIndex */
     const resolve = (color, fallbackIndex) => {
       if (typeof color === 'string') return color;
@@ -309,7 +396,9 @@ export function createPlot(container, options = {}) {
       fs * 0.9 +
       (colorbar ? fs * (colorbar.label ? 5.6 : 4.2) : 0) +
       (y2Ticks ? y2Ticks.width + fs * 0.5 + (y2?.label ? fs * 1.5 : 0) : 0);
-    let legend = options.legend !== false ? layoutLegend(fs, resolve, width - left - right) : null;
+    const canvasLegend = options.legend !== false && (!options.htmlLegend || exporting);
+    if (options.htmlLegend) updateHtmlLegend(resolve);
+    let legend = canvasLegend ? layoutLegend(fs, resolve, width - left - right, labelWidth, markFont) : null;
     // Si la leyenda no deja sitio a la gráfica (panel bajo, ventana pequeña), se quita:
     // es mejor ver las curvas sin leyenda que no ver nada (ver MIN_PLOT_WITH_LEGEND).
     if (legend && legend.rows > 0 && height - fs * 0.7 - legend.height - bottom < MIN_PLOT_WITH_LEGEND * fs) legend = null;
@@ -475,8 +564,7 @@ export function createPlot(container, options = {}) {
       if (marker.label) {
         // La etiqueta va a la derecha de la línea, o a la izquierda si no cabe. Si pisaría
         // la etiqueta de otro marcador cercano, baja a la fila siguiente.
-        g.font = tickFont;
-        const textWidth = g.measureText(marker.label).width;
+        const textWidth = labelWidth(marker.label, markFont, fs * 0.85);
         const fits = px + fs * 0.4 + textWidth < plotRight;
         const x0 = fits ? px + fs * 0.4 : px - fs * 0.4 - textWidth;
         let row = 0;
@@ -510,13 +598,11 @@ export function createPlot(container, options = {}) {
     g.font = tickFont;
     g.textBaseline = 'alphabetic';
     for (const label of markerLabels) {
-      g.textAlign = label.align;
       // Halo del color del fondo para que el texto se lea sobre las curvas.
       g.lineWidth = fs * 0.3;
       g.strokeStyle = colors.surface;
-      g.strokeText(label.text, label.x, label.y);
       g.fillStyle = label.color;
-      g.fillText(label.text, label.x, label.y);
+      drawLabel(label.text, label.x, label.y, { font: markFont, size: fs * 0.85, align: label.align, baseline: 'alphabetic', halo: 1 });
     }
     g.restore();
 
@@ -544,17 +630,13 @@ export function createPlot(container, options = {}) {
     if (xLabel) {
       // Justo debajo de las marcas (y no pegado al borde inferior), para que siga junto
       // a la gráfica cuando equalAspect la hace más baja que su contenedor.
-      g.textAlign = 'center';
-      g.textBaseline = 'top';
-      g.fillText(xLabel, (plotLeft + plotRight) / 2, plotBottom + fs * 1.6);
+      drawLabel(xLabel, (plotLeft + plotRight) / 2, plotBottom + fs * 1.6, { font: labelFont, size: fs * 0.95, align: 'center', baseline: 'top' });
     }
     if (yLabel) {
       g.save();
       g.translate(plotLeft - yTickWidth - fs * 1.1, (plotTop + plotBottom) / 2);
       g.rotate(-Math.PI / 2);
-      g.textAlign = 'center';
-      g.textBaseline = 'bottom';
-      g.fillText(yLabel, 0, 0);
+      drawLabel(yLabel, 0, 0, { font: labelFont, size: fs * 0.95, align: 'center', baseline: 'bottom' });
       g.restore();
     }
 
@@ -572,15 +654,12 @@ export function createPlot(container, options = {}) {
         g.translate(plotRight + fs * 0.9 + y2Ticks.width, (plotTop + plotBottom) / 2);
         g.rotate(Math.PI / 2);
         g.fillStyle = y2.color === undefined ? colors.text : y2Color;
-        g.font = labelFont;
-        g.textAlign = 'center';
-        g.textBaseline = 'bottom';
-        g.fillText(y2.label, 0, 0);
+        drawLabel(y2.label, 0, 0, { font: labelFont, size: fs * 0.95, align: 'center', baseline: 'bottom' });
         g.restore();
       }
     }
-    if (colorbar && valueRange) drawColorbar(colorbar, valueRange, plotRight, plotTop, plotH, fs, tickFont, labelFont, colors);
-    if (legend) drawLegend(legend, legendLeft, fs * 0.45, fs, tickFont, colors);
+    if (colorbar && valueRange) drawColorbar(colorbar, valueRange, plotRight, plotTop, plotH, fs, tickFont, labelFont, colors, drawLabel);
+    if (legend) drawLegend(legend, legendLeft, fs * 0.45, fs, markFont, colors, drawLabel);
   }
 
   /**
@@ -657,8 +736,9 @@ export function createPlot(container, options = {}) {
    * @param {string} tickFont
    * @param {string} labelFont
    * @param {import('../core/theme.js').ThemeColors} colors
+   * @param {(label: string, x: number, y: number, o: { font: string, size: number, align: CanvasTextAlign, baseline: CanvasTextBaseline }) => void} drawLabel
    */
-  function drawColorbar(map, valueRange, plotRight, plotTop, plotH, fs, tickFont, labelFont, colors) {
+  function drawColorbar(map, valueRange, plotRight, plotTop, plotH, fs, tickFont, labelFont, colors, drawLabel) {
     const barX = plotRight + fs * 0.8;
     const barW = fs * 0.9;
     const rows = Math.max(2, Math.round(plotH));
@@ -687,10 +767,7 @@ export function createPlot(container, options = {}) {
       g.translate(barX + barW + fs * 0.6 + widest, plotTop + plotH / 2);
       g.rotate(-Math.PI / 2);
       g.fillStyle = colors.text;
-      g.font = labelFont;
-      g.textAlign = 'center';
-      g.textBaseline = 'top';
-      g.fillText(map.label, 0, 0);
+      drawLabel(map.label, 0, 0, { font: labelFont, size: fs * 0.95, align: 'center', baseline: 'top' });
       g.restore();
     }
   }
@@ -706,27 +783,17 @@ export function createPlot(container, options = {}) {
    * @param {number} fs
    * @param {(color: PlotColor | undefined, fallbackIndex: number) => string} resolve
    * @param {number} available anchura disponible
+   * @param {(label: string, font: string, size: number) => number} labelWidth
+   * @param {string} tickFont
    * @returns {{ entries: LegendEntry[], rows: number, height: number }}
    */
-  function layoutLegend(fs, resolve, available) {
-    /** @type {LegendEntry[]} */
-    const entries = [];
-    /** @param {Omit<LegendEntry, 'x' | 'row'>} entry */
-    const push = (entry) => entries.push({ ...entry, x: 0, row: 0 });
-    (data.series ?? []).forEach((s, i) => {
-      if (s.label) push({ label: s.label, color: resolve(s.color, i), kind: s.line === false ? 'point' : 'line', dash: s.dash ?? [], opacity: 1 });
-    });
-    (data.areas ?? []).forEach((a, i) => {
-      if (a.label) push({ label: a.label, color: resolve(a.color, i), kind: 'fill', dash: [], opacity: a.opacity ?? 0.25 });
-    });
-    (data.bands ?? []).forEach((b, i) => {
-      if (b.label) push({ label: b.label, color: resolve(b.color, i + 2), kind: 'fill', dash: [], opacity: b.opacity ?? 0.18 });
-    });
+  function layoutLegend(fs, resolve, available, labelWidth, tickFont) {
+    const entries = legendEntries(resolve).map((e) => ({ ...e, x: 0, row: 0 }));
     if (entries.length === 0) return { entries, rows: 0, height: 0 };
     let x = 0;
     let row = 0;
     for (const entry of entries) {
-      const w = fs * 1.8 + fs * 0.4 + g.measureText(entry.label).width + fs * 1.1;
+      const w = fs * 1.8 + fs * 0.4 + labelWidth(entry.label, tickFont, fs * 0.85) + fs * 1.1;
       if (x > 0 && x + w > available) {
         x = 0;
         row++;
@@ -739,14 +806,61 @@ export function createPlot(container, options = {}) {
   }
 
   /**
+   * Entradas de la leyenda: una por cada serie, área o banda que tenga `label`.
+   * @param {(color: PlotColor | undefined, fallbackIndex: number) => string} resolve
+   * @returns {Omit<LegendEntry, 'x' | 'row'>[]}
+   */
+  function legendEntries(resolve) {
+    /** @type {Omit<LegendEntry, 'x' | 'row'>[]} */
+    const entries = [];
+    (data.series ?? []).forEach((s, i) => {
+      if (s.label) entries.push({ label: s.label, color: resolve(s.color, i), kind: s.line === false ? 'point' : 'line', dash: s.dash ?? [], opacity: 1 });
+    });
+    (data.areas ?? []).forEach((a, i) => {
+      if (a.label) entries.push({ label: a.label, color: resolve(a.color, i), kind: 'fill', dash: [], opacity: a.opacity ?? 0.25 });
+    });
+    (data.bands ?? []).forEach((b, i) => {
+      if (b.label) entries.push({ label: b.label, color: resolve(b.color, i + 2), kind: 'fill', dash: [], opacity: b.opacity ?? 0.18 });
+    });
+    return entries;
+  }
+
+  /**
+   * Leyenda en HTML (opción htmlLegend): una muestra de cada trazo (SVG) y su rótulo con las
+   * fórmulas dibujadas por KaTeX. Solo se rehace si cambia algo.
+   * @param {(color: PlotColor | undefined, fallbackIndex: number) => string} resolve
+   */
+  function updateHtmlLegend(resolve) {
+    const box = options.htmlLegend;
+    if (!box) return;
+    const entries = options.legend === false ? [] : legendEntries(resolve);
+    const key = JSON.stringify(entries);
+    if (key === htmlLegendKey) return;
+    htmlLegendKey = key;
+    box.innerHTML = entries
+      .map((e) => {
+        const dash = e.dash.length > 0 ? ` stroke-dasharray="${e.dash.map((d) => d * 0.9).join(' ')}"` : '';
+        const sample =
+          e.kind === 'line'
+            ? `<line x1="1" y1="6" x2="23" y2="6" stroke="${e.color}" stroke-width="2.2"${dash} stroke-linecap="round"/>`
+            : e.kind === 'point'
+              ? `<circle cx="12" cy="6" r="4" fill="${e.color}"/>`
+              : `<rect x="1" y="1" width="22" height="10" fill="${e.color}" fill-opacity="${Math.min(1, e.opacity + 0.3)}"/>`;
+        return `<span class="legend-item"><svg class="legend-sample" viewBox="0 0 24 12" aria-hidden="true">${sample}</svg><span class="legend-label">${partHtml(e.label)}</span></span>`;
+      })
+      .join('');
+  }
+
+  /**
    * @param {{ entries: LegendEntry[] }} legend
    * @param {number} originX
    * @param {number} originY
    * @param {number} fs
    * @param {string} tickFont
    * @param {import('../core/theme.js').ThemeColors} colors
+   * @param {(label: string, x: number, y: number, o: { font: string, size: number, align: CanvasTextAlign, baseline: CanvasTextBaseline }) => void} drawLabel
    */
-  function drawLegend(legend, originX, originY, fs, tickFont, colors) {
+  function drawLegend(legend, originX, originY, fs, tickFont, colors, drawLabel) {
     const sample = fs * 1.8;
     g.font = tickFont;
     for (const entry of legend.entries) {
@@ -773,9 +887,7 @@ export function createPlot(container, options = {}) {
         g.globalAlpha = 1;
       }
       g.fillStyle = colors.text;
-      g.textAlign = 'left';
-      g.textBaseline = 'middle';
-      g.fillText(entry.label, x + sample + fs * 0.4, cy);
+      drawLabel(entry.label, x + sample + fs * 0.4, cy, { font: tickFont, size: fs * 0.85, align: 'left', baseline: 'middle' });
     }
   }
 
@@ -805,8 +917,13 @@ export function createPlot(container, options = {}) {
 
   /** @returns {string} la gráfica como URL de datos PNG */
   function toPNG() {
+    // Con leyenda HTML, la imagen exportada la lleva dibujada en el lienzo.
+    exporting = true;
     render();
-    return canvas.toDataURL('image/png');
+    const url = canvas.toDataURL('image/png');
+    exporting = false;
+    render();
+    return url;
   }
 
   function downloadPNG() {

@@ -14,7 +14,6 @@
 // simulación (la pantalla guarda por separado lo de cada rama y el término cruzado). Aquí
 // no se calcula física: todo sale de physics-slits.js.
 
-import { addPanel, createPanelGrid } from '../../ui/panels.js';
 import { createPlot } from '../../ui/plot2d.js';
 import { colormaps } from '../../ui/colormaps.js';
 import { formatEs } from '../../ui/format.js';
@@ -33,7 +32,7 @@ import {
   screenPattern,
   step2D,
 } from './physics-slits.js';
-import { createEndNotice, formatSig } from './view-common.js';
+import { END_HOLD_SECONDS, formatSig, quantity, texNum, texSig } from './view-common.js';
 
 /** Pasos como mucho por fotograma: cada uno son dos FFT de 256 × 256 (unos 15 ms). */
 const MAX_STEPS_PER_FRAME = 3;
@@ -44,34 +43,33 @@ const MAX_STEPS_PER_FRAME = 3;
  * con un umbral del 0,5 % la curva no salía nunca). */
 
 /**
- * @param {HTMLElement} container
- * @param {import('../types.js').ModuleContext} ctx
- * @param {(text: string) => void} setStatus
+ * @param {import('./view-common.js').PartContext} ctx
  * @returns {import('./view-common.js').PartView}
  */
-export function mountSlits(container, ctx, setStatus) {
-  const grid = createPanelGrid(container, 'fo-grid-slits');
-  const planePanel = addPanel(grid, 'El plano visto desde arriba', { area: 'plane' });
-  const planePlot = createPlot(planePanel.body, {
-    xLabel: 'x (nm), a lo largo de la pared',
-    yLabel: 'y (nm), dirección de avance',
+export function mountSlits(ctx) {
+  const planeSlot = ctx.graph('plano');
+  const planePlot = createPlot(planeSlot.body, {
+    xLabel: '$x$ (nm), a lo largo de la pared',
+    yLabel: '$y$ (nm), dirección de avance',
+    htmlLegend: planeSlot.legend,
     equalAspect: true,
     exportName: 'funcion-onda-rendijas-plano',
   });
-  const screenPanel = addPanel(grid, 'La pantalla', { area: 'screen' });
-  const screenPlot = createPlot(screenPanel.body, {
-    xLabel: 'posición x en la pantalla (nm)',
+  const screenSlot = ctx.graph('pantalla');
+  const screenPlot = createPlot(screenSlot.body, {
+    xLabel: 'posición $x$ en la pantalla (nm)',
+    htmlLegend: screenSlot.legend,
     yLabel: 'probabilidad por nm (relativa al máximo)',
     yRange: [0, 1.12],
     exportName: 'funcion-onda-rendijas-pantalla',
   });
-  const endNotice = createEndNotice(container, ctx.clock);
 
   /** @type {ReturnType<typeof setup> | null} */
   let sim = null;
   /** @type {import('../types.js').State | null} */
   let lastState = null;
-  let statusText = '';
+  /** @type {string[]} */
+  let statusParts = [];
 
   const physicsKey = (/** @type {import('../types.js').State} */ s) => JSON.stringify([s.slitWavelength, s.slitSeparation, s.slitWidth]);
 
@@ -103,10 +101,13 @@ export function mountSlits(container, ctx, setStatus) {
     };
   }
 
+  /** Tiempo de reloj que lleva parada en el último instante (ver END_HOLD_SECONDS). */
+  let held = 0;
+
   function restart() {
     if (!lastState) return;
     sim = setup(lastState);
-    endNotice.hide();
+    held = 0;
   }
 
   /** @param {number} dtSim tiempo de simulación (fs) que toca avanzar */
@@ -140,6 +141,7 @@ export function mountSlits(container, ctx, setStatus) {
     // de x > 0 y ψ₂ en la de x < 0 (sumarlas ahí daría hasta cuatro veces la densidad real,
     // porque en la cara de entrada las dos ramas valen aún lo mismo que la onda incidente).
     // Detrás, la densidad con coherencia γ entre ramas.
+    if (planeSlot.visible) {
     const psi2 = mirrorX(g, s.psi);
     const mixed = mixedDensity(s.psi, psi2, gamma);
     const front = WALL_Y - WALL_THICKNESS / 2;
@@ -181,7 +183,7 @@ export function mountSlits(container, ctx, setStatus) {
         colormap: colormaps.viridis,
         vmin: 0,
         vmax: vmax > 0 ? vmax : 1,
-        label: '√ρ (nm⁻¹), raíz para ver la parte débil',
+        label: '$\\sqrt{\\rho}$ (nm$^{-1}$), raíz para ver la parte débil',
       },
       areas: pieces.map(([lo, hi], i) => ({
         x: [lo, hi],
@@ -195,9 +197,15 @@ export function mountSlits(container, ctx, setStatus) {
       xRange: edges,
       yRange: edges,
     });
-    planePanel.title.textContent =
-      `El plano visto desde arriba en t = ${formatEs(s.t, 1)} fs · ` +
-      (gamma >= 1 ? 'detrás de la pared, |ψ₁ + ψ₂|²' : gamma <= 0 ? 'detrás de la pared, |ψ₁|² + |ψ₂|² (sin interferencia)' : `detrás de la pared, coherencia γ = ${formatEs(gamma, 2)}`);
+    planeSlot.setInfo([
+      quantity('en', 't', texNum(s.t, 1), 'fs'),
+      gamma >= 1
+        ? 'detrás de la pared, $|\\psi_1 + \\psi_2|^2$'
+        : gamma <= 0
+          ? 'detrás de la pared, $|\\psi_1|^2 + |\\psi_2|^2$ (sin interferencia)'
+          : `detrás de la pared, coherencia $\\gamma = ${texNum(gamma, 2)}$`,
+    ]);
+    }
 
     // --- (b) la pantalla ----------------------------------------------------------------
     const xs = s.shown.map((j) => g.x[j]);
@@ -218,40 +226,46 @@ export function mountSlits(container, ctx, setStatus) {
       const sinTheta = (order * wavelength) / separation;
       if (Math.abs(sinTheta) >= 1) continue;
       const xm = D * Math.tan(Math.asin(sinTheta));
-      if (Math.abs(xm) < s.reach) orders.push({ x: xm, dash: [2, 3], color: colors.textSoft, label: order >= 0 ? `m = ${order}` : undefined });
+      if (Math.abs(xm) < s.reach) orders.push({ x: xm, dash: [2, 3], color: colors.textSoft, label: order >= 0 ? `$m = ${order}$` : undefined });
     }
     const arrived = pattern.reduce((acc, v) => acc + v, 0) * g.dx;
     const enough = s.t >= s.centerArrival || s.t >= s.exp.tMax;
     const nothing = xs.map(() => NaN);
-    screenPlot.draw({
+    if (screenSlot.visible) screenPlot.draw({
       series: [
-        { x: xs, y: fraun.map((v) => v / fraunPeak), color: 2, dash: [6, 4], label: `Fraunhofer con γ = ${formatEs(gamma, 2)} (misma escala de pico)` },
-        { x: xs, y: enough ? s.shown.map((j) => incoherent[j] * scale) : nothing, color: colors.textSoft, dash: [3, 3], label: '|ψ₁|² + |ψ₂|²: sin interferencia' },
+        { x: xs, y: fraun.map((v) => v / fraunPeak), color: 2, dash: [6, 4], label: `Fraunhofer con $\\gamma = ${texNum(gamma, 2)}$ (misma escala de pico)` },
+        { x: xs, y: enough ? s.shown.map((j) => incoherent[j] * scale) : nothing, color: colors.textSoft, dash: [3, 3], label: '$|\\psi_1|^2 + |\\psi_2|^2$: sin interferencia' },
         { x: xs, y: enough ? s.shown.map((j) => pattern[j] * scale) : nothing, color: 0, width: 1.6, label: 'simulación: lo que ha llegado' },
       ],
       vlines: orders,
       xRange: [xs[0], xs[xs.length - 1]],
     });
-    screenPanel.title.textContent =
-      `La pantalla, a ${formatSig(D, 3)} nm de la pared · líneas de puntos: d·sen θ = mλ` +
-      (enough ? '' : ` · la curva simulada sale cuando llegue el centro del paquete (t ≈ ${formatEs(s.centerArrival, 0)} fs)`);
+    const firstMax = (Math.asin(Math.min(1, wavelength / separation)) * 180) / Math.PI;
+    screenSlot.setInfo([
+      `a ${formatSig(D, 3)} nm de la pared`,
+      `primer máximo a $\\theta = ${texNum(firstMax, 1)}^\\circ$`,
+      `ha llegado el ${formatEs(Math.max(0, 100 * arrived), 1)} % de la probabilidad`,
+      enough ? '' : `la curva simulada sale cuando llegue el centro del paquete ($t \\approx ${texNum(s.centerArrival, 0)}$ fs)`,
+    ]);
 
-    statusText =
-      `t = ${formatEs(s.t, 1)} de ${formatEs(s.exp.tMax, 0)} fs · λ = ${formatEs(wavelength, 2)} nm (electrón de ${formatEs(s.exp.energy, 2)} eV)` +
-      ` · d = ${formatEs(separation, 2)} nm · w = ${formatEs(slitWidth, 3)} nm · primer máximo a θ = ${formatEs((Math.asin(Math.min(1, wavelength / separation)) * 180) / Math.PI, 1)}°` +
-      ` · probabilidad que ha llegado a la pantalla: ${formatEs(Math.max(0, 100 * arrived), 1)} %`;
+    statusParts = [
+      `tiempo $t = ${texNum(s.t, 1)}$ de ${formatEs(s.exp.tMax, 0)} fs` + (s.t >= s.exp.tMax ? ' (final: vuelve a empezar)' : ''),
+      quantity('electrón de', '\\lambda', texNum(wavelength, 2), 'nm') + ` (${formatEs(s.exp.energy, 2)} eV)`,
+      quantity('rendijas:', 'd', texNum(separation, 2), 'nm') + ', ' + quantity('', 'w', texNum(slitWidth, 3), 'nm'),
+    ];
   }
 
   const offTick = ctx.clock.onTick((time, dt) => {
     if (!sim || !lastState) return;
     if (time === 0 && dt === 0) restart();
-    else if (sim.t >= sim.exp.tMax) return;
-    else {
-      advance(dt * Number(lastState.rate));
-      if (sim.t >= sim.exp.tMax) endNotice.show(`Simulación terminada: ha llegado al tiempo final, t = ${formatEs(sim.exp.tMax, 0)} fs.`);
-    }
+    else if (sim.t >= sim.exp.tMax) {
+      // Final: se queda un momento con el patrón completo y vuelve a empezar sola.
+      held += dt;
+      if (held < END_HOLD_SECONDS) return;
+      restart();
+    } else advance(dt * Number(lastState.rate));
     render(lastState);
-    setStatus(statusText);
+    ctx.setStatus(statusParts);
   });
 
   return {
@@ -259,14 +273,12 @@ export function mountSlits(container, ctx, setStatus) {
       lastState = state;
       if (!sim || sim.key !== physicsKey(state)) restart();
       render(state);
-      setStatus(statusText);
+      ctx.setStatus(statusParts);
     },
     destroy() {
       offTick();
-      endNotice.destroy();
       planePlot.destroy();
       screenPlot.destroy();
-      grid.remove();
     },
   };
 }

@@ -12,6 +12,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { modules } from '../src/modules/registry.js';
 import { defaultState, normalizeState, validateValue, optionValues } from '../src/core/state.js';
+import { isPilot, VIEW_KEYS } from '../src/core/simulations.js';
+import { graphTexts } from '../src/core/ficha-sections.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const modulesDir = join(root, 'src/modules');
@@ -165,3 +167,66 @@ for (const m of modules) {
     }
   });
 }
+
+// Formato con página de entrada y simulaciones (encargo R1, en piloto). Durante la
+// transición el núcleo admite los dos formatos: estos tests solo miran los módulos que
+// declaran `simulations`. Un módulo migrado sin párrafo de entrada, o con una gráfica sin
+// título, nombre corto, frase o apartado en la ficha, hace fallar el test.
+for (const m of modules.filter(isPilot)) {
+  const ficha = readFileSync(join(modulesDir, m.id, 'ficha.md'), 'utf8');
+  const texts = graphTexts(ficha);
+  const sims = m.simulations ?? [];
+
+  test(`[${m.id}] formato nuevo: párrafo de entrada y parámetro de simulación`, () => {
+    assert.ok((m.intro ?? '').trim().length > 80, 'falta intro: el párrafo de la página de entrada (de qué va el módulo y por qué importa)');
+    const param = m.params.find((p) => p.key === m.simulationParam);
+    assert.ok(param && param.type === 'select', `simulationParam "${m.simulationParam}" debe ser la clave de un parámetro select`);
+    assert.deepEqual(
+      sims.map((s) => s.id),
+      param.type === 'select' ? optionValues(param) : [],
+      'cada opción del parámetro de simulación es una simulación, y en el mismo orden',
+    );
+    for (const key of VIEW_KEYS) assert.ok(!m.params.some((p) => p.key === key), `"${key}" está reservado para la URL (qué gráficas y qué pantalla se ven)`);
+  });
+
+  for (const sim of sims) {
+    test(`[${m.id}] simulación «${sim.id}»: textos, estado inicial, gráficas y combinaciones`, () => {
+      assert.ok(sim.title.trim().length > 0, 'falta title');
+      assert.ok(sim.summary.trim().length > 20, 'falta summary: una frase de qué simula');
+      const { warnings } = normalizeState(m.params, sim.initial);
+      assert.deepEqual(warnings, [], `estado inicial: ${warnings.join('; ')}`);
+      assert.ok(!(m.simulationParam && Object.hasOwn(sim.initial, m.simulationParam) && sim.initial[m.simulationParam] !== sim.id), 'el estado inicial abre otra simulación');
+      assert.ok(sim.graphs.length > 0, 'una simulación sin gráficas');
+      for (const g of sim.graphs) {
+        assert.match(g.id, /^[a-z0-9-]+$/, `id de gráfica no válido: "${g.id}"`);
+        assert.ok(g.title.trim().length > 0, `gráfica "${g.id}": falta title (qué es, en palabras)`);
+        assert.ok(g.short.trim().length > 0, `gráfica "${g.id}": falta short (nombre de la pestaña)`);
+        assert.ok(g.summary.trim().length > 20, `gráfica "${g.id}": falta summary (una frase de qué muestra)`);
+        const t = texts.get(g.id);
+        assert.ok(t && t.title, `gráfica "${g.id}": falta su apartado en ficha.md («### Título {#${g.id}}» en «Qué estás viendo»)`);
+        assert.equal(t.title, g.title, `gráfica "${g.id}": el título de su apartado en la ficha debe ser el de la pantalla`);
+        assert.ok(t.see && t.read && t.tryThis, `gráfica "${g.id}": su apartado de la ficha debe tener «Qué ves», «Cómo leerla» y «Prueba esto»`);
+      }
+      const ids = sim.graphs.map((g) => g.id);
+      for (const c of sim.combos) {
+        assert.ok(c.title.trim().length > 0 && c.summary.trim().length > 20, `combinación "${c.id}": faltan título o frase`);
+        assert.ok(c.graphs.length >= 2 && c.graphs.length <= 2, `combinación "${c.id}": dos gráficas (las que caben en una pantalla)`);
+        for (const g of c.graphs) assert.ok(ids.includes(g), `combinación "${c.id}": la gráfica "${g}" no es de esta simulación`);
+      }
+    });
+  }
+
+  test(`[${m.id}] identificadores de gráfica únicos en el módulo, y presets que abren gráficas de su simulación`, () => {
+    const all = sims.flatMap((s) => s.graphs.map((g) => g.id));
+    assert.equal(new Set(all).size, all.length, `gráficas con el mismo id: ${all}`);
+    for (const id of texts.keys()) assert.ok(all.includes(id), `ficha.md cita la gráfica "${id}" ({#${id}} o <!-- gráficas: … -->), que no existe`);
+    for (const preset of m.presets) {
+      if (!preset.graphs) continue;
+      const simId = preset.state[m.simulationParam ?? ''] ?? defaultState(m.params)[m.simulationParam ?? ''];
+      const sim = sims.find((s) => s.id === simId);
+      assert.ok(sim, `preset "${preset.id}": no abre ninguna simulación`);
+      for (const g of preset.graphs) assert.ok(sim.graphs.some((x) => x.id === g), `preset "${preset.id}": la gráfica "${g}" no es de la simulación «${simId}»`);
+    }
+  });
+}
+

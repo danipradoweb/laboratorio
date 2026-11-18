@@ -13,6 +13,7 @@ import { el } from './src/ui/dom.js';
 import { renderCover } from './src/ui/cover.js';
 import { createModulePage } from './src/ui/module-page.js';
 import { createPresentation } from './src/core/presentation.js';
+import { installGlossary } from './src/ui/glossary.js';
 
 const root = /** @type {HTMLElement} */ (document.getElementById('app'));
 const titleBox = /** @type {HTMLElement} */ (document.getElementById('topbar-title'));
@@ -33,6 +34,9 @@ labelThemeButton();
 onThemeChange(labelThemeButton);
 actionsBox.append(pageActions, themeButton);
 
+// Glosario común: los términos marcados en los textos abren su definición al pulsarlos.
+installGlossary();
+
 // --- Enrutado ---------------------------------------------------------------------------
 /** @type {import('./src/ui/module-page.js').ModulePage | null} */
 let current = null;
@@ -47,8 +51,9 @@ async function route() {
   const { moduleId, query } = parseHash(location.hash);
   document.documentElement.dataset.ready = 'false';
 
-  // Misma página de módulo: solo ha cambiado el estado en la URL.
-  if (current && current.module.id === moduleId) {
+  // Misma página de módulo: solo ha cambiado el estado en la URL. (En el formato con
+  // simulaciones, pasar de la página de entrada a una simulación, o al revés, rehace la página.)
+  if (current && current.module.id === moduleId && current.canApply(query)) {
     current.applyQuery(query);
     document.documentElement.dataset.ready = 'true';
     return;
