@@ -341,6 +341,10 @@ export async function createModulePage(root, module, query, shell) {
     ctx.setStatus = (parts) => renderInfo(statusBox, parts);
   }
   if (screens) ctx.graph = (id) => screens.slot(id);
+  // Los rótulos de las gráficas usan la letra del texto y la cursiva de KaTeX: cuando
+  // terminan de cargarse esas fuentes, se redibujan (antes salían con una de reserva).
+  const onFonts = () => refreshPlots();
+  document.fonts?.addEventListener('loadingdone', onFonts);
   const instance = await module.mount(stage, ctx);
   instance.update(store.get());
   started = true;
@@ -476,6 +480,7 @@ export async function createModulePage(root, module, query, shell) {
       unsubscribe();
       offTheme();
       offPresentation();
+      document.fonts?.removeEventListener('loadingdone', onFonts);
       clock.destroy();
       controls.destroy();
       clockControls?.destroy();

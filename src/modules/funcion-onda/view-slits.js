@@ -49,14 +49,16 @@ const MAX_STEPS_PER_FRAME = 3;
 export function mountSlits(ctx) {
   const planeSlot = ctx.graph('plano');
   const planePlot = createPlot(planeSlot.body, {
-    xLabel: 'x (nm), a lo largo de la pared',
-    yLabel: 'y (nm), dirección de avance',
+    xLabel: '$x$ (nm), a lo largo de la pared',
+    yLabel: '$y$ (nm), dirección de avance',
+    htmlLegend: planeSlot.legend,
     equalAspect: true,
     exportName: 'funcion-onda-rendijas-plano',
   });
   const screenSlot = ctx.graph('pantalla');
   const screenPlot = createPlot(screenSlot.body, {
-    xLabel: 'posición x en la pantalla (nm)',
+    xLabel: 'posición $x$ en la pantalla (nm)',
+    htmlLegend: screenSlot.legend,
     yLabel: 'probabilidad por nm (relativa al máximo)',
     yRange: [0, 1.12],
     exportName: 'funcion-onda-rendijas-pantalla',
@@ -181,7 +183,7 @@ export function mountSlits(ctx) {
         colormap: colormaps.viridis,
         vmin: 0,
         vmax: vmax > 0 ? vmax : 1,
-        label: '√ρ (nm⁻¹), raíz para ver la parte débil',
+        label: '$\\sqrt{\\rho}$ (nm$^{-1}$), raíz para ver la parte débil',
       },
       areas: pieces.map(([lo, hi], i) => ({
         x: [lo, hi],
@@ -224,15 +226,15 @@ export function mountSlits(ctx) {
       const sinTheta = (order * wavelength) / separation;
       if (Math.abs(sinTheta) >= 1) continue;
       const xm = D * Math.tan(Math.asin(sinTheta));
-      if (Math.abs(xm) < s.reach) orders.push({ x: xm, dash: [2, 3], color: colors.textSoft, label: order >= 0 ? `m = ${order}` : undefined });
+      if (Math.abs(xm) < s.reach) orders.push({ x: xm, dash: [2, 3], color: colors.textSoft, label: order >= 0 ? `$m = ${order}$` : undefined });
     }
     const arrived = pattern.reduce((acc, v) => acc + v, 0) * g.dx;
     const enough = s.t >= s.centerArrival || s.t >= s.exp.tMax;
     const nothing = xs.map(() => NaN);
     if (screenSlot.visible) screenPlot.draw({
       series: [
-        { x: xs, y: fraun.map((v) => v / fraunPeak), color: 2, dash: [6, 4], label: `Fraunhofer con γ = ${formatEs(gamma, 2)} (misma escala de pico)` },
-        { x: xs, y: enough ? s.shown.map((j) => incoherent[j] * scale) : nothing, color: colors.textSoft, dash: [3, 3], label: '|ψ₁|² + |ψ₂|²: sin interferencia' },
+        { x: xs, y: fraun.map((v) => v / fraunPeak), color: 2, dash: [6, 4], label: `Fraunhofer con $\\gamma = ${texNum(gamma, 2)}$ (misma escala de pico)` },
+        { x: xs, y: enough ? s.shown.map((j) => incoherent[j] * scale) : nothing, color: colors.textSoft, dash: [3, 3], label: '$|\\psi_1|^2 + |\\psi_2|^2$: sin interferencia' },
         { x: xs, y: enough ? s.shown.map((j) => pattern[j] * scale) : nothing, color: 0, width: 1.6, label: 'simulación: lo que ha llegado' },
       ],
       vlines: orders,

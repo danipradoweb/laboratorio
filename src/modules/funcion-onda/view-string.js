@@ -36,16 +36,18 @@ const PULSE_WIDTH = 0.04;
 export function mountString(ctx) {
   const stringSlot = ctx.graph('cuerda');
   const stringPlot = createPlot(stringSlot.body, {
-    xLabel: 'posición a lo largo de la cuerda, x/L',
-    yLabel: 'desplazamiento u (relativo)',
+    xLabel: 'posición a lo largo de la cuerda, $x/L$',
+    yLabel: 'desplazamiento $u$ (relativo)',
+    htmlLegend: stringSlot.legend,
     xRange: [0, 1],
     yRange: [-1.35, 1.35],
     exportName: 'funcion-onda-cuerda',
   });
   const freqSlot = ctx.graph('frecuencias');
   const freqPlot = createPlot(freqSlot.body, {
-    xLabel: 'modo n',
+    xLabel: 'modo $n$',
     yLabel: 'frecuencia / la del modo 1',
+    htmlLegend: freqSlot.legend,
     xRange: [0.5, 8.5],
     yRange: [0, 68],
     xTicks: [1, 2, 3, 4, 5, 6, 7, 8],
@@ -54,7 +56,8 @@ export function mountString(ctx) {
   });
   const energySlot = ctx.graph('energia-cuerda');
   const energyPlot = createPlot(energySlot.body, {
-    xLabel: 'tiempo (periodos del modo fundamental, T₁ = 2L/c)',
+    xLabel: 'tiempo (periodos del modo fundamental, $T_1 = 2L/c$)',
+    htmlLegend: energySlot.legend,
     yLabel: 'energía / energía total',
     yRange: [-0.05, 1.15],
     exportName: 'funcion-onda-energia-cuerda',
@@ -122,7 +125,7 @@ export function mountString(ctx) {
     const vlines = [];
     if (sm.shape === 'modo') {
       const env = Array.from(xs, (x) => Math.abs(modeShape(sm.n, x, LENGTH, sm.boundary)));
-      series.push({ x: xs, y: env, color: 3, dash: [5, 4], label: `±envolvente del modo ${sm.n}: la misma función que el estado ${sm.n} de una caja cuántica` });
+      series.push({ x: xs, y: env, color: 3, dash: [5, 4], label: `$\\pm$envolvente del modo ${sm.n}: la misma función que el estado ${sm.n} de una caja cuántica` });
       series.push({ x: xs, y: env.map((v) => -v), color: 3, dash: [5, 4] });
       for (let j = 0; j <= sm.n; j++) {
         const xNode = sm.boundary === 'fixed' ? j / sm.n : (j + 0.5) / sm.n;
@@ -134,7 +137,7 @@ export function mountString(ctx) {
       series.push({ x: xs, y: Array.from(xs, (x) => 0.6 * modeShape(sm.n, x, LENGTH, sm.boundary) * Math.cos(wn * sm.s.time)), color: 2, width: 0.8, dash: [4, 3], label: `modo ${sm.n}` });
       series.push({ x: xs, y: Array.from(xs, (x) => 0.6 * modeShape(sm.m, x, LENGTH, sm.boundary) * Math.cos(wm * sm.s.time)), color: 4, width: 0.8, dash: [4, 3], label: `modo ${sm.m}` });
     }
-    series.push({ x: xs, y: sm.s.u, color: 0, width: 1.3, label: sm.shape === 'dos-modos' ? 'cuerda = suma de los dos modos' : 'cuerda u(x, t)' });
+    series.push({ x: xs, y: sm.s.u, color: 0, width: 1.3, label: sm.shape === 'dos-modos' ? 'cuerda = suma de los dos modos' : 'cuerda $u(x,t)$' });
     if (stringSlot.visible) stringPlot.draw({ series, vlines });
     const ends = sm.boundary === 'fixed' ? 'extremos fijos' : 'extremos libres';
     const what = {
@@ -150,10 +153,10 @@ export function mountString(ctx) {
     const marks = sm.shape === 'modo' ? [sm.n] : sm.shape === 'dos-modos' ? [sm.n, sm.m] : [];
     if (freqSlot.visible) freqPlot.draw({
       series: [
-        { x: ns, y: ns, color: 0, points: true, label: 'cuerda: ωₙ = nπc/L (∝ n)' },
-        { x: ns, y: ns.map((n) => n * n), color: 1, points: true, label: 'partícula en una caja: Eₙ/ħ (∝ n²)' },
+        { x: ns, y: ns, color: 0, points: true, label: 'cuerda: $\\omega_n = n\\pi c/L$ ($\\propto n$)' },
+        { x: ns, y: ns.map((n) => n * n), color: 1, points: true, label: 'partícula en una caja: $E_n/\\hbar$ ($\\propto n^2$)' },
       ],
-      vlines: marks.map((n) => ({ x: n, dash: [3, 3], label: `n = ${n}` })),
+      vlines: marks.map((n) => ({ x: n, dash: [3, 3], label: `$n = ${n}$` })),
     });
 
     // --- Energía ------------------------------------------------------------------------------

@@ -71,8 +71,9 @@ function boxFor(spec) {
 export function mountStates(ctx, color) {
   const levelsSlot = ctx.graph('niveles');
   const levelsPlot = createPlot(levelsSlot.body, {
-    xLabel: 'posición x (nm)',
+    xLabel: 'posición $x$ (nm)',
     yLabel: 'energía (eV)',
+    htmlLegend: levelsSlot.legend,
     exportName: 'funcion-onda-niveles',
     onPick: (x, energy) => {
       const state = ctx.getState();
@@ -100,14 +101,14 @@ export function mountStates(ctx, color) {
   psiBox.append(psiItem);
   const psiBody = el('div', { class: 'fo-with-wheel' }, psiBox);
   psiSlot.body.append(psiBody);
-  const psiPlot = createPlot(psiItem, { xLabel: 'posición x (nm)', exportName: 'funcion-onda-superposicion' });
+  const psiPlot = createPlot(psiItem, { xLabel: 'posición $x$ (nm)', exportName: 'funcion-onda-superposicion', htmlLegend: psiSlot.legend });
   const wheel = createPhaseWheel(psiBody, { label: 'tono: fase de ψ · altura: |ψ| (o |ψ|²)' });
 
   const bridgeSlot = ctx.graph('puente-luz');
   // Muestra del color del fotón, junto al título.
   const swatch = el('span', { class: 'fo-swatch', 'aria-hidden': 'true', hidden: true });
   bridgeSlot.titleExtra.append(swatch);
-  const bridgePlot = createPlot(bridgeSlot.body, { xLabel: 'tiempo t (fs)', yLabel: '⟨x⟩ (nm)', exportName: 'funcion-onda-dipolo' });
+  const bridgePlot = createPlot(bridgeSlot.body, { xLabel: 'tiempo $t$ (fs)', yLabel: '$\\langle x\\rangle$ (nm)', exportName: 'funcion-onda-dipolo', htmlLegend: bridgeSlot.legend });
 
   const phasorSlot = ctx.graph('coeficientes');
   const phasorPlot = createPlot(phasorSlot.body, {
@@ -119,6 +120,7 @@ export function mountStates(ctx, color) {
     yTicks: [-1, 0, 1],
     equalAspect: true,
     exportName: 'funcion-onda-coeficientes',
+    htmlLegend: phasorSlot.legend,
   });
 
   /** @type {ReturnType<typeof setup> | null} */
@@ -181,7 +183,7 @@ export function mountStates(ctx, color) {
     const vx = s.spec.type === 'pozo-infinito' ? [box[0], box[0], box[1], box[1]] : Array.from(s.x);
     const top = eMax + 1.2 * spacing;
     const vy = s.spec.type === 'pozo-infinito' ? [top * 2, 0, 0, top * 2] : Array.from(s.V);
-    levelSeries.push({ x: vx, y: vy, color: colors.textSoft, width: 1.4, label: 'potencial V(x)' });
+    levelSeries.push({ x: vx, y: vy, color: colors.textSoft, width: 1.4, label: 'potencial $V(x)$' });
     for (let n = 0; n < shownLevels; n++) {
       const selected = (n === a || n === b) && !(n === b && weight === 0) && !(n === a && weight === 1 && a !== b);
       const c = n === a ? 0 : n === b ? 1 : colors.textSoft;
@@ -191,7 +193,7 @@ export function mountStates(ctx, color) {
         y: s.states[n].map((v) => s.energies[n] + amplitude * v),
         color: selected ? c : colors.textSoft,
         width: selected ? 1.3 : 0.7,
-        label: n === a ? `φ${a + 1} (primer estado)` : n === b && a !== b ? `φ${b + 1} (segundo estado)` : undefined,
+        label: n === a ? `$\\varphi_{${a + 1}}$ (primer estado)` : n === b && a !== b ? `$\\varphi_{${b + 1}}$ (segundo estado)` : undefined,
       });
     }
     pickDraws = state.potential === 'dibujado';
@@ -221,8 +223,8 @@ export function mountStates(ctx, color) {
     const step = s.x[1] - s.x[0];
     /** @type {import('../../ui/plot2d.js').Series[]} */
     const psiSeries = [];
-    if (showRe) psiSeries.push({ x: s.x, y: psi.re, color: 0, label: 'Re ψ' });
-    if (showIm) psiSeries.push({ x: s.x, y: psi.im, color: 1, label: 'Im ψ' });
+    if (showRe) psiSeries.push({ x: s.x, y: psi.re, color: 0, label: '$\\mathrm{Re}\\,\\psi$' });
+    if (showIm) psiSeries.push({ x: s.x, y: psi.im, color: 1, label: '$\\mathrm{Im}\\,\\psi$' });
     const pa = ca.re * ca.re + ca.im * ca.im;
     const pb = a === b ? 0 : cb.re * cb.re + cb.im * cb.im;
     if (psiSlot.visible) {
@@ -232,7 +234,7 @@ export function mountStates(ctx, color) {
       vlines: s.spec.type === 'pozo-infinito' ? [{ x: box[0], color: colors.textSoft }, { x: box[1], color: colors.textSoft }] : [],
       xRange,
       yRange,
-      yLabel: squared ? '|ψ|² (nm⁻¹)' : 'ψ (1/√nm)',
+      yLabel: squared ? '$|\\psi|^2$ (nm$^{-1}$)' : '$\\psi$ (nm$^{-1/2}$)',
     });
     const single = a === b || pb === 0 || pa === 0;
     psiSlot.setInfo(
@@ -258,7 +260,7 @@ export function mountStates(ctx, color) {
     const ySpan = Math.max(0.05 * span, 1.3 * amplitudeX);
     if (bridgeSlot.visible) {
     bridgePlot.draw({
-      series: [{ x: ts, y: xMean, color: 0, label: '⟨x⟩(t): la carga oscila como un dipolo' }],
+      series: [{ x: ts, y: xMean, color: 0, label: '$\\langle x\\rangle(t)$: la carga oscila como un dipolo' }],
       vlines: [{ x: t % window, color: colors.textSoft }],
       hlines: [{ y: xMid, dash: [4, 4], color: colors.textSoft }],
       xRange: [0, window],
@@ -320,8 +322,8 @@ export function mountStates(ctx, color) {
     const circle = Array.from({ length: 121 }, (_, i) => (2 * Math.PI * i) / 120);
     /** @type {import('../../ui/plot2d.js').Series[]} */
     const phasorSeries = [{ x: circle.map(Math.cos), y: circle.map(Math.sin), color: colors.grid, width: 0.8 }];
-    phasorSeries.push({ ...arrow(za), color: 0, width: 1.6, label: `c${a + 1}·e^(−iE${a + 1}t/ħ)` });
-    if (a !== b) phasorSeries.push({ ...arrow(zb), color: 1, width: 1.6, label: `c${b + 1}·e^(−iE${b + 1}t/ħ)` });
+    phasorSeries.push({ ...arrow(za), color: 0, width: 1.6, label: `$c_{${a + 1}}\\,e^{-iE_{${a + 1}}t/\\hbar}$` });
+    if (a !== b) phasorSeries.push({ ...arrow(zb), color: 1, width: 1.6, label: `$c_{${b + 1}}\\,e^{-iE_{${b + 1}}t/\\hbar}$` });
     if (phasorSlot.visible) phasorPlot.draw({ series: phasorSeries });
     const relative = a === b ? 0 : Math.atan2(za.re * zb.im - za.im * zb.re, za.re * zb.re + za.im * zb.im);
     phasorSlot.setInfo(
