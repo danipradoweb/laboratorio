@@ -13,10 +13,29 @@ Registro vivo del estado del laboratorio. Cada sesión lo lee al empezar y lo ac
 | 04 Cristales y Bragg | pendiente |
 
 ## Sesión en curso
-- Encargo: 03 Ondas clásicas y función de onda (`docs/encargos/03-ondas-cuanticas.md`). Rama `claude/sweet-clarke-70f1i8` (sale de `main` con el encargo 02 ya fusionado, pull request #3).
-- Petición añadida por Daniel para este encargo: en `ficha.md`, un apartado por cada vista con tres partes: «Qué ves» (cada eje con su magnitud y unidades en palabras, cada curva y color), «Cómo leerla» (la idea física a nivel de primero de carrera, sin ecuaciones) y «Prueba esto» (una o dos acciones con el resultado que se observa, comprobadas contra la pantalla). Sustituye la regla de brevedad de las fichas.
-- Último paso terminado: 9 (revisión independiente, correcciones y cierre). Encargo 03 terminado.
-- Siguiente paso: encargo 04 (`docs/encargos/04-cristales-bragg.md`), en una sesión nueva.
+- Tarea de mantenimiento pedida por Daniel (2026-11-18), sin encargo nuevo. Rama `claude/youthful-hawking-b5y2oe` (sale de `main` con el encargo 03 fusionado, pull request #4). Lista cerrada, sin ampliar alcance:
+  1. Vista Paquete: el panel «Valores esperados» salía vacío (solo el título). Diagnosticar, corregir y prueba de humo que falle si queda vacío.
+  2. Al llegar al tiempo final la simulación se paraba sin avisar: aviso claro con acceso directo a reiniciar.
+  3. Doble rendija 2D con control de coherencia (del backlog) en `funcion-onda`, con tests físicos y su apartado en `ficha.md`.
+  4. `docs/ARQUITECTURA.md`, sección Fichas: la regla de los apartados por vista («Qué ves», «Cómo leerla», «Prueba esto») en lugar de «Las fichas no son un libro de texto»; también `src/modules/_plantilla/` y su `LEEME.md`.
+  5. Revisión independiente de una ronda solo sobre lo nuevo.
+
+### Plan de la tarea de mantenimiento (pasos y estado)
+
+| # | Paso | Estado |
+|---|---|---|
+| 1 | Panel de valores esperados: diagnóstico, corrección y prueba de humo | hecho |
+| 2 | Aviso de fin de la simulación con botón «Reiniciar» | hecho |
+| 3a | Física de la doble rendija (`physics-slits.js`) con tests | en curso |
+| 3b | Vista o preset en `funcion-onda`, prueba de humo y apartado de la ficha | pendiente |
+| 4 | ARQUITECTURA (Fichas), plantilla y su LEEME | pendiente |
+| 5 | Revisión independiente (una ronda), correcciones y cierre | pendiente |
+
+### Evidencia y decisiones de la tarea de mantenimiento
+
+- Paso 1. **Diagnóstico**: no era un fallo de la física ni del dibujo de las curvas, sino de espacio. Con la ventana de un portátil (1366 × 768 menos la barra del navegador ≈ 1366 × 650, reproducido en local con Playwright) cada una de las dos gráficas apiladas del panel medía unos 90 px de alto; la leyenda de tres filas, el rótulo del eje de tiempo y las marcas se comían el área de datos, que quedaba por debajo de 20 px, y `plot2d.js` en ese caso no dibuja nada (solo el fondo). A 1280 × 800 sí se veía, muy apretado. **Corrección**: (a) `plot2d.js` quita la leyenda cuando no deja al área de datos al menos 3 tamaños de letra (`MIN_PLOT_WITH_LEGEND`): mejor ver las curvas sin leyenda que nada; vale para todos los módulos; (b) en el panel, la gráfica de arriba no repite el rótulo del eje de tiempo, la leyenda es más corta (cabe en una o dos filas) y la de la incertidumbre no lleva leyenda (su eje y la etiqueta de la línea ħ/2 ya lo dicen); (c) la gráfica de la incertidumbre tiene una altura mínima (`.fo-stack-min`, 5,5 rem), necesaria a 1280 × 600. De paso, dos defectos de lectura que la prueba de humo destapó: la trayectoria clásica (punteada) se dibujaba encima de ⟨x⟩ y lo tapaba (coinciden por Ehrenfest), ahora va debajo; y en el estado coherente la línea ħ/2 tapaba la curva Δx·Δp, que ahora es más gruesa. **Prueba de humo nueva** (`smoke.test.js`, «el panel de valores esperados dibuja sus curvas»): carga el preset del oscilador armónico a 1366 × 650, 1280 × 600, 1280 × 800 y en el modo presentación a 1920 × 1080, y cuenta en los lienzos los píxeles del color de ⟨x⟩, de ⟨p⟩/ħ, de Δx·Δp/ħ y de la línea ħ/2 (más de 20 de cada uno). Con el código anterior falla a 1366 × 650 y a 1280 × 600 (0 píxeles de ⟨x⟩); con el nuevo pasa en los cuatro tamaños. Capturas revisadas a ojo: `capturas/funcion-onda-valores-esperados-*.png`.
+- Paso 2. **Antes**: al llegar al tiempo final la vista paquete se quedaba quieta 1,5 s, sin decir nada, y volvía a empezar sola. **Ahora** se para en el último instante y muestra encima de las vistas un aviso, «Simulación terminada: ha llegado al tiempo final, t = 83 fs.», con un botón «Reiniciar» que vuelve a t = 0 y pone el reloj en marcha aunque estuviera en pausa (`createEndNotice` en `view-common.js`, para reutilizarlo en la doble rendija). El aviso se quita al reiniciar (con su botón o con el del reloj) y al cambiar cualquier parámetro que cambie la física. Decisión: ya no vuelve a empezar sola; quien quiera repetir pulsa «Reiniciar». Prueba de humo nueva: llega al final, comprueba el texto, que el tiempo no avanza con el aviso puesto y que el botón reinicia desde la pausa.
+- Pasos 1 y 2: `npm test` 429 en verde (dos pruebas de humo nuevas, la de valores esperados con cuatro tamaños). `npm run check` limpio (antes hubo que hacer `npm ci`: el contenedor no traía `node_modules`).
 
 ### Cómo queda el encargo 03
 

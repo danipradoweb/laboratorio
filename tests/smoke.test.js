@@ -859,6 +859,104 @@ test('función de onda: tres vistas enlazadas, fase global, presets y lo que cue
   assert.deepEqual(errors, []);
 });
 
+/**
+ * Cuenta, en un lienzo, los píxeles cercanos a cada color de la lista (variables CSS del
+ * tema, como '--series-1'). Sirve para saber si una gráfica ha dibujado de verdad sus
+ * curvas: un lienzo que solo tiene el fondo da cero en todas.
+ * @param {any} page
+ * @param {any} canvas localizador del lienzo
+ * @param {string[]} cssVars
+ * @returns {Promise<number[]>}
+ */
+async function colorPixels(page, canvas, cssVars) {
+  return canvas.evaluate((/** @type {HTMLCanvasElement} */ c, /** @type {string[]} */ vars) => {
+    const probe = document.createElement('canvas').getContext('2d');
+    if (!probe) return vars.map(() => 0);
+    const rgb = vars.map((v) => {
+      probe.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+      probe.fillRect(0, 0, 1, 1);
+      return Array.from(probe.getImageData(0, 0, 1, 1).data.slice(0, 3));
+    });
+    const ctx = c.getContext('2d');
+    if (!ctx || c.width === 0 || c.height === 0) return vars.map(() => 0);
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    const counts = vars.map(() => 0);
+    for (let i = 0; i < data.length; i += 4) {
+      rgb.forEach((col, j) => {
+        if (Math.abs(data[i] - col[0]) + Math.abs(data[i + 1] - col[1]) + Math.abs(data[i + 2] - col[2]) < 30) counts[j]++;
+      });
+    }
+    return counts;
+  }, cssVars);
+}
+
+// Regresión: en la web publicada, el panel «Valores esperados» del oscilador armónico salía
+// solo con el título. Con la ventana de un portátil (1366 × 768 menos la barra del
+// navegador ≈ 1366 × 650) cada una de las dos gráficas apiladas medía unos 90 px, la leyenda
+// y los ejes se comían el área de datos y plot2d no dibujaba nada. La prueba mira los
+// píxeles: deben aparecer ⟨x⟩ (serie 1), ⟨p⟩/ħ (serie 2), Δx·Δp/ħ (serie 5) y la línea ħ/2
+// (color de acento), en varios tamaños de ventana y en el modo presentación.
+for (const [width, height, presentation] of /** @type {[number, number, boolean][]} */ ([
+  [1366, 650, false],
+  [1280, 600, false],
+  [1280, 800, false],
+  [1920, 1080, true],
+])) {
+  test(`función de onda: el panel de valores esperados dibuja sus curvas (${width} × ${height}${presentation ? ', presentación' : ''})`, { skip }, async () => {
+    const { page, errors, close } = await openPage(
+      '#/funcion-onda?part=paquete&potential=armonico&quantum=0.1&x0=4&sigma=0.62&energy=0&rate=20',
+      { width, height },
+    );
+    if (presentation) await page.keyboard.press('p');
+    await page.waitForTimeout(1500); // que la historia tenga unos cuantos fs
+    const panel = page.locator('.fo-part .panel').nth(3);
+    assert.match(String(await panel.locator('.panel-title').textContent()), /^Valores esperados/);
+    const canvases = panel.locator('canvas');
+    assert.equal(await canvases.count(), 2);
+    const [x, k] = await colorPixels(page, canvases.nth(0), ['--series-1', '--series-2']);
+    const [u, line] = await colorPixels(page, canvases.nth(1), ['--series-5', '--accent']);
+    await page.screenshot({ path: join(shots, `funcion-onda-valores-esperados-${width}x${height}.png`) });
+    await close();
+    // Umbral: una curva de 1,5 px de grosor y unas decenas de px de largo da cientos de
+    // píxeles; 20 deja margen para el suavizado sin aceptar un lienzo vacío.
+    assert.ok(x > 20, `no se ve la curva de ⟨x⟩ (${x} px)`);
+    assert.ok(k > 20, `no se ve la curva de ⟨p⟩/ħ (${k} px)`);
+    assert.ok(u > 20, `no se ve la curva de Δx·Δp/ħ (${u} px)`);
+    assert.ok(line > 20, `no se ve la línea ħ/2 (${line} px)`);
+    assert.deepEqual(errors, []);
+  });
+}
+
+// Al llegar al tiempo final, la vista paquete se para en el último instante y lo dice con
+// un aviso que tiene un botón para volver a empezar (antes se quedaba quieta sin avisar y
+// parecía colgada). El oscilador armónico se simula dos periodos: 2·h/ħω = 82,7 fs con
+// ħω = 0,1 eV; a 100 fs por segundo llega al final en menos de un segundo.
+test('función de onda: aviso de fin de la simulación con botón para reiniciar', { skip }, async () => {
+  const { page, errors, close } = await openPage(
+    '#/funcion-onda?part=paquete&potential=armonico&quantum=0.1&x0=4&sigma=0.62&energy=0&rate=100',
+    { width: 1366, height: 650 },
+  );
+  const notice = page.locator('.fo-end');
+  await page.waitForSelector('.fo-end:not([hidden])', { timeout: 10000 });
+  assert.match(String(await notice.textContent()), /Simulación terminada: ha llegado al tiempo final, t = 83 fs/);
+  // Parada de verdad: el tiempo no avanza mientras se ve el aviso.
+  const at = String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1];
+  await page.waitForTimeout(800);
+  assert.equal(String(await page.locator('.fo-status').textContent()).match(/^t = ([\d,]+)/)?.[1], at);
+  assert.equal(await notice.isVisible(), true);
+  await page.screenshot({ path: join(shots, 'funcion-onda-fin.png') });
+  // El botón vuelve a t = 0 y pone el reloj en marcha, aunque estuviera en pausa.
+  await page.locator('.clock-controls button').first().click(); // pausa
+  await notice.locator('button').click();
+  await page.waitForFunction(() => /^t = [0-9],/.test(document.querySelector('.fo-status')?.textContent ?? ''));
+  assert.equal(await notice.isVisible(), false);
+  assert.equal(await page.locator('.clock-controls button').first().textContent(), 'Pausa');
+  // Y vuelve a avisar cuando llega otra vez al final.
+  await page.waitForSelector('.fo-end:not([hidden])', { timeout: 10000 });
+  await close();
+  assert.deepEqual(errors, []);
+});
+
 for (const [tourId, steps] of /** @type {const} */ ([
   ['onda', ['part=cuerda', 'part=estados&potential=pozo-infinito', 'wellWidth=0.8', 'potential=barrera', 'potential=libre', 'twin=1']],
   ['compleja', ['part=cuerda', 'part=estados', 'wellWidth=0.8', 'twin=1', 'potential=armonico']],
